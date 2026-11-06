@@ -70,9 +70,13 @@ function queriesFor(city: string) {
   ];
 }
 
+const pick = <T>(all: T[], focus?: number) => (focus === undefined ? all : [all[focus % all.length]]);
+
 type RawEvent = Partial<Record<keyof YeloEvent, string>>;
 
-export async function discover(city: string, { exa, geo, log = () => {}, deadline = Infinity }: AgentDeps): Promise<YeloEvent[]> {
+// `focus` runs just one of the city's searches (picked by index, wrapping around). The rolling
+// schedule uses it to scout a little every few minutes instead of everything at once.
+export async function discover(city: string, { exa, geo, log = () => {}, deadline = Infinity }: AgentDeps, focus?: number): Promise<YeloEvent[]> {
   const now = new Date();
   const weekOut = new Date(now.getTime() + 7 * 864e5);
   const systemPrompt = [
@@ -84,7 +88,7 @@ export async function discover(city: string, { exa, geo, log = () => {}, deadlin
   ].join(" ");
 
   const runs = await Promise.allSettled(
-    queriesFor(city).map(async (query, i) => {
+    pick(queriesFor(city), focus).map(async (query, i) => {
       // Stagger starts: deep search fans out internally, and firing all at once trips
       // Exa's 10 req/s team limit. One retry on a rate-limit error.
       await sleep(i * 700);

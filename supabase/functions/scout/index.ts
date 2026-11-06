@@ -1,7 +1,8 @@
 // Scout Edge Function: runs the discovery agent (task "events") or the rooms agent
 // (task "rooms") for one city and writes the results to Postgres.
 //
-// POST { task: "events" | "rooms", city: "New York, NY" }
+// POST { task: "events" | "rooms", city: "New York, NY", focus?: number }
+// `focus` (trusted callers only) runs a single search: the rolling 5-minute schedule.
 // Auth: the nightly cron sends SCOUT_KEY. Anyone else (the app's Scout button) is allowed
 // one run per city per hour, so a public button can't run up the Exa bill.
 // Replies 202 right away and keeps working in the background (free plan: 150s per worker).
@@ -45,26 +46,28 @@ Deno.serve(async (req) => {
   }
   if (req.method !== "POST") return json(405, { error: "POST { task, city }" });
 
-  const { task = "events", city: rawCity } = await req.json().catch(() => ({}));
+  const { task = "events", city: rawCity, focus: rawFocus } = await req.json().catch(() => ({}));
   const city = canonicalCity(String(rawCity ?? ""));
   if (!city || !["events", "rooms"].includes(task)) return json(400, { error: "Expected { task: 'events' | 'rooms', city }" });
 
   const scoutKey = Deno.env.get("SCOUT_KEY");
   const trusted = !!scoutKey && req.headers.get("Authorization") === `Bearer ${scoutKey}`;
+  const focus = trusted && task === "events" && Number.isInteger(rawFocus) && rawFocus >= 0 ? rawFocus as number : undefined;
   if (!trusted) {
-    const { data: last } = await db.from("scout_runs").select("ran_at").eq("kind", task).eq("city", cityKey(city))
+    // Rolling single-search runs (focus set) don't count against the app's Scout button.
+    const { data: last } = await db.from("scout_runs").select("ran_at").eq("kind", task).eq("city", cityKey(city)).is("focus", null)
       .order("ran_at", { ascending: false }).limit(1).maybeSingle();
     const wait = last ? COOLDOWN_MS - (Date.now() - Date.parse(last.ran_at)) : 0;
     if (wait > 0) return json(429, { error: `Scouted recently. Try again in ${Math.ceil(wait / 60000)} min.` });
-    const { count } = await db.from("scout_runs").select("id", { count: "exact", head: true })
+    const { count } = await db.from("scout_runs").select("id", { count: "exact", head: true }).is("focus", null)
       .gte("ran_at", new Date(Date.now() - 3600e3).toISOString());
     if ((count ?? 0) >= PUBLIC_RUNS_PER_HOUR) return json(429, { error: "Scout is busy. Try again in a little while." });
   }
 
   // Claim the slot now so double-taps don't start two runs.
-  const { data: run } = await db.from("scout_runs").insert({ kind: task, city: cityKey(city) }).select("id").single();
+  const { data: run } = await db.from("scout_runs").insert({ kind: task, city: cityKey(city), focus: focus ?? null }).select("id").single();
   const started = Date.now();
-  const work = (task === "events" ? runEvents(city, started) : runRooms(city))
+  const work = (task === "events" ? runEvents(city, started, focus) : runRooms(city))
     .then((r) => db.from("scout_runs").update({ ...r, ms: Date.now() - started }).eq("id", run!.id))
     .catch((err) => db.from("scout_runs").update({ error: describe(err), ms: Date.now() - started }).eq("id", run!.id));
   // Keep the worker alive after replying (Supabase's EdgeRuntime); elsewhere just finish first.
@@ -75,8 +78,8 @@ Deno.serve(async (req) => {
   return json(202, { ok: true, runId: run!.id, message: `Scouting ${city}. Results land in a minute or two.` });
 });
 
-async function runEvents(city: string, started: number) {
-  const found = await discover(city, { exa, geo, log: console.log, deadline: started + BUDGET_MS });
+async function runEvents(city: string, started: number, focus?: number) {
+  const found = await discover(city, { exa, geo, log: console.log, deadline: started + BUDGET_MS }, focus);
 
   // Merge with what's stored: same venue + same night (or same standing deal) is one spot.
   const { data: existing } = await db.from("events").select("*").eq("city", cityKey(city));
