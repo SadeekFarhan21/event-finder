@@ -218,7 +218,7 @@ export function SpotSheet({ spot, city, me, unlocked, canAskLocation, onAskLocat
               </Animated.View>
             ) : canCrew ? (
               <Tap style={s.friends} onPress={() => { Haptics.selectionAsync(); setComposing(true); }}>
-                <Ionicons name="people-outline" size={18} color={C.ink} />
+                <Ionicons name="people-outline" size={18} color={C.ink2} />
                 <Text style={s.friendsText}>Go with friends</Text>
                 <Ionicons name="chevron-forward" size={16} color={C.ink3} />
               </Tap>
@@ -240,18 +240,33 @@ export function SpotSheet({ spot, city, me, unlocked, canAskLocation, onAskLocat
                   </>
                 )}
               </View>
-              <Tap onPress={() => Linking.openURL(config.directionsUrl(`${e.venue}, ${e.address}`))} hitSlop={10} accessibilityRole="link">
-                <Text style={s.link}>Directions</Text>
+              <Tap onPress={() => Linking.openURL(config.directionsUrl(`${e.venue}, ${e.address}`))} style={s.round} hitSlop={4}
+                accessibilityRole="link" accessibilityLabel={`Directions to ${e.venue}`}>
+                <Ionicons name="navigate-outline" size={17} color={C.ink} />
               </Tap>
             </View>
-            {!fare && canAskLocation && (
-              <Tap pressedScale={1} onPress={onAskLocation} style={[s.row, { marginTop: 4 }]} accessibilityLabel="Use my location to see the ride price">
+            {/* The ride, read like a receipt line: what on the left, the price on the right */}
+            {fare ? (
+              <View style={[s.row, s.rowNext]}>
                 <Ionicons name="car-outline" size={18} color={C.ink2} />
-                <Text style={[s.rowSub, { flex: 1, marginTop: 0 }]}>See what the ride costs from you</Text>
-                <Text style={s.link}>Use location</Text>
-              </Tap>
-            )}
-            {fare && <Text style={s.fareNote}>Yelo ~${fare.yelo} vs Uber/Lyft ~${fare.typical}, ~{fare.minutes} min. Estimates.</Text>}
+                <View style={{ flex: 1 }}>
+                  <Text style={s.rowText} numberOfLines={1}>About {fare.minutes} min by car</Text>
+                  <Text style={s.rowSub} numberOfLines={1}>Estimate. About ${fare.typical} on other apps</Text>
+                </View>
+                <Text style={s.value}>${fare.yelo}</Text>
+              </View>
+            ) : canAskLocation ? (
+              <View style={[s.row, s.rowNext]}>
+                <Ionicons name="car-outline" size={18} color={C.ink2} />
+                <View style={{ flex: 1 }}>
+                  <Text style={s.rowText} numberOfLines={1}>Ride price</Text>
+                  <Text style={s.rowSub} numberOfLines={1}>Uses your location once</Text>
+                </View>
+                <Tap onPress={onAskLocation} style={s.smallPill} hitSlop={8} accessibilityLabel="Use my location to see the ride price">
+                  <Text style={s.smallPillText}>Show price</Text>
+                </Tap>
+              </View>
+            ) : null}
 
             {e.deal && unlocked && (
               <Animated.View entering={FadeIn} style={s.deal}>
@@ -330,8 +345,7 @@ const s = StyleSheet.create({
     borderWidth: 1, borderColor: C.d4 },
   pillOn: { borderColor: C.d4, backgroundColor: C.surface },
   pillText: { fontFamily: F.semibold, fontSize: T.small, color: C.ink2 },
-  friends: { flexDirection: "row", alignItems: "center", gap: 12, height: 52, paddingHorizontal: 16, marginTop: 16, borderRadius: R.md,
-    backgroundColor: C.surface, borderWidth: StyleSheet.hairlineWidth, borderColor: C.d4 },
+  friends: { flexDirection: "row", alignItems: "center", gap: 12, minHeight: 48, marginTop: 8 },
   friendsText: { flex: 1, fontFamily: F.semibold, fontSize: T.small, color: C.ink },
   crew: { flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 16, paddingVertical: 12, marginTop: 16, borderRadius: R.md,
     backgroundColor: C.surface, borderWidth: StyleSheet.hairlineWidth, borderColor: C.d4 },
@@ -339,7 +353,13 @@ const s = StyleSheet.create({
   crewSub: { fontFamily: F.regular, fontSize: T.meta, color: C.ink3, marginTop: 2 },
   link: { fontFamily: F.semibold, fontSize: T.small, color: C.ink, textDecorationLine: "underline" },
   linkQuiet: { fontFamily: F.semibold, fontSize: T.small, color: C.ink3 },
-  fareNote: { fontFamily: F.regular, fontSize: T.meta, color: C.ink3, marginTop: 12, marginLeft: 30 },
+  rowNext: { marginTop: 16 },
+  value: { fontFamily: F.semibold, fontSize: T.body, color: C.ink, fontVariant: ["tabular-nums"] },
+  round: { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center",
+    borderWidth: StyleSheet.hairlineWidth, borderColor: C.d4 },
+  smallPill: { height: 32, paddingHorizontal: 12, borderRadius: R.pill, justifyContent: "center",
+    borderWidth: StyleSheet.hairlineWidth, borderColor: C.d4 },
+  smallPillText: { fontFamily: F.semibold, fontSize: T.small, color: C.ink },
   deal: { marginTop: 20, paddingVertical: 12, paddingHorizontal: 16, borderRadius: R.md, backgroundColor: C.surface, borderWidth: StyleSheet.hairlineWidth, borderColor: C.d4 },
   dealLabel: { fontFamily: F.semibold, fontSize: 11, color: C.ink3, letterSpacing: 1.2 },
   dealText: { fontFamily: F.semibold, fontSize: T.body, lineHeight: 23, color: C.ink, marginTop: 4 },

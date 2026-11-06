@@ -95,6 +95,16 @@ export function ScoutScreen() {
     if (core.length) map.current?.fitTo(core.map((e) => ({ latitude: e.lat, longitude: e.lng })), FIT_PADDING);
   }, []);
 
+  // While the camera flies to a new city, its tiles are still loading: hold the pins so they
+  // don't float on a black map, then bring them in once the ground is drawn.
+  const [settling, setSettling] = useState(false);
+  const settleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const settle = useCallback((ms: number) => {
+    setSettling(true);
+    if (settleTimer.current) clearTimeout(settleTimer.current);
+    settleTimer.current = setTimeout(() => setSettling(false), ms);
+  }, []);
+
   const open = useCallback(async (typed: string) => {
     const city = canonicalCity(typed); // "nyc" and "New York, NY" are the same map
     if (!city) { setCityInput(mapCity ?? "New York, NY"); return; } // empty search: keep the current city
@@ -106,11 +116,12 @@ export function ScoutScreen() {
       const tonight = list.filter((e) => matches(e, "tonight")).length;
       setFilter(tonight >= 3 ? "tonight" : "all");
       if (list.length) show(tonight >= 3 ? `${tonight} things on tonight` : `${list.length} spots this week`);
+      if (city !== mapCity) settle(1800);
       setTimeout(() => fit(list), 300);
     } catch (err) {
       show((err as Error).message || "Couldn't load spots", true);
     }
-  }, [load, fit, show, mapCity]);
+  }, [load, fit, show, mapCity, settle]);
 
   useEffect(() => { open(cityInput); }, []);
 
@@ -174,7 +185,7 @@ export function ScoutScreen() {
     <View style={s.root}>
       <StatusBar style="light" />
       <ScoutMap ref={map} initialRegion={START} showsUserLocation={!!me} onRegionChange={setRegion} onPress={() => setActive(null)}>
-        <SpotPins clusters={clusters} active={active}
+        <SpotPins clusters={settling ? [] : clusters} active={settling ? null : active}
           onSpot={(e) => focus(e, true)} onCluster={openCluster} onActive={setDetail} />
       </ScoutMap>
 
