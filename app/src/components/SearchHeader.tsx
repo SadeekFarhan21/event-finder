@@ -7,7 +7,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 import { FILTERS, filterLabel, type Filter } from "../lib/filters";
-import { color as C, font as F, radius as R, shadow } from "../theme";
+import { color as C, font as F, radius as R, shadow, text as T } from "../theme";
 import { HEADER_GAP, HEADER_H } from "../layout";
 import { Tap } from "./Tap";
 
@@ -39,19 +39,19 @@ export function SearchHeader({ city, onCityChange, onSubmitCity, onScout, scouti
   return (
     <>
       {/* Soft fade so map labels don't fight the controls */}
-      <LinearGradient pointerEvents="none" colors={["rgba(250,248,242,0.98)", "rgba(250,248,242,0.75)", "rgba(250,248,242,0)"]}
+      <LinearGradient pointerEvents="none" colors={["rgba(251,250,246,0.98)", "rgba(251,250,246,0.75)", "rgba(251,250,246,0)"]}
         locations={[0, 0.55, 1]} style={[s.fade, { height: insets.top + HEADER_GAP + HEADER_H + 26 }]} />
       <View style={[s.top, { paddingTop: insets.top + HEADER_GAP }]}>
         <View style={s.row}>
           <Glass style={s.search}>
             <Ionicons name="location-outline" size={18} color={C.ink2} />
             <TextInput value={city} onChangeText={onCityChange} onSubmitEditing={() => onSubmitCity(city)} placeholder="Search a city"
-              placeholderTextColor={C.ink3} style={s.input} returnKeyType="search" selectTextOnFocus
+              placeholderTextColor={C.placeholder} style={s.input} returnKeyType="search" selectTextOnFocus
               onFocus={() => setEditing(true)} onBlur={() => setEditing(false)} />
           </Glass>
           <Tap onPress={onScout} disabled={scouting || !scoutable} style={[s.scout, !scoutable && { opacity: 0.4 }]}
             accessibilityLabel={scouting ? "Scouting this city" : "Scout this city"} accessibilityState={{ busy: scouting, disabled: scouting || !scoutable }}>
-            {scouting ? <ActivityIndicator color="#fff" size="small" /> : <Text style={s.scoutText}>Scout</Text>}
+            {scouting ? <ActivityIndicator color={C.surface} size="small" /> : <Text style={s.scoutText}>Scout</Text>}
           </Tap>
         </View>
 
@@ -69,7 +69,8 @@ export function SearchHeader({ city, onCityChange, onSubmitCity, onScout, scouti
 
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.chips}>
           {FILTERS.map((k) => (
-            <Tap key={k} onPress={() => onFilter(k)} style={[s.chip, filter === k && s.chipOn]} accessibilityState={{ selected: filter === k }}>
+            <Tap key={k} onPress={() => onFilter(k)} hitSlop={{ top: 6, bottom: 6 }} style={[s.chip, filter === k && s.chipOn]}
+              accessibilityState={{ selected: filter === k }}>
               <Text style={[s.chipText, filter === k && s.chipTextOn]}>{filterLabel(k)}</Text>
             </Tap>
           ))}
@@ -90,18 +91,18 @@ const s = StyleSheet.create({
   top: { position: "absolute", top: 0, left: 0, right: 0 },
   row: { flexDirection: "row", gap: 8, paddingHorizontal: 16 },
   search: { flex: 1, flexDirection: "row", alignItems: "center", gap: 8, height: 48, paddingHorizontal: 16, borderRadius: R.pill,
-    borderWidth: StyleSheet.hairlineWidth, borderColor: "rgba(17,17,17,0.08)", ...shadow },
-  input: { flex: 1, fontFamily: F.medium, fontSize: 15, color: C.ink },
+    borderWidth: StyleSheet.hairlineWidth, borderColor: C.hairline, ...shadow },
+  input: { flex: 1, fontFamily: F.medium, fontSize: T.body, color: C.ink },
   scout: { height: 48, paddingHorizontal: 20, borderRadius: R.pill, backgroundColor: C.ink, alignItems: "center", justifyContent: "center", ...shadow },
-  scoutText: { fontFamily: F.semibold, fontSize: 15, color: "#fff" },
-  suggest: { marginHorizontal: 16, marginTop: 8, backgroundColor: C.surface, borderRadius: R.md, paddingVertical: 6, ...shadow },
-  suggestRow: { flexDirection: "row", alignItems: "center", gap: 10, paddingHorizontal: 16, paddingVertical: 12 },
-  suggestText: { flex: 1, fontFamily: F.medium, fontSize: 15, color: C.ink },
-  suggestHint: { fontFamily: F.regular, fontSize: 12, color: C.ink3 },
-  chips: { gap: 6, paddingHorizontal: 16, paddingTop: 10, paddingBottom: 6 },
-  chip: { height: 32, paddingHorizontal: 13, justifyContent: "center", borderRadius: R.pill, backgroundColor: C.surface,
+  scoutText: { fontFamily: F.semibold, fontSize: T.body, color: C.surface },
+  suggest: { marginHorizontal: 16, marginTop: 8, backgroundColor: C.surface, borderRadius: R.md, paddingVertical: 8, ...shadow },
+  suggestRow: { flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 16, paddingVertical: 12 },
+  suggestText: { flex: 1, fontFamily: F.medium, fontSize: T.body, color: C.ink },
+  suggestHint: { fontFamily: F.regular, fontSize: T.meta, color: C.ink3 },
+  chips: { gap: 8, paddingHorizontal: 16, paddingTop: 12, paddingBottom: 8 },
+  chip: { height: 32, paddingHorizontal: 12, justifyContent: "center", borderRadius: R.pill, backgroundColor: C.surface,
     borderWidth: StyleSheet.hairlineWidth, borderColor: C.hairline },
   chipOn: { backgroundColor: C.ink, borderColor: C.ink },
-  chipText: { fontFamily: F.medium, fontSize: 13, color: C.ink },
-  chipTextOn: { color: "#fff" },
+  chipText: { fontFamily: F.medium, fontSize: T.small, color: C.ink },
+  chipTextOn: { color: C.surface },
 });

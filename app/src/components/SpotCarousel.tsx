@@ -10,7 +10,7 @@ import Animated, {
 import { whenLabel } from "../lib/time";
 import type { Spot } from "../lib/types";
 import { CARD_GAP, CARD_INSET, CARD_STEP, CARD_W, CAROUSEL_BOTTOM } from "../layout";
-import { CATEGORY, color as C, font as F, radius as R, shadow } from "../theme";
+import { CATEGORY, color as C, font as F, radius as R, shadow, text as T } from "../theme";
 import { Tap } from "./Tap";
 
 export type CarouselRef = { scrollTo: (index: number, animated?: boolean) => void };
@@ -18,12 +18,13 @@ export type CarouselRef = { scrollTo: (index: number, animated?: boolean) => voi
 type Props = {
   ref?: Ref<CarouselRef>;
   spots: Spot[];
+  going: Record<string, number>; // spot id -> people going
   activeId: string | null;
   onSettle: (spot: Spot) => void; // a swipe came to rest on this card
   onPress: (spot: Spot, index: number) => void;
 };
 
-export function SpotCarousel({ ref, spots, activeId, onSettle, onPress }: Props) {
+export function SpotCarousel({ ref, spots, going, activeId, onSettle, onPress }: Props) {
   const list = useAnimatedRef<Animated.FlatList<Spot>>();
   const x = useSharedValue(0);
   const onScroll = useAnimatedScrollHandler((e) => { x.value = e.contentOffset.x; });
@@ -44,12 +45,12 @@ export function SpotCarousel({ ref, spots, activeId, onSettle, onPress }: Props)
         snapToInterval={CARD_STEP} decelerationRate="fast" disableIntervalMomentum
         contentContainerStyle={{ gap: CARD_GAP, paddingHorizontal: CARD_INSET }}
         onScroll={onScroll} scrollEventThrottle={16} onMomentumScrollEnd={onEnd}
-        renderItem={({ item, index }) => <Card spot={item} index={index} x={x} onPress={() => onPress(item, index)} />} />
+        renderItem={({ item, index }) => <Card spot={item} going={going[item.id] ?? 0} index={index} x={x} onPress={() => onPress(item, index)} />} />
     </Animated.View>
   );
 }
 
-function Card({ spot: e, index, x, onPress }: { spot: Spot; index: number; x: SharedValue<number>; onPress: () => void }) {
+function Card({ spot: e, going, index, x, onPress }: { spot: Spot; going: number; index: number; x: SharedValue<number>; onPress: () => void }) {
   const style = useAnimatedStyle(() => {
     const d = (x.value - index * CARD_STEP) / CARD_STEP; // 0 = centered, ±1 = one card away
     return {
@@ -68,7 +69,7 @@ function Card({ spot: e, index, x, onPress }: { spot: Spot; index: number; x: Sh
               : e.deal ? <View style={s.deal}><Text style={s.dealText}>Deal</Text></View> : null}
           </View>
           <Text style={s.title} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.72}>{e.venue}</Text>
-          <Text style={s.sub} numberOfLines={1}>{e.deal ?? e.title}</Text>
+          <Text style={s.sub} numberOfLines={1}>{going ? `${going} going  ·  ` : ""}{e.deal ?? e.title}</Text>
         </View>
       </Tap>
     </Animated.View>
@@ -77,16 +78,16 @@ function Card({ spot: e, index, x, onPress }: { spot: Spot; index: number; x: Sh
 
 const s = StyleSheet.create({
   wrap: { position: "absolute", left: 0, right: 0, bottom: CAROUSEL_BOTTOM },
-  card: { width: CARD_W, flexDirection: "row", alignItems: "center", gap: 14, backgroundColor: C.surface, borderRadius: R.lg,
-    paddingHorizontal: 16, paddingVertical: 14, ...shadow },
-  thumb: { width: 64, height: 64, borderRadius: 14, backgroundColor: C.fill },
+  card: { width: CARD_W, flexDirection: "row", alignItems: "center", gap: 12, backgroundColor: C.surface, borderRadius: R.lg,
+    paddingHorizontal: 16, paddingVertical: 12, ...shadow },
+  thumb: { width: 64, height: 64, borderRadius: R.md, backgroundColor: C.fill },
   body: { flex: 1, minWidth: 0 },
   top: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8 },
-  meta: { flex: 1, fontFamily: F.medium, fontSize: 12, color: C.ink3 },
-  title: { fontFamily: F.display, fontSize: 28, lineHeight: 32, color: C.ink, marginTop: 4 },
-  sub: { fontFamily: F.regular, fontSize: 14, color: C.ink2, marginTop: 2 },
-  partner: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: R.pill, backgroundColor: C.ink },
-  partnerText: { fontFamily: F.semibold, fontSize: 11, color: C.yellow },
-  deal: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: R.pill, backgroundColor: C.yellow },
-  dealText: { fontFamily: F.semibold, fontSize: 11, color: C.ink },
+  meta: { flex: 1, fontFamily: F.medium, fontSize: T.meta, color: C.ink3 },
+  title: { fontFamily: F.display, fontSize: T.title, lineHeight: 32, color: C.ink, marginTop: 4 },
+  sub: { fontFamily: F.regular, fontSize: T.small, color: C.ink2, marginTop: 2 },
+  partner: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: R.pill, backgroundColor: C.ink },
+  partnerText: { fontFamily: F.semibold, fontSize: T.meta, color: C.surface },
+  deal: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: R.pill, backgroundColor: C.blue },
+  dealText: { fontFamily: F.semibold, fontSize: T.meta, color: C.surface },
 });

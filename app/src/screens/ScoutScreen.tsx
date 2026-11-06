@@ -1,6 +1,6 @@
 // The main screen: map of spots, search + filters on top, cards along the bottom.
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { Linking, StyleSheet, Text, View } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import * as Haptics from "expo-haptics";
 import { Ionicons } from "@expo/vector-icons";
@@ -13,6 +13,9 @@ import type { Spot } from "../lib/types";
 import { useSpots } from "../hooks/useSpots";
 import { useLeads } from "../hooks/useLeads";
 import { useMyLocation } from "../hooks/useMyLocation";
+import { useGoing } from "../hooks/useGoing";
+import { useCrews } from "../hooks/useCrews";
+import { openRide } from "../lib/ride";
 import { useToast } from "../hooks/useToast";
 import { SearchHeader } from "../components/SearchHeader";
 import { SpotPins } from "../components/SpotPins";
@@ -20,10 +23,13 @@ import { SpotCarousel, type CarouselRef } from "../components/SpotCarousel";
 import { SpotSheet } from "../components/SpotSheet";
 import { EmptyCard, LoadingCard } from "../components/BottomStates";
 import { Toast } from "../components/Toast";
+import { OfflineBanner } from "../components/OfflineBanner";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Tap } from "../components/Tap";
 import { RoomsScreen } from "./RoomsScreen";
+import { CrewsScreen } from "./CrewsScreen";
 import { CARD_H, CARD_INSET, CAROUSEL_BOTTOM } from "../layout";
-import { color as C, font as F, radius as R, shadow } from "../theme";
+import { color as C, font as F, radius as R, shadow, text as T } from "../theme";
 
 const START: Region = { latitude: 40.728, longitude: -73.99, latitudeDelta: 0.09, longitudeDelta: 0.09 };
 const FIT_PADDING = { top: 200, right: 40, bottom: 220, left: 40 };
@@ -35,6 +41,24 @@ export function ScoutScreen() {
   const [leads, setLeads] = useLeads(mapCity);
   const { me, canAsk: canAskLocation, ask: askLocation } = useMyLocation();
   const { toast, show } = useToast();
+  const { counts: going, mine: myGoing, go } = useGoing(spots, mapCity);
+  const crewsApi = useCrews();
+  const insets = useSafeAreaInsets();
+  const [crewsOpen, setCrewsOpen] = useState(false);
+  const [linkCode, setLinkCode] = useState<string | null>(null);
+
+  // A crew link opened on a phone with Scout (scout://crew/<code>) lands on Crews, code filled in.
+  useEffect(() => {
+    const handle = (url?: string | null) => {
+      const m = url && /^scout:\/\/crew\/([a-f0-9]{8,16})/i.exec(url);
+      if (m) { setLinkCode(m[1].toLowerCase()); setCrewsOpen(true); }
+    };
+    Linking.getInitialURL().then(handle).catch(() => {});
+    const sub = Linking.addEventListener("url", (e) => handle(e.url));
+    return () => sub.remove();
+  }, []);
+  // Crews still on (anyone not out), for the pill count.
+  const liveCrews = crewsApi.crews.filter((c) => c.members.some((m) => m.me && m.status !== "out"));
 
   const [cityInput, setCityInput] = useState("New York, NY");
   const [filter, setFilter] = useState<Filter>("all");
@@ -141,6 +165,7 @@ export function ScoutScreen() {
       <SearchHeader city={cityInput} onCityChange={setCityInput} onSubmitCity={open}
         onScout={runScout} scouting={scouting} scoutable={scoutable} filter={filter} onFilter={pickFilter} />
 
+      <OfflineBanner top={insets.top} />
       <Toast text={toast.text} visible={toast.visible} />
 
       {loading && !spots.length ? <LoadingCard /> : !shown.length && !scouting ? (
@@ -150,29 +175,50 @@ export function ScoutScreen() {
       ) : (
         <>
           <Animated.View entering={FadeIn.delay(150)} style={s.roomsWrap}>
-            <Tap style={s.rooms} onPress={() => { Haptics.selectionAsync(); setRoomsOpen(true); }}>
+            {crewsApi.available && (
+              <Tap hitSlop={4} style={[s.rooms, liveCrews.length > 0 && s.crewsOn]} onPress={() => { Haptics.selectionAsync(); setCrewsOpen(true); }}>
+                <Ionicons name="people-outline" size={14} color={liveCrews.length > 0 ? C.surface : C.ink} />
+                <Text style={[s.roomsText, liveCrews.length > 0 && s.crewsOnText]}>Crews{liveCrews.length ? `  ·  ${liveCrews.length}` : ""}</Text>
+              </Tap>
+            )}
+            <Tap hitSlop={4} style={s.rooms} onPress={() => { Haptics.selectionAsync(); setRoomsOpen(true); }}>
               <Ionicons name="business-outline" size={14} color={C.ink} />
               <Text style={s.roomsText}>Rooms for Yelo nights{leads.length ? `  ·  ${leads.length}` : ""}</Text>
             </Tap>
           </Animated.View>
-          <SpotCarousel ref={carousel} spots={shown} activeId={active?.id ?? null}
+          <SpotCarousel ref={carousel} spots={shown} going={going} activeId={active?.id ?? null}
             onSettle={(e) => { Haptics.selectionAsync(); focus(e); }}
             onPress={(e) => (active?.id === e.id ? setDetail(e) : focus(e, true))} />
         </>
       )}
 
+      <CrewsScreen visible={crewsOpen} crews={crewsApi.crews} linkCode={linkCode} onJoin={crewsApi.join} onStatus={crewsApi.status}
+        onRide={(c) => openRide(c)} onClose={() => setCrewsOpen(false)}
+        onOpen={(c) => {
+          const spot = spots.find((e) => e.id === c.spotId);
+          setCrewsOpen(false);
+          if (!spot) { show(`${c.venue} is in another city's map`); return; }
+          focus(spot, true);
+          setTimeout(() => setDetail(spot), 350);
+        }} />
+
       <RoomsScreen visible={roomsOpen} city={mapCity ?? cityInput} leads={leads} setLeads={setLeads} canSearch={scoutable}
         onClose={() => setRoomsOpen(false)} />
 
-      <SpotSheet spot={detail} me={me} canAskLocation={canAskLocation} onAskLocation={askLocation} unlocked={!!detail && unlocked.has(detail.id)}
-        onUnlock={(e) => setUnlocked((u) => new Set(u).add(e.id))} onClose={() => setDetail(null)} />
+      <SpotSheet spot={detail} city={mapCity ?? cityInput} me={me} canAskLocation={canAskLocation} onAskLocation={askLocation} unlocked={!!detail && unlocked.has(detail.id)}
+        onUnlock={(e) => setUnlocked((u) => new Set(u).add(e.id))}
+        going={detail ? going[detail.id] ?? 0 : 0} isGoing={!!detail && myGoing.has(detail.id)} onGo={go}
+        crew={detail ? crewsApi.crews.find((c) => c.spotId === detail.id) : undefined} canCrew={crewsApi.available}
+        onStartCrew={(e, leaveAt, name) => crewsApi.start(e, leaveAt, name)} onCrewStatus={crewsApi.status} onClose={() => setDetail(null)} />
     </View>
   );
 }
 
 const s = StyleSheet.create({
   root: { flex: 1, backgroundColor: C.bg },
-  roomsWrap: { position: "absolute", left: CARD_INSET, bottom: CAROUSEL_BOTTOM + CARD_H },
-  rooms: { flexDirection: "row", alignItems: "center", gap: 6, height: 34, paddingHorizontal: 14, borderRadius: R.pill, backgroundColor: C.surface, ...shadow },
-  roomsText: { fontFamily: F.semibold, fontSize: 13, color: C.ink },
+  roomsWrap: { position: "absolute", left: CARD_INSET, bottom: CAROUSEL_BOTTOM + CARD_H, flexDirection: "row", gap: 8 },
+  crewsOn: { backgroundColor: C.ink },
+  crewsOnText: { color: C.surface },
+  rooms: { flexDirection: "row", alignItems: "center", gap: 6, height: 40, paddingHorizontal: 12, borderRadius: R.pill, backgroundColor: C.surface, ...shadow },
+  roomsText: { fontFamily: F.semibold, fontSize: T.small, color: C.ink },
 });

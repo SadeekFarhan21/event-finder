@@ -1,7 +1,7 @@
 // Spot details, modeled on Yelo's spot card: venue, when/where/price, Ride and Unlock.
 // A real bottom sheet: springs up, drags down to dismiss, backdrop fades with the drag.
 import { useEffect, useState, type ComponentProps } from "react";
-import { BackHandler, Dimensions, Linking, Pressable, StyleSheet, Text, View } from "react-native";
+import { BackHandler, Dimensions, Linking, Pressable, Share, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Image } from "expo-image";
 import * as Haptics from "expo-haptics";
@@ -11,9 +11,14 @@ import Animated, { FadeInDown, interpolate, useAnimatedStyle, useSharedValue, wi
 import { scheduleOnRN } from "react-native-worklets";
 import { estimateFare, type Point } from "../lib/fare";
 import { openRide } from "../lib/ride";
+import { track } from "../data/activity";
+import { inviteMessage } from "../data/social";
+import { crewInvite, type Crew, type CrewStatus } from "../data/crews";
+import { CrewCard } from "./CrewCard";
+import { StartCrew } from "./StartCrew";
 import { whenLabel } from "../lib/time";
 import type { Spot } from "../lib/types";
-import { CATEGORY, color as C, font as F, radius as R } from "../theme";
+import { CATEGORY, color as C, font as F, radius as R, shadow, text as T } from "../theme";
 import { Tap } from "./Tap";
 
 const SCREEN_H = Dimensions.get("window").height;
@@ -21,18 +26,26 @@ const OFFSCREEN = SCREEN_H;
 const OPEN = { damping: 24, stiffness: 240, mass: 0.9 };
 
 type Props = {
-  spot: Spot | null; me: Point | null; unlocked: boolean;
+  spot: Spot | null; city: string; me: Point | null; unlocked: boolean;
   canAskLocation: boolean; onAskLocation: () => void; // ask for location here, where the ride price explains why
   onUnlock: (spot: Spot) => void; onClose: () => void;
+  going: number; isGoing: boolean; onGo: (spot: Spot) => void; // "I'm going" + live count
+  crew?: Crew; canCrew: boolean; // my crew for this spot, if any
+  onStartCrew: (spot: Spot, leaveAt: Date, name: string) => Promise<string>;
+  onCrewStatus: (code: string, s: CrewStatus) => void;
 };
 
-export function SpotSheet({ spot, me, unlocked, canAskLocation, onAskLocation, onUnlock, onClose }: Props) {
+export function SpotSheet({ spot, city, me, unlocked, canAskLocation, onAskLocation, onUnlock, onClose, going, isGoing, onGo,
+  crew, canCrew, onStartCrew, onCrewStatus }: Props) {
   const y = useSharedValue(OFFSCREEN);
   const [shown, setShown] = useState<Spot | null>(null); // stays mounted while sliding out
+  const [composing, setComposing] = useState(false); // the "Heading out" crew composer is open
 
   useEffect(() => {
     if (!spot) return;
     setShown(spot);
+    setComposing(false);
+    track(spot, "view", city);
     y.value = OFFSCREEN;
     y.value = withSpring(0, OPEN);
   }, [spot?.id]);
@@ -109,6 +122,49 @@ export function SpotSheet({ spot, me, unlocked, canAskLocation, onAskLocation, o
             )}
           </View>
 
+          {/* Turn one person's plan into a group: say you're going, then pull friends in. */}
+          <View style={s.social}>
+            <Text style={s.socialCount}>
+              {going ? `${going} going` : "Be the first to say you're going"}{isGoing ? "  ·  including you" : ""}
+            </Text>
+            <View style={s.socialBtns}>
+              <Tap style={[s.chip, isGoing && s.chipOn]} disabled={isGoing} accessibilityState={{ selected: isGoing }}
+                onPress={() => { Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); onGo(e); }}>
+                <Ionicons name={isGoing ? "checkmark" : "hand-right-outline"} size={16} color={C.ink} />
+                <Text style={s.chipText}>{isGoing ? "You're going" : "I'm going"}</Text>
+              </Tap>
+              {canCrew && !crew && (
+                <Tap style={[s.chip, composing && s.chipOn]} onPress={() => { Haptics.selectionAsync(); setComposing((c) => !c); }}
+                  accessibilityState={{ expanded: composing }}>
+                  <Ionicons name="people-outline" size={16} color={C.ink} />
+                  <Text style={s.chipText}>Heading out</Text>
+                </Tap>
+              )}
+              <Tap style={[s.chip, s.chipIcon]} accessibilityLabel="Send this spot to friends" onPress={async () => {
+                const r = await Share.share({ message: inviteMessage(e, isGoing) }).catch(() => null);
+                if (r?.action === Share.sharedAction) track(e, "share", city);
+              }}>
+                <Ionicons name="paper-plane-outline" size={16} color={C.ink} />
+              </Tap>
+            </View>
+            {composing && !crew && (
+              <Animated.View entering={FadeInDown.springify().damping(18)}>
+                <StartCrew spot={e} onCancel={() => setComposing(false)} onStart={async (leaveAt, name) => {
+                  const code = await onStartCrew(e, leaveAt, name);
+                  setComposing(false);
+                  if (!isGoing) onGo(e);
+                  track(e, "share", city);
+                  Share.share({ message: crewInvite({ venue: e.venue, title: e.title, leaveAt: leaveAt.toISOString(), code }) }).catch(() => {});
+                }} />
+              </Animated.View>
+            )}
+            {crew && (
+              <Animated.View entering={FadeInDown.springify().damping(18)}>
+                <CrewCard crew={crew} onStatus={onCrewStatus} onRide={() => { track(e, "ride", city); openRide(e); }} />
+              </Animated.View>
+            )}
+          </View>
+
           {e.deal && unlocked && (
             <Animated.View entering={FadeInDown.springify().damping(16)} style={s.dealCard}>
               <Text style={s.dealLabel}>Your deal</Text>
@@ -118,7 +174,7 @@ export function SpotSheet({ spot, me, unlocked, canAskLocation, onAskLocation, o
           )}
 
           <Text style={s.source}>
-            {e.source === "demo" ? "Demo listing"
+            {e.source === "demo" ? "Demo listing" : e.source === "venue" ? "Listed by the venue"
               : e.confidence === "low" ? "Unconfirmed listing. Check the event page before you go."
               : "Found on the web"}
             {fare ? "  ·  Fares are estimates" : ""}
@@ -127,16 +183,16 @@ export function SpotSheet({ spot, me, unlocked, canAskLocation, onAskLocation, o
 
         {/* Actions stay put while the details scroll */}
         <View style={[s.actions, { paddingBottom: Math.max(insets.bottom, 16) + 8 }]}>
-          <Tap style={[s.btn, s.btnPrimary]} onPress={() => openRide(e)}>
+          <Tap style={[s.btn, s.btnPrimary]} onPress={() => { track(e, "ride", city); openRide(e); }}>
             <Ionicons name="car-outline" size={18} color={C.ink} />
             <Text style={s.btnPrimaryText}>{fare ? `Ride · ~$${fare.yelo}` : "Ride there"}</Text>
           </Tap>
           {e.deal ? (
             <Tap style={[s.btn, s.btnDeal, unlocked && { opacity: 0.45 }]} disabled={unlocked}
-              onPress={() => { Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); onUnlock(e); }}>
+              onPress={() => { Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); track(e, "unlock", city); onUnlock(e); }}>
               <Text style={s.btnDealText}>{unlocked ? "Unlocked" : "Unlock deal"}</Text>
             </Tap>
-          ) : e.url ? (
+          ) : e.url && /^https?:\/\//i.test(e.url) ? (
             <Tap style={[s.btn, s.btnQuiet]} onPress={() => Linking.openURL(e.url!)}>
               <Text style={s.btnQuietText}>Event page</Text>
             </Tap>
@@ -157,34 +213,42 @@ function Row({ icon, text }: { icon: ComponentProps<typeof Ionicons>["name"]; te
 }
 
 const s = StyleSheet.create({
-  backdrop: { position: "absolute", top: 0, right: 0, bottom: 0, left: 0, backgroundColor: "rgba(17,17,17,0.28)" },
-  sheet: { position: "absolute", left: 0, right: 0, bottom: 0, maxHeight: SCREEN_H * 0.88, backgroundColor: C.surface, borderTopLeftRadius: 30, borderTopRightRadius: 30,
-    overflow: "hidden", shadowColor: "#000", shadowOpacity: 0.15, shadowRadius: 30, shadowOffset: { width: 0, height: -6 }, elevation: 20 },
+  backdrop: { position: "absolute", top: 0, right: 0, bottom: 0, left: 0, backgroundColor: C.scrim },
+  sheet: { position: "absolute", left: 0, right: 0, bottom: 0, maxHeight: SCREEN_H * 0.88, backgroundColor: C.surface, borderTopLeftRadius: R.sheet, borderTopRightRadius: R.sheet,
+    overflow: "hidden", ...shadow, shadowOffset: { width: 0, height: -2 } },
   hero: { height: 190, backgroundColor: C.fill },
-  handle: { paddingBottom: 6 },
-  grabber: { alignSelf: "center", width: 38, height: 5, borderRadius: 3, backgroundColor: C.hairline, marginTop: 10 },
+  handle: { paddingBottom: 8 },
+  grabber: { alignSelf: "center", width: 36, height: 4, borderRadius: 2, backgroundColor: C.hairline, marginTop: 8 },
   grabberOnImage: { position: "absolute", top: 0, backgroundColor: "rgba(255,255,255,0.85)" },
   content: { paddingHorizontal: 24, paddingTop: 12, paddingBottom: 8 },
-  eyebrow: { fontFamily: F.medium, fontSize: 12, color: C.ink3, letterSpacing: 0.3 },
-  title: { fontFamily: F.display, fontSize: 40, lineHeight: 44, color: C.ink, marginTop: 2 },
-  event: { fontFamily: F.semibold, fontSize: 16, color: C.ink, marginTop: 12 },
-  desc: { fontFamily: F.regular, fontSize: 15, lineHeight: 22, color: C.ink2, marginTop: 4 },
-  rows: { marginTop: 18, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: C.hairline },
+  eyebrow: { fontFamily: F.medium, fontSize: T.meta, color: C.ink3, letterSpacing: 0.3 },
+  title: { fontFamily: F.display, fontSize: T.display, lineHeight: 44, color: C.ink, marginTop: 2 },
+  event: { fontFamily: F.semibold, fontSize: T.body, color: C.ink, marginTop: 12 },
+  desc: { fontFamily: F.regular, fontSize: T.body, lineHeight: 22, color: C.ink2, marginTop: 4 },
+  rows: { marginTop: 20, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: C.hairline },
   row: { flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 12, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: C.hairline },
-  rowText: { flex: 1, fontFamily: F.regular, fontSize: 15, color: C.ink },
-  rowAction: { fontFamily: F.semibold, fontSize: 14, color: C.blue },
-  dealCard: { marginTop: 18, padding: 16, borderRadius: R.md, backgroundColor: C.blue },
-  dealLabel: { fontFamily: F.medium, fontSize: 12, color: "rgba(255,255,255,0.7)" },
-  dealText: { fontFamily: F.semibold, fontSize: 17, lineHeight: 24, color: "#fff", marginTop: 4 },
-  dealHint: { fontFamily: F.regular, fontSize: 13, color: "rgba(255,255,255,0.7)", marginTop: 6 },
-  actions: { flexDirection: "row", gap: 10, paddingHorizontal: 24, paddingTop: 12,
+  rowText: { flex: 1, fontFamily: F.regular, fontSize: T.body, color: C.ink },
+  rowAction: { fontFamily: F.semibold, fontSize: T.small, color: C.ink, textDecorationLine: "underline" },
+  social: { marginTop: 20, gap: 12 },
+  socialCount: { fontFamily: F.medium, fontSize: T.small, color: C.ink3 },
+  socialBtns: { flexDirection: "row", gap: 8 },
+  chip: { flex: 1, height: 44, borderRadius: R.pill, flexDirection: "row", gap: 6, alignItems: "center", justifyContent: "center",
+    borderWidth: 1, borderColor: C.hairline, backgroundColor: C.surface },
+  chipOn: { backgroundColor: C.fill, borderColor: C.ink2 },
+  chipIcon: { flex: 0, width: 44 },
+  chipText: { fontFamily: F.semibold, fontSize: T.small, color: C.ink },
+  dealCard: { marginTop: 20, padding: 16, borderRadius: R.md, backgroundColor: C.blue },
+  dealLabel: { fontFamily: F.medium, fontSize: T.meta, color: "rgba(255,255,255,0.7)" },
+  dealText: { fontFamily: F.semibold, fontSize: T.body, lineHeight: 24, color: C.surface, marginTop: 4 },
+  dealHint: { fontFamily: F.regular, fontSize: T.small, color: "rgba(255,255,255,0.7)", marginTop: 8 },
+  actions: { flexDirection: "row", gap: 12, paddingHorizontal: 24, paddingTop: 12,
     borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: C.hairline, backgroundColor: C.surface },
   btn: { flex: 1, height: 52, borderRadius: R.pill, flexDirection: "row", gap: 8, alignItems: "center", justifyContent: "center" },
   btnPrimary: { backgroundColor: C.yellow },
-  btnPrimaryText: { fontFamily: F.semibold, fontSize: 16, color: C.ink },
-  btnDeal: { backgroundColor: C.blue },
-  btnDealText: { fontFamily: F.semibold, fontSize: 16, color: "#fff" },
+  btnPrimaryText: { fontFamily: F.semibold, fontSize: T.body, color: C.ink },
+  btnDeal: { backgroundColor: C.surface, borderWidth: 1.5, borderColor: C.blue },
+  btnDealText: { fontFamily: F.semibold, fontSize: T.body, color: C.blue },
   btnQuiet: { backgroundColor: C.fill },
-  btnQuietText: { fontFamily: F.semibold, fontSize: 16, color: C.ink },
-  source: { fontFamily: F.regular, fontSize: 12, color: C.ink3, marginTop: 16, textAlign: "center" },
+  btnQuietText: { fontFamily: F.semibold, fontSize: T.body, color: C.ink },
+  source: { fontFamily: F.regular, fontSize: T.meta, color: C.ink3, marginTop: 16 },
 });

@@ -33,7 +33,7 @@ for (const [table, rows] of [
   ["geocache", byKey(geocache, (r) => r.key)],
 ] as const) {
   for (let i = 0; i < rows.length; i += 500) {
-    const { error } = await db.from(table).upsert(rows.slice(i, i + 500) as any[]);
+    const { error } = await db.from(table).upsert(rows.slice(i, i + 500) as Record<string, unknown>[]);
     if (error) throw new Error(`${table}: ${error.message}`);
   }
   console.log(`${table}: ${rows.length} rows`);

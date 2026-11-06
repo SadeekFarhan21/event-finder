@@ -5,11 +5,16 @@ import { createClient } from "@supabase/supabase-js";
 import type { Lead, Spot } from "../lib/types";
 import { cityKey } from "../lib/cities";
 
-const url = process.env.EXPO_PUBLIC_SUPABASE_URL;
-const key = process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+import { config } from "../config";
+import { fetchWithTimeout } from "../lib/net";
 
-// No sign-in in this prototype, so no session storage.
-export const supabase = url && key ? createClient(url, key, { auth: { persistSession: false } }) : null;
+// No sign-in in this prototype, so no session storage. Every request gets the shared timeout.
+export const supabase = config.supabase
+  ? createClient(config.supabase.url, config.supabase.key, {
+      auth: { persistSession: false },
+      global: { fetch: fetchWithTimeout(config.requestTimeoutMs) },
+    })
+  : null;
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
