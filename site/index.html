@@ -13,8 +13,8 @@
      Links and focus rings use ink instead of a second color. */
   :root, :root:not([data-theme="light"]), :root[data-theme] {
     --bg: #0C0C0A; --surface: #151513; --fill: #1D1C19; --line: #282723;
-    --ink: #F2F0E9; --ink-2: #C2BEB2; --ink-3: #8E8A7F; --placeholder: #6B675E;
-    --yellow: #FFE14A; --on-yellow: #14130F; --blue: #F2F0E9; --red: #FF7A6B;
+    --ink: #F2F0E9; --ink-2: #C2BEB2; --ink-3: #8E8A7F; --placeholder: #8E8A7F;
+    --yellow: #FFE14A; --on-yellow: #14130F; --yellow-hover: #F5D63E; --blue: #F2F0E9; --red: #FF7A6B;
     color-scheme: dark;
   }
 </style>
@@ -38,22 +38,12 @@
     --display: "Instrument Serif", "Iowan Old Style", Georgia, serif;
     --body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
   }
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) {
-      --bg: #121210; --surface: #1C1C19; --ink: #F4F2EA; --ink-2: #B9B5A9; --ink-3: #85817A;
-      --line: #2E2D28; --blue: #7F9BFF; color-scheme: dark;
-    }
-  }
-  :root[data-theme="dark"] {
-    --bg: #121210; --surface: #1C1C19; --ink: #F4F2EA; --ink-2: #B9B5A9; --ink-3: #85817A;
-    --line: #2E2D28; --blue: #7F9BFF; color-scheme: dark;
-  }
 
   /* Type: 13 / 15 / 16 / 18 body sizes, two display sizes. Spacing: 4/8/12/16/24/32/48/64. Hairline borders, no shadows. */
   body { background: var(--bg); color: var(--ink); font: 400 16px/1.55 var(--body); }
   .wrap { max-width: 1060px; margin: 0 auto; padding-inline: 16px; padding-block: 24px 64px; }
   a { color: inherit; }
-  :focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; border-radius: 6px; }
+  :focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; border-radius: 8px; }
 
   header { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
   .mark { display: flex; align-items: center; gap: 8px; font: 600 15px var(--body); }
@@ -70,7 +60,7 @@
   .get { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; margin-top: 32px; }
   .btn { display: inline-flex; align-items: center; gap: 8px; min-height: 48px; background: var(--yellow); color: var(--on-yellow);
     text-decoration: none; font: 600 16px var(--body); padding: 12px 24px; border-radius: 999px; }
-  .btn:hover { background: #F5DC00; }
+  .btn:hover { background: var(--yellow-hover); }
   .btn svg { width: 20px; height: 20px; }
   .meta { font-size: 13px; color: var(--ink-3); display: grid; gap: 4px; }
   .meta a { color: var(--ink-2); }
@@ -78,6 +68,7 @@
   .qr { display: flex; align-items: center; gap: 16px; margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--line); }
   .qr-box { background: #FFFFFF; padding: 8px; border-radius: 8px; border: 1px solid var(--line); width: 104px; height: 104px; flex: none; }
   .qr-box img, .qr-box canvas { width: 100% !important; height: 100% !important; display: block; }
+  @media (max-width: 860px) { .qr { display: none; } }
   .qr p { margin: 0; font-size: 15px; color: var(--ink-2); max-width: 22em; }
 
   .phone { justify-self: center; width: min(300px, 78vw); border-radius: 36px; padding: 8px; background: #0E0E0D; }

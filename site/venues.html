@@ -22,7 +22,7 @@
   body { margin: 0; background: var(--bg); color: var(--ink); font: 400 16px/1.55 var(--body); }
   .wrap { max-width: 980px; margin: 0 auto; padding-inline: 16px; padding-block: 24px 64px; }
   a { color: inherit; }
-  :focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; border-radius: 6px; }
+  :focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; border-radius: 8px; }
   header { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
   .mark { display: flex; align-items: center; gap: 8px; min-height: 44px; font-weight: 600; text-decoration: none; }
   .mark i { width: 28px; height: 28px; border-radius: 8px; background: var(--yellow); display: grid; place-items: center; font: 400 20px/1 var(--display); font-style: normal;  color: var(--on-yellow); }
@@ -41,7 +41,7 @@
   .btn { font: 600 15px var(--body); min-height: 44px; border: 1px solid var(--ink); border-radius: 999px; padding: 10px 20px; cursor: pointer; background: var(--surface); color: var(--ink); }
   .btn:hover { background: var(--fill); }
   .btn.primary { background: var(--yellow); border-color: var(--yellow); color: var(--on-yellow); }
-  .btn.primary:hover { background: #F2D43C; }
+  .btn.primary:hover { background: var(--yellow-hover); }
   .btn:disabled { opacity: .5; cursor: default; }
   .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; margin-top: 24px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
   .stat { padding: 16px; border-left: 1px solid var(--line); min-width: 0; }
@@ -80,8 +80,8 @@
      Links and focus rings use ink instead of a second color. */
   :root, :root:not([data-theme="light"]), :root[data-theme] {
     --bg: #0C0C0A; --surface: #151513; --fill: #1D1C19; --line: #282723;
-    --ink: #F2F0E9; --ink-2: #C2BEB2; --ink-3: #8E8A7F; --placeholder: #6B675E;
-    --yellow: #FFE14A; --on-yellow: #14130F; --blue: #F2F0E9; --red: #FF7A6B;
+    --ink: #F2F0E9; --ink-2: #C2BEB2; --ink-3: #8E8A7F; --placeholder: #8E8A7F;
+    --yellow: #FFE14A; --on-yellow: #14130F; --yellow-hover: #F5D63E; --blue: #F2F0E9; --red: #FF7A6B;
     color-scheme: dark;
   }
 </style>
