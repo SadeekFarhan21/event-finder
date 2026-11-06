@@ -45,8 +45,13 @@ export function ScoutScreen() {
   const [roomsOpen, setRoomsOpen] = useState(false);
 
   const shown = useMemo(() => sortSpots(spots.filter((e) => matches(e, filter))), [spots, filter]);
-  // Keep the active pin out of clustering so it's always visible.
-  const clusters = useMemo(() => clusterEvents(shown.filter((e) => e.id !== active?.id), region), [shown, active, region]);
+  // The active pin and Yelo partners never fold into a cluster: partners are the rooms Yelo
+  // wants people riding to, so their yellow-ringed pins stay visible at every zoom.
+  const clusters = useMemo(() => {
+    const rest = shown.filter((e) => e.id !== active?.id);
+    const partners = rest.filter((e) => e.partner).map((e) => ({ key: e.id, lat: e.lat, lng: e.lng, events: [e] }));
+    return [...clusterEvents(rest.filter((e) => !e.partner), region), ...partners];
+  }, [shown, active, region]);
 
   const fit = useCallback((list: Spot[]) => {
     const core = coreOf(list);
