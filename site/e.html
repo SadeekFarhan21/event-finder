@@ -141,10 +141,13 @@
       id = crew.spot_id;
     }
     if (!id) return gone();
-    const [{ data: e }, { data: g }] = await Promise.all([
+    const [{ data: live }, { data: g }] = await Promise.all([
       db.from("upcoming_events").select("*").eq("id", id).maybeSingle(),
       db.rpc("going_counts", { p_spot_ids: [id] }),
     ]);
+    // The scout may have merged or refreshed the listing since the crew started; the crew keeps
+    // its own copy of the spot, so fall back to that.
+    const e = live ?? (crew && { venue: crew.venue, title: crew.title, address: crew.address, start: crew.start, category: "" });
     if (!e) return gone();
     const going = Number(g?.[0]?.going ?? 0);
     const dest = encodeURIComponent(`${e.venue}, ${e.address}`);
