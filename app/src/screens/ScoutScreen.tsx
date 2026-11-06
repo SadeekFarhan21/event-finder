@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Linking, StyleSheet, Text, View } from "react-native";
 import { StatusBar } from "expo-status-bar";
+import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
 import { Ionicons } from "@expo/vector-icons";
 import Animated, { FadeIn } from "react-native-reanimated";
@@ -164,6 +165,10 @@ export function ScoutScreen() {
           onSpot={(e) => focus(e, true)} onCluster={openCluster} onActive={setDetail} />
       </ScoutMap>
 
+      {/* Soft fade under the bottom controls, so pins don't fight the pills and cards (mirrors the header fade). */}
+      <LinearGradient pointerEvents="none" colors={["rgba(12,12,10,0)", "rgba(12,12,10,0.72)", "rgba(12,12,10,0.94)"]}
+        locations={[0, 0.45, 1]} style={[s.bottomFade, { height: CAROUSEL_BOTTOM + CARD_H + 72 }]} />
+
       <SearchHeader city={cityInput} onCityChange={setCityInput} onSubmitCity={open}
         onScout={runScout} scouting={scouting} scoutable={scoutable} filter={filter} onFilter={pickFilter} />
 
@@ -219,6 +224,7 @@ export function ScoutScreen() {
 
 const s = StyleSheet.create({
   root: { flex: 1, backgroundColor: C.bg },
+  bottomFade: { position: "absolute", left: 0, right: 0, bottom: 0 },
   roomsWrap: { position: "absolute", left: CARD_INSET, bottom: CAROUSEL_BOTTOM + CARD_H, flexDirection: "row", gap: 8 },
   crewsOn: { backgroundColor: C.ink },
   crewsOnText: { color: C.surface },

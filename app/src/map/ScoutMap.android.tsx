@@ -25,7 +25,7 @@ export function ScoutMap({ ref, initialRegion, showsUserLocation, onRegionChange
   }), []);
 
   return (
-    <Map style={StyleSheet.absoluteFill} mapStyle={STYLE} logo={false} compass={false} attributionPosition={{ bottom: 8, left: 8 }}
+    <Map style={StyleSheet.absoluteFill} mapStyle={STYLE} logo={false} compass={false} attributionPosition={{ top: 112, right: 8 }}
       onPress={() => onPress?.()}
       onRegionDidChange={(ev) => {
         const [west, south, east, north] = ev.nativeEvent.bounds;
