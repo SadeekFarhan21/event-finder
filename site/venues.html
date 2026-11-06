@@ -35,7 +35,7 @@
   section { margin-top: 48px; padding-top: 32px; border-top: 1px solid var(--line); }
   .row { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 16px; }
   label { display: grid; gap: 4px; font-size: 13px; font-weight: 500; color: var(--ink-2); min-width: 0; }
-  input, select, textarea { font: inherit; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; min-height: 44px; width: 100%; }
+  input, select, textarea { font: 400 16px/1.4 var(--body); color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; min-height: 44px; width: 100%; }
   input:hover, select:hover, textarea:hover { border-color: var(--ink-3); }
   input::placeholder, textarea::placeholder { color: var(--placeholder); }
   .btn { font: 600 15px var(--body); min-height: 44px; border: 1px solid var(--ink); border-radius: 999px; padding: 10px 20px; cursor: pointer; background: var(--surface); color: var(--ink); }
@@ -68,10 +68,17 @@
   .badge.approved { background: var(--ink); border-color: var(--ink); color: var(--surface); }
   .badge.rejected { background: transparent; color: var(--ink-2); }
   input:disabled, select:disabled, textarea:disabled { background: var(--fill); color: var(--ink-3); }
+  .subject { margin: 24px 0 0; font-size: 16px; color: var(--ink-2); }
+  .subject b { color: var(--ink); font-weight: 600; }
+  .zeros { margin: 12px 0 0; font-size: 14px; color: var(--ink-3); }
+  .stats.n1 { grid-template-columns: minmax(0, 1fr); } .stats.n2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .stats.n3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .spot-title { min-width: 0; }
+  @media (max-width: 560px) { ul.spots li { flex-direction: column; gap: 4px; } ul.spots small { white-space: normal; } }
   .empty { color: var(--ink-3); font-size: 15px; margin-top: 16px; }
   @media (max-width: 700px) {
     .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .stats:not(.three) .stat:nth-child(3) { border-left: 0; } .stats:not(.three) .stat:nth-child(n+3) { border-top: 1px solid var(--line); }
+    .stats.n4 .stat:nth-child(3) { border-left: 0; } .stats.n4 .stat:nth-child(n+3) { border-top: 1px solid var(--line); }
     .stats.three { grid-template-columns: minmax(0, 1fr); } .stats.three .stat { border-left: 0; } .stats.three .stat + .stat { border-top: 1px solid var(--line); }
     .form { grid-template-columns: minmax(0, 1fr); }
   }
@@ -164,22 +171,31 @@
     if (stats.error || spots.error) { $("result").innerHTML = `<p class="msg err">Couldn't load stats. Try again in a moment.</p>`; return; }
     const by = Object.fromEntries((stats.data ?? []).map((r) => [r.kind, r]));
     const people = Math.max(0, ...(stats.data ?? []).map((r) => r.people));
-    const n = (k) => (by[k]?.total ?? 0).toLocaleString();
+    const list = spots.data ?? [];
+    const metrics = [
+      [Number(by.view?.total ?? 0), "Spot views", "views"],
+      [people, "People reached", "people reached"],
+      [Number(by.ride?.total ?? 0), "Ride taps", "ride taps"],
+      [Number(by.unlock?.total ?? 0), "Deals unlocked", "deal unlocks"],
+      [Number(m.crews), "Crews heading here", "crews"],
+      [Number(m.on_way), "Riders on the way", "riders on the way"],
+    ];
+    const shown = metrics.filter(([v]) => v > 0), zero = metrics.filter(([v]) => v === 0);
+    const cityName = city.split(",")[0];
+    // A venue Scout has never seen is most likely a typo: say so instead of showing a wall of zeros.
+    if (!shown.length && !list.length) {
+      $("result").innerHTML = `<p class="subject">No activity for <b>${esc(venue)}</b> in ${esc(cityName)} yet.</p>
+        <p class="empty">Check the spelling against the suggestions, or list your first night below.</p>`;
+      return;
+    }
     const fmt = (s) => s ? new Date(s).toLocaleString(undefined, { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "Ongoing";
+    const joinWords = (w) => w.length < 2 ? w.join("") : `${w.slice(0, -1).join(", ")} or ${w[w.length - 1]}`;
     $("result").innerHTML = `
-      <div class="stats">
-        <div class="stat"><b>${n("view")}</b><span>Spot views</span></div>
-        <div class="stat"><b>${n("ride")}</b><span>Ride taps</span></div>
-        <div class="stat"><b>${n("unlock")}</b><span>Deals unlocked</span></div>
-        <div class="stat"><b>${people.toLocaleString()}</b><span>People reached</span></div>
-      </div>
-      <h3 class="subh">Ride activity</h3>
-      <div class="stats three">
-        <div class="stat"><b>${Number(m.crews).toLocaleString()}</b><span>Crews heading here</span></div>
-        <div class="stat"><b>${Number(m.people).toLocaleString()}</b><span>Riders in those crews</span></div>
-        <div class="stat"><b>${Number(m.on_way).toLocaleString()}</b><span>Marked on the way</span></div>
-      </div>
-      ${(spots.data ?? []).length ? `<ul class="spots">${spots.data.map((s) => `<li><span>${esc(s.title)}${s.partner ? '<span class="tag">Yelo partner</span>' : ""}</span><small>${esc(fmt(s.start))}</small></li>`).join("")}</ul>`
+      <p class="subject"><b>${esc(venue)}</b> · ${esc(cityName)} · last 7 days</p>
+      ${shown.length ? `<div class="stats n${Math.min(shown.length, 4)}">${shown.map(([v, label]) =>
+        `<div class="stat"><b>${v.toLocaleString()}</b><span>${label}</span></div>`).join("")}</div>` : ""}
+      ${zero.length ? `<p class="zeros">No ${joinWords(zero.map(([, , w]) => w))} yet this week.</p>` : ""}
+      ${list.length ? `<h3 class="subh">On the map now</h3><ul class="spots">${list.map((s) => `<li><span class="spot-title">${esc(s.title)}${s.partner ? '<span class="tag">Yelo partner</span>' : ""}</span><small>${esc(fmt(s.start))}</small></li>`).join("")}</ul>`
         : `<p class="empty">${esc(venue)} has no spots on the map right now. List one below.</p>`}`;
   });
 
