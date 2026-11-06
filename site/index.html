@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Scout maps tonight's events, parties and happy hours in New York and LA, and shows what a ride there costs. Android download.">
+<meta property="og:title" content="Scout for Android">
+<meta property="og:description" content="Find tonight's spots. Ride there for less. A prototype built for Yelo.">
+<meta property="og:image" content="shot-map.jpg">
+<link rel="icon" href="favicon.png">
+<style>*,*::before,*::after{box-sizing:border-box}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Scout for Android</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&display=swap">
+<style>
+  /* Layout: a two-column hero (pitch + download | phone), then a strip of real screens, then install steps. */
+  :root {
+    --bg: #FAF8F2;
+    --surface: #FFFFFF;
+    --ink: #111111;
+    --ink-2: #5E5B53;
+    --ink-3: #8F8B80;
+    --line: #E8E4D8;
+    --yellow: #FFE600;
+    --on-yellow: #111111;
+    --blue: #1F4FFF;
+    --shadow: 0 10px 30px rgba(27, 26, 20, 0.08);
+    --display: "Instrument Serif", "Iowan Old Style", Georgia, serif;
+    --body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #121210; --surface: #1C1C19; --ink: #F4F2EA; --ink-2: #B9B5A9; --ink-3: #85817A;
+      --line: #2E2D28; --blue: #7F9BFF; --shadow: 0 10px 30px rgba(0, 0, 0, 0.35); color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #121210; --surface: #1C1C19; --ink: #F4F2EA; --ink-2: #B9B5A9; --ink-3: #85817A;
+    --line: #2E2D28; --blue: #7F9BFF; --shadow: 0 10px 30px rgba(0, 0, 0, 0.35); color-scheme: dark;
+  }
+
+  body { background: var(--bg); color: var(--ink); font: 400 16px/1.55 var(--body); }
+  .wrap { max-width: 1060px; margin: 0 auto; padding-inline: 20px; padding-block: 28px 64px; }
+  a { color: inherit; }
+  :focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; border-radius: 6px; }
+
+  header { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .mark { display: flex; align-items: center; gap: 10px; font: 600 15px var(--body); }
+  .mark i { width: 30px; height: 30px; border-radius: 9px; background: var(--yellow); color: var(--on-yellow);
+    display: grid; place-items: center; font: 400 22px/1 var(--display); font-style: normal; }
+  .badge { font-size: 12px; color: var(--ink-2); border: 1px solid var(--line); border-radius: 999px; padding: 5px 11px; }
+
+  .hero { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr); gap: 48px; align-items: center; margin-top: 48px; }
+  .eyebrow { font-size: 13px; letter-spacing: 0.04em; color: var(--ink-3); }
+  h1 { font: 400 clamp(46px, 7vw, 84px)/0.98 var(--display); letter-spacing: -0.015em; margin: 10px 0 0; text-wrap: balance; }
+  h1 em { color: var(--blue); }
+  .lede { color: var(--ink-2); font-size: 18px; max-width: 34em; margin: 20px 0 0; }
+
+  .get { display: flex; flex-wrap: wrap; gap: 18px; align-items: center; margin-top: 30px; }
+  .btn { display: inline-flex; align-items: center; gap: 10px; background: var(--yellow); color: var(--on-yellow);
+    text-decoration: none; font: 600 17px var(--body); padding: 16px 26px; border-radius: 999px; box-shadow: var(--shadow);
+    transition: transform .15s ease; }
+  .btn:hover { transform: translateY(-1px); }
+  .btn svg { width: 20px; height: 20px; }
+  .meta { font-size: 13px; color: var(--ink-3); display: grid; gap: 2px; }
+  .meta a { color: var(--ink-2); }
+
+  .qr { display: flex; align-items: center; gap: 14px; margin-top: 26px; }
+  .qr-box { background: #FFFFFF; padding: 9px; border-radius: 14px; border: 1px solid var(--line); width: 112px; height: 112px; flex: none; }
+  .qr-box img, .qr-box canvas { width: 100% !important; height: 100% !important; display: block; }
+  .qr p { margin: 0; font-size: 14px; color: var(--ink-2); max-width: 22em; }
+
+  .phone { justify-self: center; width: min(300px, 78vw); border-radius: 38px; padding: 9px; background: #0E0E0D;
+    box-shadow: 0 30px 60px rgba(27, 26, 20, 0.18); }
+  .phone img { display: block; width: 100%; border-radius: 30px; }
+
+  h2 { font: 400 clamp(32px, 4.5vw, 44px)/1.05 var(--display); margin: 0; text-wrap: balance; }
+  section { margin-top: 84px; }
+  .section-head { display: flex; justify-content: space-between; align-items: end; gap: 16px; flex-wrap: wrap; margin-bottom: 22px; }
+  .section-head p { margin: 0; color: var(--ink-2); max-width: 30em; }
+
+  .screens { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+  figure { margin: 0; display: grid; gap: 10px; min-width: 0; }
+  figure img { width: 100%; border-radius: 18px; border: 1px solid var(--line); box-shadow: var(--shadow); }
+  figcaption { font-size: 14px; color: var(--ink-2); }
+  figcaption b { display: block; color: var(--ink); font-weight: 600; }
+
+  .steps { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; counter-reset: s; }
+  .steps li { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 20px; counter-increment: s; min-width: 0; }
+  .steps li::before { content: counter(s); font: 400 34px/1 var(--display); color: var(--ink-3); display: block; margin-bottom: 10px; }
+  .steps b { display: block; font-weight: 600; margin-bottom: 4px; }
+  .steps span { color: var(--ink-2); font-size: 15px; }
+
+  .note { margin-top: 16px; font-size: 14px; color: var(--ink-2); }
+  footer { margin-top: 72px; padding-top: 20px; border-top: 1px solid var(--line); font-size: 13px; color: var(--ink-3);
+    display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 20px; }
+  .num { font-variant-numeric: tabular-nums; }
+
+  @media (max-width: 860px) {
+    .hero { grid-template-columns: minmax(0, 1fr); gap: 36px; margin-top: 32px; }
+    .screens { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .steps { grid-template-columns: minmax(0, 1fr); }
+  }
+  @media (prefers-reduced-motion: reduce) { .btn { transition: none; } }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <div class="mark"><i>s</i> Scout</div>
+    <span class="badge">Android · v1.0.0 · Nov 5, 2026</span>
+  </header>
+
+  <div class="hero">
+    <div>
+      <div class="eyebrow">A prototype built for Yelo by Farhan Sadeek</div>
+      <h1>Find tonight's spots. Ride there for <em>less.</em></h1>
+      <p class="lede">
+        Scout searches the web every morning for events, parties and happy hours in New York and Los Angeles,
+        puts them on one map, and shows what a ride there costs. Yelo's partner venues come first.
+      </p>
+
+      <div class="get">
+        <a class="btn" href="https://expo.dev/artifacts/eas/yfdt3rsoRpMQjLk-2_BtBJ7wKW5BLUQUpYu3iSkr5vc.apk" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11"/><path d="m7 10 5 5 5-5"/><path d="M5 20h14"/></svg>
+          Download for Android
+        </a>
+        <div class="meta">
+          <span>APK, installs directly. No Play Store needed.</span>
+          <a href="https://expo.dev/accounts/fsadeek/projects/scout/builds/9916d6b7-8922-4a47-bce6-f492f78644a5" target="_blank" rel="noopener">Or open the install page</a>
+        </div>
+      </div>
+
+      <div class="qr">
+        <div class="qr-box" id="qr" role="img" aria-label="QR code that links to the Scout download"></div>
+        <p>On a laptop? Point your Android phone's camera at this code to download Scout.</p>
+      </div>
+    </div>
+
+    <div class="phone"><img src="shot-map.jpg" alt="Scout's map of New York with grouped spots and a card for Nublu 151, a Yelo partner, tonight at 7 PM" width="414" height="900"></div>
+  </div>
+
+  <section aria-labelledby="inside">
+    <div class="section-head">
+      <h2 id="inside">What's inside</h2>
+      <p>Real screens from the app, with live data the agent found on the web this week.</p>
+    </div>
+    <div class="screens">
+      <figure><img src="shot-map.jpg" alt="Map of New York spots" loading="lazy" width="414" height="900">
+        <figcaption><b>One map for the night</b>133 spots in New York this week, grouped so the map stays readable.</figcaption></figure>
+      <figure><img src="shot-spot.jpg" alt="Spot details for Cubbyhole Bar with an unlocked happy hour deal" loading="lazy" width="414" height="900">
+        <figcaption><b>Ride and Unlock</b>Each spot shows the time, the address, the deal, and a ride estimate.</figcaption></figure>
+      <figure><img src="shot-la.jpg" alt="Map of Los Angeles with a Gold-Diggers card marked Yelo partner" loading="lazy" width="414" height="900">
+        <figcaption><b>New York and LA</b>Yelo's partner rooms, like Gold-Diggers and Nublu, are marked and shown first.</figcaption></figure>
+      <figure><img src="shot-rooms.jpg" alt="Rooms page listing venues worth pitching, with quiet nights" loading="lazy" width="414" height="900">
+        <figcaption><b>Rooms worth pitching</b>Venues that could host a Yelo night, with capacity, a quiet weeknight and a contact.</figcaption></figure>
+    </div>
+  </section>
+
+  <section aria-labelledby="install">
+    <div class="section-head">
+      <h2 id="install">Install in a minute</h2>
+      <p>Android blocks apps from outside the Play Store by default, so it asks once.</p>
+    </div>
+    <ol class="steps">
+      <li><b>Download</b><span>Tap "Download for Android" on your phone, or scan the code above.</span></li>
+      <li><b>Allow the install</b><span>When Android asks, allow installs from your browser for this one file.</span></li>
+      <li><b>Open Scout</b><span>Allow location if you want ride estimates. The map loads with this week's spots.</span></li>
+    </ol>
+    <p class="note">On an iPhone? There's no iOS download yet. Ask Farhan for a live demo.</p>
+  </section>
+
+  <footer>
+    <span>Scout is an independent prototype. It is not an official Yelo app.</span>
+    <span class="num">Build 1 · Expo SDK 58 · data refreshed daily</span>
+  </footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+  try {
+    new QRCode(document.getElementById("qr"), {
+      text: "https://expo.dev/artifacts/eas/yfdt3rsoRpMQjLk-2_BtBJ7wKW5BLUQUpYu3iSkr5vc.apk",
+      width: 256, height: 256, colorDark: "#111111", colorLight: "#FFFFFF",
+      correctLevel: QRCode.CorrectLevel.M,
+    });
+  } catch (e) {
+    document.querySelector(".qr").hidden = true;
+  }
+</script>
+</body>
+</html>
