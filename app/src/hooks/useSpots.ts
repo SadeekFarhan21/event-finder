@@ -27,10 +27,10 @@ export function useSpots() {
   const scout = useCallback(async (target: string) => {
     setScouting(true);
     try {
-      const { spots: list, added } = await runScout(target);
+      const { spots: list, added, pending } = await runScout(target);
       setCity(target);
       setSpots(list);
-      return { list, added };
+      return { list, added, pending };
     } finally {
       setScouting(false);
     }

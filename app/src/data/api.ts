@@ -29,9 +29,9 @@ export const getSpots = async (city: string) =>
   supabase ? sbEvents(city) : (await call<{ events: Spot[] }>(`/events${q(city)}`)).events;
 
 export const runScout = async (city: string) => {
-  if (!supabase) return post<{ events: Spot[]; added: number }>("/discover", { city }).then((r) => ({ spots: r.events, added: r.added }));
+  if (!supabase) return post<{ events: Spot[]; added: number }>("/discover", { city }).then((r) => ({ spots: r.events, added: r.added, pending: false }));
   const run = await sbRun("events", city);
-  return { spots: await sbEvents(city), added: run.added };
+  return { spots: await sbEvents(city), added: run.added, pending: run.pending };
 };
 
 export const getLeads = async (city: string) =>

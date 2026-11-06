@@ -74,11 +74,17 @@ export function ScoutScreen() {
     setCityInput(city);
     show(`Searching ${city.split(",")[0]} · about 2 min`, true);
     try {
-      const { list, added } = await scout(city);
+      const { list, added, pending } = await scout(city);
+      if (pending) {
+        // The run outlived our wait; it keeps going on the server. Check back once it's had time.
+        show("Still scouting. New spots will appear in a minute.");
+        setTimeout(() => open(city), 60_000);
+        return;
+      }
       setFilter("all");
       setActive(null);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      show(`${added} new spots`);
+      show(added ? `${added} new spots` : "Up to date. No new spots this time.");
       fit(list);
     } catch (err) {
       show((err as Error).message);

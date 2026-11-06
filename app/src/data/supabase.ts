@@ -39,7 +39,7 @@ export async function sbRun(task: "events" | "rooms", city: string) {
     await sleep(5000);
     const { data: run } = await supabase!.from("scout_runs").select("added,ms,error").eq("id", runId).single();
     if (run?.error) throw new Error(run.error);
-    if (run?.ms != null) return { added: run.added ?? 0, ms: run.ms };
+    if (run?.ms != null) return { added: run.added ?? 0, ms: run.ms, pending: false };
   }
-  return { added: 0, ms: Date.now() - started }; // still running; results will show on next load
+  return { added: 0, ms: Date.now() - started, pending: true }; // still running server-side
 }
