@@ -42,6 +42,27 @@
   .btn.quiet { background: var(--fill); }
   .note { font-size: 13px; color: var(--ink-3); text-align: center; margin: 18px 0 0; }
   .empty { margin-top: 48px; }
+  .invite { font: 400 26px/1.15 var(--display); margin: 28px 0 0; }
+  .crew { margin-top: 18px; padding: 16px; border-radius: 16px; background: var(--fill); }
+  .crewhead { margin: 0; font-size: 14px; color: var(--ink-2); }
+  .crewhead b { color: var(--ink); }
+  .members { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .member { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 999px; background: var(--surface); font-size: 14px; font-weight: 500; }
+  .member small { color: var(--ink-3); font-size: 12px; font-weight: 400; }
+  .member.out { opacity: .5; }
+  .member i { width: 8px; height: 8px; border-radius: 50%; background: var(--ink); }
+  .member i.on_way { background: var(--yellow); box-shadow: 0 0 0 1px var(--ink); }
+  .member i.out { background: var(--line); }
+  .join { margin-top: 14px; }
+  .join label { display: block; font-size: 13px; font-weight: 500; color: var(--ink-2); margin-bottom: 6px; }
+  .joinrow { display: flex; gap: 8px; flex-wrap: wrap; }
+  .joinrow input { flex: 1 1 160px; min-width: 0; font: inherit; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 0 12px; height: 48px; }
+  .joinrow .btn { flex: 1 1 140px; border: 0; font: 600 15px var(--body); cursor: pointer; height: 48px; }
+  .statusrow { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+  .statusrow .btn { flex: 1 1 140px; border: 0; font: 600 15px var(--body); cursor: pointer; }
+  .btn.quiet { background: var(--fill); }
+  .crew .btn.quiet { background: var(--surface); border: 1px solid var(--line); }
+  .msg { font-size: 13px; color: #B42318; margin: 8px 0 0; min-height: 1em; }
   .empty h1 { font-size: 36px; }
 </style>
 </head>
@@ -77,8 +98,48 @@
       <div class="actions"><a class="btn primary" href="./">Get Scout for Android</a></div></section>`;
   }
 
-  (async () => {
-    const id = new URLSearchParams(location.search).get("id");
+  // A browser joining a crew gets its own random id (kept in this browser), like a phone does.
+  function deviceId() {
+    try {
+      let d = localStorage.getItem("scout.deviceId");
+      if (!d) { d = crypto.randomUUID(); localStorage.setItem("scout.deviceId", d); }
+      return d;
+    } catch { return crypto.randomUUID(); }
+  }
+  const STATUS = { in: "Coming", on_way: "On the way", out: "Can't make it" };
+  function leaveLabel(iso) {
+    const d = new Date(iso), mins = Math.round((d - Date.now()) / 60000);
+    if (mins <= 0 && mins > -90) return "now";
+    if (mins > 0 && mins < 60) return `in ${mins} min`;
+    const t = d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+    return new Date().toDateString() === d.toDateString() ? `at ${t}` : `${d.toLocaleDateString(undefined, { weekday: "long" })} at ${t}`;
+  }
+
+  function crewHtml(c) {
+    const me = c.members.find((m) => m.me);
+    const coming = c.members.filter((m) => m.status !== "out").length;
+    const chips = c.members.map((m) => `<span class="member${m.status === "out" ? " out" : ""}"><i class="${m.status}"></i>${esc(m.me ? "You" : m.name)}<small>${STATUS[m.status]}</small></span>`).join("");
+    const action = !me
+      ? `<form class="join" id="join"><label for="nm">Your first name</label><div class="joinrow">
+           <input id="nm" required maxlength="30" autocomplete="given-name" placeholder="First name">
+           <button class="btn primary" type="submit">Join the crew</button></div><p class="msg" id="msg" role="status"></p></form>`
+      : `<div class="statusrow">
+           <button class="btn ${me.status === "on_way" ? "quiet" : "primary"}" data-status="on_way">${me.status === "on_way" ? "You're on the way" : "I'm on my way"}</button>
+           <button class="btn quiet" data-status="${me.status === "out" ? "in" : "out"}">${me.status === "out" ? "I'm back in" : "Can't make it"}</button></div>`;
+    return `<section class="crew" aria-label="Crew"><p class="crewhead"><b>Leaving ${esc(leaveLabel(c.leave_at))}</b> · ${coming} coming</p>
+      <div class="members">${chips}</div>${action}</section>`;
+  }
+
+  async function render() {
+    const q = new URLSearchParams(location.search);
+    const code = (q.get("crew") || "").toLowerCase();
+    let crew = null, id = q.get("id");
+    if (code) {
+      const { data } = await db.rpc("get_crews", { p_codes: [code], p_device_id: deviceId() });
+      crew = data?.[0] ?? null;
+      if (!crew) return gone();
+      id = crew.spot_id;
+    }
     if (!id) return gone();
     const [{ data: e }, { data: g }] = await Promise.all([
       db.from("upcoming_events").select("*").eq("id", id).maybeSingle(),
@@ -87,8 +148,9 @@
     if (!e) return gone();
     const going = Number(g?.[0]?.going ?? 0);
     const dest = encodeURIComponent(`${e.venue}, ${e.address}`);
-    document.title = `${e.venue} · ${when(e)} · Scout`;
+    document.title = crew ? `Crew to ${e.venue} · Scout` : `${e.venue} · ${when(e)} · Scout`;
     app.innerHTML = `
+      ${crew ? `<p class="invite">${esc(crew.members[0]?.name ?? "A friend")} is heading out. Come with.</p>` : ""}
       <article class="card">
         ${e.image ? `<img class="hero" src="${esc(e.image)}" alt="" referrerpolicy="no-referrer" onerror="this.remove()">` : ""}
         <div class="body">
@@ -96,22 +158,44 @@
           <h1>${esc(e.venue)}</h1>
           <p class="title">${esc(e.title)}</p>
           ${e.description ? `<p class="desc">${esc(e.description)}</p>` : ""}
+          ${crew ? crewHtml(crew) : ""}
           <dl>
             <div><dt>When</dt><dd>${esc(when(e))}</dd></div>
             <div><dt>Where</dt><dd>${esc(e.address)}</dd></div>
             ${e.price ? `<div><dt>Price</dt><dd>${esc(e.price)}</dd></div>` : ""}
             ${e.deal ? `<div><dt>Deal</dt><dd>${esc(e.deal)} <span style="color:var(--ink-3)">(unlock in the app)</span></dd></div>` : ""}
           </dl>
-          <p class="going">${going ? `<b>${going} ${going === 1 ? "person" : "people"}</b> on Scout ${going === 1 ? "is" : "are"} going.` : "A friend wants you there."}</p>
+          ${crew ? "" : `<p class="going">${going ? `<b>${going} ${going === 1 ? "person" : "people"}</b> on Scout ${going === 1 ? "is" : "are"} going.` : "A friend wants you there."}</p>`}
           <div class="actions">
-            <a class="btn primary" href="./">Get Scout to say you're going</a>
+            ${crew ? "" : `<a class="btn primary" href="./">Get Scout to say you're going</a>`}
             <a class="btn quiet" href="https://www.google.com/maps/dir/?api=1&destination=${dest}" target="_blank" rel="noopener">Directions</a>
             ${e.url && /^https?:\/\//.test(e.url) ? `<a class="btn quiet" href="${esc(e.url)}" target="_blank" rel="noopener">Event page</a>` : ""}
+            ${crew ? `<a class="btn quiet" href="./">Get the Scout app</a>` : ""}
           </div>
         </div>
       </article>
       <p class="note">Scout is an independent prototype, not an official Yelo app.</p>`;
-  })().catch(gone);
+
+    if (!crew) return;
+    document.getElementById("join")?.addEventListener("submit", async (ev) => {
+      ev.preventDefault();
+      const name = document.getElementById("nm").value.trim(), btn = ev.target.querySelector("button");
+      btn.disabled = true;
+      const { error } = await db.rpc("join_crew", { p_code: code, p_device_id: deviceId(), p_name: name });
+      if (error) { btn.disabled = false; document.getElementById("msg").textContent = error.message; return; }
+      render();
+    });
+    document.querySelectorAll("[data-status]").forEach((b) => b.addEventListener("click", async () => {
+      const status = b.dataset.status;
+      await db.rpc("set_crew_status", { p_code: code, p_device_id: deviceId(), p_status: status });
+      if (status === "on_way") window.open(`https://www.google.com/maps/dir/?api=1&destination=${dest}`, "_blank", "noopener");
+      render();
+    }));
+  }
+
+  render().catch(gone);
+  // Friends join and head out while the page is open: keep the crew current.
+  if (new URLSearchParams(location.search).get("crew")) setInterval(() => { if (!document.querySelector("#nm:focus")) render().catch(() => {}); }, 20000);
 </script>
 </body>
 </html>
