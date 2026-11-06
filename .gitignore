@@ -5,3 +5,4 @@ server/data/
 .expo
 supabase/.temp/
 .vercel/
+releases/
