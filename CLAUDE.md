@@ -45,6 +45,13 @@ night on a quiet weeknight, and fills the room with its riders.
   only for deals. Ionicons outline icons. No emoji anywhere.
 - Copy should be plain and specific. Fares are labeled as estimates.
 
+## Releasing the Android app
+- Run `scripts/release-android.sh "<message>"` after any app change. It compares the native
+  fingerprint with the newest APK: same -> `eas update` (over the air); different -> starts a new
+  APK build (never two for one fingerprint). Every run then calls `scripts/sync-download-link.sh`,
+  which points scout-download.vercel.app (site/index.html on main) at the newest finished APK.
+- Don't poll scout-download.vercel.app in a loop (Vercel's bot protection blocks the machine).
+
 ## Security rules
 - The scout function validates every request with Zod (`_shared/requests.ts`) and answers errors as
   `{ error: "<sentence>", code: "<CODE>" }`. Public callers may only scout `SERVED_CITIES`; never let
