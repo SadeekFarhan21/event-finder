@@ -51,7 +51,7 @@ export function SearchHeader({ city, onCityChange, onSubmitCity, onScout, scouti
           </Glass>
           <Tap onPress={onScout} disabled={scouting || !scoutable} style={[s.scout, !scoutable && { opacity: 0.4 }]}
             accessibilityLabel={scouting ? "Scouting this city" : "Scout this city"} accessibilityState={{ busy: scouting, disabled: scouting || !scoutable }}>
-            {scouting ? <ActivityIndicator color="#fff" size="small" /> : <Text style={s.scoutText}>Scout</Text>}
+            {scouting ? <ActivityIndicator color={C.surface} size="small" /> : <Text style={s.scoutText}>Scout</Text>}
           </Tap>
         </View>
 
@@ -69,7 +69,8 @@ export function SearchHeader({ city, onCityChange, onSubmitCity, onScout, scouti
 
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.chips}>
           {FILTERS.map((k) => (
-            <Tap key={k} onPress={() => onFilter(k)} style={[s.chip, filter === k && s.chipOn]} accessibilityState={{ selected: filter === k }}>
+            <Tap key={k} onPress={() => onFilter(k)} hitSlop={{ top: 6, bottom: 6 }} style={[s.chip, filter === k && s.chipOn]}
+              accessibilityState={{ selected: filter === k }}>
               <Text style={[s.chipText, filter === k && s.chipTextOn]}>{filterLabel(k)}</Text>
             </Tap>
           ))}
@@ -90,18 +91,18 @@ const s = StyleSheet.create({
   top: { position: "absolute", top: 0, left: 0, right: 0 },
   row: { flexDirection: "row", gap: 8, paddingHorizontal: 16 },
   search: { flex: 1, flexDirection: "row", alignItems: "center", gap: 8, height: 48, paddingHorizontal: 16, borderRadius: R.pill,
-    borderWidth: StyleSheet.hairlineWidth, borderColor: "rgba(26,24,20,0.08)", ...shadow },
+    borderWidth: StyleSheet.hairlineWidth, borderColor: C.hairline, ...shadow },
   input: { flex: 1, fontFamily: F.medium, fontSize: T.body, color: C.ink },
   scout: { height: 48, paddingHorizontal: 20, borderRadius: R.pill, backgroundColor: C.ink, alignItems: "center", justifyContent: "center", ...shadow },
-  scoutText: { fontFamily: F.semibold, fontSize: T.body, color: "#fff" },
-  suggest: { marginHorizontal: 16, marginTop: 8, backgroundColor: C.surface, borderRadius: R.md, paddingVertical: 6, ...shadow },
-  suggestRow: { flexDirection: "row", alignItems: "center", gap: 10, paddingHorizontal: 16, paddingVertical: 12 },
+  scoutText: { fontFamily: F.semibold, fontSize: T.body, color: C.surface },
+  suggest: { marginHorizontal: 16, marginTop: 8, backgroundColor: C.surface, borderRadius: R.md, paddingVertical: 8, ...shadow },
+  suggestRow: { flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 16, paddingVertical: 12 },
   suggestText: { flex: 1, fontFamily: F.medium, fontSize: T.body, color: C.ink },
   suggestHint: { fontFamily: F.regular, fontSize: T.meta, color: C.ink3 },
-  chips: { gap: 6, paddingHorizontal: 16, paddingTop: 10, paddingBottom: 6 },
-  chip: { height: 32, paddingHorizontal: 13, justifyContent: "center", borderRadius: R.pill, backgroundColor: C.surface,
+  chips: { gap: 8, paddingHorizontal: 16, paddingTop: 12, paddingBottom: 8 },
+  chip: { height: 32, paddingHorizontal: 12, justifyContent: "center", borderRadius: R.pill, backgroundColor: C.surface,
     borderWidth: StyleSheet.hairlineWidth, borderColor: C.hairline },
   chipOn: { backgroundColor: C.ink, borderColor: C.ink },
   chipText: { fontFamily: F.medium, fontSize: T.small, color: C.ink },
-  chipTextOn: { color: "#fff" },
+  chipTextOn: { color: C.surface },
 });

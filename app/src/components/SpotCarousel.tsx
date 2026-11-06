@@ -78,16 +78,16 @@ function Card({ spot: e, going, index, x, onPress }: { spot: Spot; going: number
 
 const s = StyleSheet.create({
   wrap: { position: "absolute", left: 0, right: 0, bottom: CAROUSEL_BOTTOM },
-  card: { width: CARD_W, flexDirection: "row", alignItems: "center", gap: 14, backgroundColor: C.surface, borderRadius: R.lg,
-    paddingHorizontal: 16, paddingVertical: 14, ...shadow },
-  thumb: { width: 64, height: 64, borderRadius: 14, backgroundColor: C.fill },
+  card: { width: CARD_W, flexDirection: "row", alignItems: "center", gap: 12, backgroundColor: C.surface, borderRadius: R.lg,
+    paddingHorizontal: 16, paddingVertical: 12, ...shadow },
+  thumb: { width: 64, height: 64, borderRadius: R.md, backgroundColor: C.fill },
   body: { flex: 1, minWidth: 0 },
   top: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8 },
   meta: { flex: 1, fontFamily: F.medium, fontSize: T.meta, color: C.ink3 },
   title: { fontFamily: F.display, fontSize: T.title, lineHeight: 32, color: C.ink, marginTop: 4 },
   sub: { fontFamily: F.regular, fontSize: T.small, color: C.ink2, marginTop: 2 },
-  partner: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: R.pill, backgroundColor: C.ink },
-  partnerText: { fontFamily: F.semibold, fontSize: T.meta, color: C.yellow },
-  deal: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: R.pill, backgroundColor: C.yellow },
-  dealText: { fontFamily: F.semibold, fontSize: T.meta, color: C.ink },
+  partner: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: R.pill, backgroundColor: C.ink },
+  partnerText: { fontFamily: F.semibold, fontSize: T.meta, color: C.surface },
+  deal: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: R.pill, backgroundColor: C.blue },
+  dealText: { fontFamily: F.semibold, fontSize: T.meta, color: C.surface },
 });

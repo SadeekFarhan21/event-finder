@@ -23,16 +23,20 @@ export const color = {
   yellow: "#FFE600",
   blue: "#1F4FFF",
   red: "#B42318",
+  scrim: "rgba(26,24,20,0.28)", // dims the map behind the spot sheet
 };
 
 // Instrument Serif is the display face on joinyelo.com; Inter does the rest.
 export const font = {
   display: "InstrumentSerif_400Regular",
+  displayItalic: "InstrumentSerif_400Regular_Italic", // one accent word in screen titles
   regular: "Inter_400Regular",
   medium: "Inter_500Medium",
   semibold: "Inter_600SemiBold",
   bold: "Inter_700Bold",
 };
+
+// Spacing: paddings, margins and gaps step through 4, 8, 12, 16, 20, 24, 32 and nothing in between.
 
 export const radius = { sm: 8, md: 12, lg: 16, sheet: 20, pill: 999 };
 
@@ -43,7 +47,7 @@ export const text = { meta: 12, small: 14, body: 16, title: 28, display: 40 };
 // Only for things floating over the map (header, pills, carousel cards): short and crisp, not a
 // soft glow. Surfaces on the page background use a hairline border instead.
 export const shadow = {
-  shadowColor: "#1B1A14",
+  shadowColor: neutral.n900,
   shadowOpacity: 0.12,
   shadowRadius: 6,
   shadowOffset: { width: 0, height: 2 },

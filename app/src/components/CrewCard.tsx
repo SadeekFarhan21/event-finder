@@ -33,8 +33,8 @@ export function CrewCard({ crew, showVenue, onStatus, onRide, onOpen }: {
         {crew.members.map((m, i) => (
           <View key={i} style={[s.member, m.status === "out" && { opacity: 0.45 }]}
             accessibilityLabel={`${m.me ? "You" : m.name}, ${STATUS[m.status]}`}>
-            <View style={[s.dot, m.status === "on_way" && { backgroundColor: C.yellow, borderColor: C.ink },
-              m.status === "out" && { backgroundColor: C.hairline }]} />
+            <View style={[s.dot, m.status === "on_way" && s.dotOnWay,
+              m.status === "out" && s.dotOut]} />
             <Text style={s.memberText}>{m.me ? "You" : m.name}</Text>
           </View>
         ))}
@@ -77,13 +77,16 @@ export function CrewCard({ crew, showVenue, onStatus, onRide, onOpen }: {
 }
 
 const s = StyleSheet.create({
-  card: { padding: 16, borderRadius: R.lg, backgroundColor: C.fill, gap: 12 },
+  card: { padding: 16, borderRadius: R.lg, backgroundColor: C.fill, gap: 12, borderWidth: 1, borderColor: C.hairline },
   meta: { fontFamily: F.semibold, fontSize: T.small, color: C.ink },
   venue: { fontFamily: F.display, fontSize: T.title, lineHeight: 32, color: C.ink, marginTop: 4 },
   title: { fontFamily: F.regular, fontSize: T.small, color: C.ink2 },
-  members: { flexDirection: "row", flexWrap: "wrap", gap: 6 },
-  member: { flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 10, height: 30, borderRadius: R.pill, backgroundColor: C.surface, borderWidth: 1, borderColor: C.hairline },
-  dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: C.ink, borderWidth: 1, borderColor: C.ink },
+  members: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  member: { flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 12, height: 32, borderRadius: R.pill, backgroundColor: C.surface, borderWidth: 1, borderColor: C.hairline },
+  // Coming: an open ring. On the way: filled. Out: a faded dot (the row is dimmed too).
+  dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: C.surface, borderWidth: 1.5, borderColor: C.ink },
+  dotOnWay: { backgroundColor: C.ink },
+  dotOut: { backgroundColor: C.hairline, borderColor: C.placeholder },
   memberText: { fontFamily: F.medium, fontSize: T.small, color: C.ink },
   actions: { flexDirection: "row", gap: 8 },
   btn: { flex: 1, height: 44, borderRadius: R.pill, flexDirection: "row", gap: 6, alignItems: "center", justifyContent: "center" },

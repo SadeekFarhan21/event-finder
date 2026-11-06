@@ -52,7 +52,7 @@ export function RoomsScreen({ visible, city, leads, setLeads, canSearch, onClose
       </Text>
       <Tap onPress={find} disabled={busy || !canSearch} style={[s.findBtn, !canSearch && { opacity: 0.4 }]}
         accessibilityState={{ busy, disabled: busy || !canSearch }}>
-        {busy ? <ActivityIndicator color="#fff" size="small" /> : <Text style={s.findText}>{leads.length ? "Find more rooms" : "Find rooms"}</Text>}
+        {busy ? <ActivityIndicator color={C.surface} size="small" /> : <Text style={s.findText}>{leads.length ? "Find more rooms" : "Find rooms"}</Text>}
       </Tap>
       {busy && <Text style={s.hint}>Searching venue sites and calendars · about a minute</Text>}
       {error && <Text style={[s.hint, { color: C.red }]}>{error}</Text>}
@@ -63,7 +63,7 @@ export function RoomsScreen({ visible, city, leads, setLeads, canSearch, onClose
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
       <View style={s.root}>
         <FlatList data={leads} keyExtractor={(l) => l.id} ListHeaderComponent={header}
-          contentContainerStyle={{ paddingHorizontal: 16, gap: 10, paddingBottom: Math.max(insets.bottom, 16) + 32 }}
+          contentContainerStyle={{ paddingHorizontal: 20, gap: 12, paddingBottom: Math.max(insets.bottom, 16) + 32 }}
           ListEmptyComponent={busy ? undefined : <Text style={s.empty}>No rooms yet. Tap Find rooms to search this city.</Text>}
           renderItem={({ item: l }) => (
             <View style={s.card}>
@@ -97,26 +97,26 @@ export function RoomsScreen({ visible, city, leads, setLeads, canSearch, onClose
 
 const s = StyleSheet.create({
   root: { flex: 1, backgroundColor: C.bg },
-  head: { paddingHorizontal: 4, paddingTop: 16, paddingBottom: 8 },
-  close: { alignSelf: "flex-start", width: 36, height: 36, borderRadius: 18, backgroundColor: C.surface, alignItems: "center", justifyContent: "center", marginBottom: 14, borderWidth: 1, borderColor: C.hairline },
+  head: { paddingTop: 16, paddingBottom: 8 },
+  close: { alignSelf: "flex-start", width: 36, height: 36, borderRadius: 18, backgroundColor: C.surface, alignItems: "center", justifyContent: "center", marginBottom: 16, borderWidth: 1, borderColor: C.hairline },
   eyebrow: { fontFamily: F.medium, fontSize: T.meta, color: C.ink3 },
-  title: { fontFamily: F.display, fontSize: T.display, lineHeight: 44, color: C.ink, marginTop: 6 },
-  titleAccent: { fontFamily: "InstrumentSerif_400Regular_Italic", color: C.blue },
-  sub: { fontFamily: F.regular, fontSize: T.body, lineHeight: 22, color: C.ink2, marginTop: 10 },
+  title: { fontFamily: F.display, fontSize: T.display, lineHeight: 44, color: C.ink, marginTop: 8 },
+  titleAccent: { fontFamily: F.displayItalic },
+  sub: { fontFamily: F.regular, fontSize: T.body, lineHeight: 22, color: C.ink2, marginTop: 12 },
   findBtn: { alignSelf: "flex-start", height: 44, paddingHorizontal: 20, borderRadius: R.pill, backgroundColor: C.ink, justifyContent: "center", marginTop: 16 },
-  findText: { fontFamily: F.semibold, fontSize: T.body, color: "#fff" },
+  findText: { fontFamily: F.semibold, fontSize: T.body, color: C.surface },
   hint: { fontFamily: F.regular, fontSize: T.small, color: C.ink3, marginTop: 8 },
-  empty: { fontFamily: F.regular, fontSize: T.body, color: C.ink3, textAlign: "center", marginTop: 40 },
-  card: { backgroundColor: C.surface, borderRadius: R.lg, padding: 18, borderWidth: 1, borderColor: C.hairline },
+  empty: { fontFamily: F.regular, fontSize: T.body, color: C.ink3, marginTop: 40 },
+  card: { backgroundColor: C.surface, borderRadius: R.lg, padding: 16, borderWidth: 1, borderColor: C.hairline },
   meta: { fontFamily: F.medium, fontSize: T.meta, color: C.ink3 },
   name: { fontFamily: F.display, fontSize: T.title, lineHeight: 32, color: C.ink, marginTop: 4 },
   fit: { fontFamily: F.regular, fontSize: T.small, lineHeight: 20, color: C.ink2, marginTop: 4 },
-  footer: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 14 },
-  tags: { flexDirection: "row", gap: 6, flexShrink: 1 },
-  cap: { flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 10, paddingVertical: 5, borderRadius: R.pill, backgroundColor: C.fill },
+  footer: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 8 },
+  tags: { flexDirection: "row", gap: 8, flexShrink: 1 },
+  cap: { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 8, paddingVertical: 4, borderRadius: R.pill, backgroundColor: C.fill },
   capText: { fontFamily: F.medium, fontSize: T.meta, color: C.ink2 },
-  night: { flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 10, paddingVertical: 5, borderRadius: R.pill, backgroundColor: C.yellow },
+  night: { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 8, paddingVertical: 4, borderRadius: R.pill, backgroundColor: C.fill },
   nightText: { fontFamily: F.semibold, fontSize: T.meta, color: C.ink },
-  contact: { flexDirection: "row", alignItems: "center", gap: 4, paddingVertical: 4 },
+  contact: { flexDirection: "row", alignItems: "center", gap: 4, minHeight: 44, paddingLeft: 12 },
   contactText: { fontFamily: F.semibold, fontSize: T.small, color: C.ink },
 });

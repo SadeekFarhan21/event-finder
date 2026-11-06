@@ -22,7 +22,7 @@ export function SpotPins({ clusters, active, onSpot, onCluster, onActive }: Prop
         return only ? (
           <ScoutMarker key={only.id} coordinate={{ latitude: c.lat, longitude: c.lng }} onPress={() => onSpot(only)}>
             <View style={[s.pin, only.partner && s.pinPartner]}>
-              <Ionicons name={CATEGORY[only.category].icon} size={14} color="#fff" />
+              <Ionicons name={CATEGORY[only.category].icon} size={14} color={C.surface} />
             </View>
           </ScoutMarker>
         ) : (
@@ -52,10 +52,10 @@ const clusterSize = (n: number) => {
 };
 
 const s = StyleSheet.create({
-  pin: { width: 28, height: 28, borderRadius: 14, backgroundColor: C.ink, borderWidth: 2, borderColor: "#fff", alignItems: "center", justifyContent: "center", ...shadow, shadowOpacity: 0.2 },
+  pin: { width: 28, height: 28, borderRadius: 14, backgroundColor: C.ink, borderWidth: 2, borderColor: C.surface, alignItems: "center", justifyContent: "center", ...shadow },
   pinPartner: { borderColor: C.yellow, borderWidth: 3 },
-  pinActive: { width: 42, height: 42, borderRadius: 21, backgroundColor: C.yellow, borderWidth: 3, borderColor: "#fff", alignItems: "center", justifyContent: "center", ...shadow, shadowOpacity: 0.25 },
-  label: { marginTop: 4, paddingHorizontal: 9, paddingVertical: 4, borderRadius: R.pill, backgroundColor: C.surface, maxWidth: 180, ...shadow },
+  pinActive: { width: 42, height: 42, borderRadius: 21, backgroundColor: C.yellow, borderWidth: 3, borderColor: C.surface, alignItems: "center", justifyContent: "center", ...shadow },
+  label: { marginTop: 4, paddingHorizontal: 8, paddingVertical: 4, borderRadius: R.pill, backgroundColor: C.surface, maxWidth: 180, ...shadow },
   labelText: { fontFamily: F.semibold, fontSize: T.meta, color: C.ink },
   cluster: { paddingHorizontal: 8, backgroundColor: C.surface, borderWidth: 1.5, borderColor: C.ink, alignItems: "center", justifyContent: "center", ...shadow },
   clusterText: { fontFamily: F.semibold, fontSize: T.small, color: C.ink },

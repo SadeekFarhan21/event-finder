@@ -18,7 +18,7 @@ import { CrewCard } from "./CrewCard";
 import { StartCrew } from "./StartCrew";
 import { whenLabel } from "../lib/time";
 import type { Spot } from "../lib/types";
-import { CATEGORY, color as C, font as F, radius as R, text as T } from "../theme";
+import { CATEGORY, color as C, font as F, radius as R, shadow, text as T } from "../theme";
 import { Tap } from "./Tap";
 
 const SCREEN_H = Dimensions.get("window").height;
@@ -213,23 +213,23 @@ function Row({ icon, text }: { icon: ComponentProps<typeof Ionicons>["name"]; te
 }
 
 const s = StyleSheet.create({
-  backdrop: { position: "absolute", top: 0, right: 0, bottom: 0, left: 0, backgroundColor: "rgba(26,24,20,0.28)" },
+  backdrop: { position: "absolute", top: 0, right: 0, bottom: 0, left: 0, backgroundColor: C.scrim },
   sheet: { position: "absolute", left: 0, right: 0, bottom: 0, maxHeight: SCREEN_H * 0.88, backgroundColor: C.surface, borderTopLeftRadius: R.sheet, borderTopRightRadius: R.sheet,
-    overflow: "hidden", shadowColor: "#000", shadowOpacity: 0.15, shadowRadius: 30, shadowOffset: { width: 0, height: -6 }, elevation: 20 },
+    overflow: "hidden", ...shadow, shadowOffset: { width: 0, height: -2 } },
   hero: { height: 190, backgroundColor: C.fill },
-  handle: { paddingBottom: 6 },
-  grabber: { alignSelf: "center", width: 38, height: 5, borderRadius: 3, backgroundColor: C.hairline, marginTop: 10 },
+  handle: { paddingBottom: 8 },
+  grabber: { alignSelf: "center", width: 36, height: 4, borderRadius: 2, backgroundColor: C.hairline, marginTop: 8 },
   grabberOnImage: { position: "absolute", top: 0, backgroundColor: "rgba(255,255,255,0.85)" },
   content: { paddingHorizontal: 24, paddingTop: 12, paddingBottom: 8 },
   eyebrow: { fontFamily: F.medium, fontSize: T.meta, color: C.ink3, letterSpacing: 0.3 },
   title: { fontFamily: F.display, fontSize: T.display, lineHeight: 44, color: C.ink, marginTop: 2 },
   event: { fontFamily: F.semibold, fontSize: T.body, color: C.ink, marginTop: 12 },
   desc: { fontFamily: F.regular, fontSize: T.body, lineHeight: 22, color: C.ink2, marginTop: 4 },
-  rows: { marginTop: 18, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: C.hairline },
+  rows: { marginTop: 20, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: C.hairline },
   row: { flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 12, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: C.hairline },
   rowText: { flex: 1, fontFamily: F.regular, fontSize: T.body, color: C.ink },
-  rowAction: { fontFamily: F.semibold, fontSize: T.small, color: C.blue },
-  social: { marginTop: 18, gap: 10 },
+  rowAction: { fontFamily: F.semibold, fontSize: T.small, color: C.ink, textDecorationLine: "underline" },
+  social: { marginTop: 20, gap: 12 },
   socialCount: { fontFamily: F.medium, fontSize: T.small, color: C.ink3 },
   socialBtns: { flexDirection: "row", gap: 8 },
   chip: { flex: 1, height: 44, borderRadius: R.pill, flexDirection: "row", gap: 6, alignItems: "center", justifyContent: "center",
@@ -237,11 +237,11 @@ const s = StyleSheet.create({
   chipOn: { backgroundColor: C.fill, borderColor: C.ink2 },
   chipIcon: { flex: 0, width: 44 },
   chipText: { fontFamily: F.semibold, fontSize: T.small, color: C.ink },
-  dealCard: { marginTop: 18, padding: 16, borderRadius: R.md, backgroundColor: C.blue },
+  dealCard: { marginTop: 20, padding: 16, borderRadius: R.md, backgroundColor: C.blue },
   dealLabel: { fontFamily: F.medium, fontSize: T.meta, color: "rgba(255,255,255,0.7)" },
-  dealText: { fontFamily: F.semibold, fontSize: T.body, lineHeight: 24, color: "#fff", marginTop: 4 },
-  dealHint: { fontFamily: F.regular, fontSize: T.small, color: "rgba(255,255,255,0.7)", marginTop: 6 },
-  actions: { flexDirection: "row", gap: 10, paddingHorizontal: 24, paddingTop: 12,
+  dealText: { fontFamily: F.semibold, fontSize: T.body, lineHeight: 24, color: C.surface, marginTop: 4 },
+  dealHint: { fontFamily: F.regular, fontSize: T.small, color: "rgba(255,255,255,0.7)", marginTop: 8 },
+  actions: { flexDirection: "row", gap: 12, paddingHorizontal: 24, paddingTop: 12,
     borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: C.hairline, backgroundColor: C.surface },
   btn: { flex: 1, height: 52, borderRadius: R.pill, flexDirection: "row", gap: 8, alignItems: "center", justifyContent: "center" },
   btnPrimary: { backgroundColor: C.yellow },
@@ -250,5 +250,5 @@ const s = StyleSheet.create({
   btnDealText: { fontFamily: F.semibold, fontSize: T.body, color: C.blue },
   btnQuiet: { backgroundColor: C.fill },
   btnQuietText: { fontFamily: F.semibold, fontSize: T.body, color: C.ink },
-  source: { fontFamily: F.regular, fontSize: T.meta, color: C.ink3, marginTop: 16, },
+  source: { fontFamily: F.regular, fontSize: T.meta, color: C.ink3, marginTop: 16 },
 });

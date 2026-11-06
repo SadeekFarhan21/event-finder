@@ -62,7 +62,7 @@ export function CrewsScreen({ visible, crews, linkCode, onJoin, onStatus, onRide
         {error && <Text style={s.error}>{error}</Text>}
         {joined && !error && <Text style={s.success}>You're in. The crew for {joined} is below.</Text>}
         <Tap style={[s.joinBtn, (!code.trim() || !name.trim()) && { opacity: 0.4 }]} disabled={!code.trim() || !name.trim() || busy} onPress={join}>
-          {busy ? <ActivityIndicator color="#fff" size="small" /> : <Text style={s.joinText}>Join crew</Text>}
+          {busy ? <ActivityIndicator color={C.surface} size="small" /> : <Text style={s.joinText}>Join crew</Text>}
         </Tap>
       </View>
     </View>
@@ -72,7 +72,7 @@ export function CrewsScreen({ visible, crews, linkCode, onJoin, onStatus, onRide
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
       <View style={s.root}>
         <FlatList data={crews} keyExtractor={(c) => c.code} ListHeaderComponent={header}
-          contentContainerStyle={{ padding: 20, paddingBottom: insets.bottom + 32, gap: 12 }}
+          contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: insets.bottom + 32, gap: 12 }}
           keyboardShouldPersistTaps="handled"
           ListEmptyComponent={<Text style={s.empty}>No crews yet tonight.</Text>}
           renderItem={({ item }) => (
@@ -85,19 +85,19 @@ export function CrewsScreen({ visible, crews, linkCode, onJoin, onStatus, onRide
 
 const s = StyleSheet.create({
   root: { flex: 1, backgroundColor: C.bg },
-  head: { paddingHorizontal: 4, paddingTop: 16, paddingBottom: 8 },
-  close: { alignSelf: "flex-start", width: 36, height: 36, borderRadius: 18, backgroundColor: C.surface, alignItems: "center", justifyContent: "center", marginBottom: 14, borderWidth: 1, borderColor: C.hairline },
+  head: { paddingTop: 16, paddingBottom: 8 },
+  close: { alignSelf: "flex-start", width: 36, height: 36, borderRadius: 18, backgroundColor: C.surface, alignItems: "center", justifyContent: "center", marginBottom: 16, borderWidth: 1, borderColor: C.hairline },
   title: { fontFamily: F.display, fontSize: T.display, lineHeight: 44, color: C.ink },
-  titleAccent: { fontFamily: "InstrumentSerif_400Regular_Italic", color: C.blue },
-  sub: { fontFamily: F.regular, fontSize: T.body, lineHeight: 22, color: C.ink2, marginTop: 10 },
-  joinBox: { marginTop: 18, padding: 16, borderRadius: R.lg, backgroundColor: C.surface, gap: 8, borderWidth: 1, borderColor: C.hairline },
+  titleAccent: { fontFamily: F.displayItalic },
+  sub: { fontFamily: F.regular, fontSize: T.body, lineHeight: 22, color: C.ink2, marginTop: 12 },
+  joinBox: { marginTop: 20, padding: 16, borderRadius: R.lg, backgroundColor: C.surface, gap: 8, borderWidth: 1, borderColor: C.hairline },
   label: { fontFamily: F.semibold, fontSize: T.small, color: C.ink },
-  input: { height: 44, borderRadius: 12, paddingHorizontal: 14, backgroundColor: C.bg, borderWidth: 1, borderColor: C.hairline,
+  input: { height: 44, borderRadius: R.md, paddingHorizontal: 12, backgroundColor: C.bg, borderWidth: 1, borderColor: C.hairline,
     fontFamily: F.regular, fontSize: T.body, color: C.ink },
   fieldLabel: { fontFamily: F.medium, fontSize: T.meta, color: C.ink3, marginTop: 4 },
   success: { fontFamily: F.medium, fontSize: T.small, color: C.ink },
   error: { fontFamily: F.medium, fontSize: T.small, color: C.red },
   joinBtn: { height: 44, borderRadius: R.pill, backgroundColor: C.ink, alignItems: "center", justifyContent: "center", marginTop: 4 },
-  joinText: { fontFamily: F.semibold, fontSize: T.body, color: "#fff" },
-  empty: { fontFamily: F.regular, fontSize: T.body, color: C.ink3, textAlign: "center", marginTop: 24 },
+  joinText: { fontFamily: F.semibold, fontSize: T.body, color: C.surface },
+  empty: { fontFamily: F.regular, fontSize: T.body, color: C.ink3, marginTop: 24 },
 });

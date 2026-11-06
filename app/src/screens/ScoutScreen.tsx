@@ -173,8 +173,8 @@ export function ScoutScreen() {
           <Animated.View entering={FadeIn.delay(150)} style={s.roomsWrap}>
             {crewsApi.available && (
               <Tap hitSlop={4} style={[s.rooms, liveCrews.length > 0 && s.crewsOn]} onPress={() => { Haptics.selectionAsync(); setCrewsOpen(true); }}>
-                <Ionicons name="people-outline" size={14} color={C.ink} />
-                <Text style={s.roomsText}>Crews{liveCrews.length ? `  ·  ${liveCrews.length}` : ""}</Text>
+                <Ionicons name="people-outline" size={14} color={liveCrews.length > 0 ? C.surface : C.ink} />
+                <Text style={[s.roomsText, liveCrews.length > 0 && s.crewsOnText]}>Crews{liveCrews.length ? `  ·  ${liveCrews.length}` : ""}</Text>
               </Tap>
             )}
             <Tap hitSlop={4} style={s.rooms} onPress={() => { Haptics.selectionAsync(); setRoomsOpen(true); }}>
@@ -213,7 +213,8 @@ export function ScoutScreen() {
 const s = StyleSheet.create({
   root: { flex: 1, backgroundColor: C.bg },
   roomsWrap: { position: "absolute", left: CARD_INSET, bottom: CAROUSEL_BOTTOM + CARD_H, flexDirection: "row", gap: 8 },
-  crewsOn: { backgroundColor: C.yellow },
-  rooms: { flexDirection: "row", alignItems: "center", gap: 6, height: 40, paddingHorizontal: 14, borderRadius: R.pill, backgroundColor: C.surface, ...shadow },
+  crewsOn: { backgroundColor: C.ink },
+  crewsOnText: { color: C.surface },
+  rooms: { flexDirection: "row", alignItems: "center", gap: 6, height: 40, paddingHorizontal: 12, borderRadius: R.pill, backgroundColor: C.surface, ...shadow },
   roomsText: { fontFamily: F.semibold, fontSize: T.small, color: C.ink },
 });
