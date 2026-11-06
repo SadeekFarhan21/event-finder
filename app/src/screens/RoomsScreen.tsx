@@ -1,7 +1,9 @@
 // "Rooms": the partner-team view. Yelo's playbook is to take a venue's quiet night,
 // build an event there and fill it with riders, so this lists rooms worth pitching.
 import { useState } from "react";
-import { ActivityIndicator, FlatList, Linking, Modal, Pressable, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, FlatList, Linking, Modal, Platform, StyleSheet, Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Tap } from "../components/Tap";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { runLeads } from "../data/api";
@@ -36,28 +38,33 @@ export function RoomsScreen({ visible, city, leads, setLeads, canSearch, onClose
     if (l.url) return Linking.openURL(l.url);
   };
 
+  const insets = useSafeAreaInsets();
+  // The header scrolls with the list: on a small phone a fixed header left room for ~1.5 cards.
+  const header = (
+    <View style={[s.head, Platform.OS === "android" && { paddingTop: insets.top + 16 }]}>
+      <Tap onPress={onClose} hitSlop={12} style={s.close} accessibilityLabel="Close rooms">
+        <Ionicons name="chevron-down" size={22} color={C.ink} />
+      </Tap>
+      <Text style={s.eyebrow}>For Yelo's partner team · {city.split(",")[0]}</Text>
+      <Text style={s.title}>Rooms worth{"\n"}<Text style={s.titleAccent}>pitching.</Text></Text>
+      <Text style={s.sub}>
+        Independent venues that could host a Yelo night: the vibe, the size, and a night that likely runs quiet.
+      </Text>
+      <Tap onPress={find} disabled={busy || !canSearch} style={[s.findBtn, !canSearch && { opacity: 0.4 }]}
+        accessibilityState={{ busy, disabled: busy || !canSearch }}>
+        {busy ? <ActivityIndicator color="#fff" size="small" /> : <Text style={s.findText}>{leads.length ? "Find more rooms" : "Find rooms"}</Text>}
+      </Tap>
+      {busy && <Text style={s.hint}>Searching venue sites and calendars · about a minute</Text>}
+      {error && <Text style={[s.hint, { color: C.red }]}>{error}</Text>}
+    </View>
+  );
+
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
       <View style={s.root}>
-        <View style={s.head}>
-          <Pressable onPress={onClose} hitSlop={12} style={s.close}>
-            <Ionicons name="chevron-down" size={22} color={C.ink} />
-          </Pressable>
-          <Text style={s.eyebrow}>For Yelo's partner team · {city.split(",")[0]}</Text>
-          <Text style={s.title}>Rooms worth{"\n"}<Text style={s.titleAccent}>pitching.</Text></Text>
-          <Text style={s.sub}>
-            Independent venues that could host a Yelo night: the vibe, the size, and a night that likely runs quiet.
-          </Text>
-          <Pressable onPress={find} disabled={busy || !canSearch}
-            style={({ pressed }) => [s.findBtn, (!canSearch) && { opacity: 0.4 }, pressed && { opacity: 0.85 }]}>
-            {busy ? <ActivityIndicator color="#fff" size="small" /> : <Text style={s.findText}>{leads.length ? "Find more rooms" : "Find rooms"}</Text>}
-          </Pressable>
-          {busy && <Text style={s.hint}>Searching venue sites and calendars · about a minute</Text>}
-          {error && <Text style={[s.hint, { color: "#C0392B" }]}>{error}</Text>}
-        </View>
-
-        <FlatList data={leads} keyExtractor={(l) => l.id} contentContainerStyle={{ padding: 16, gap: 10, paddingBottom: 48 }}
-          ListEmptyComponent={busy ? undefined : <Text style={s.empty}>No rooms yet for this city.</Text>}
+        <FlatList data={leads} keyExtractor={(l) => l.id} ListHeaderComponent={header}
+          contentContainerStyle={{ paddingHorizontal: 16, gap: 10, paddingBottom: Math.max(insets.bottom, 16) + 32 }}
+          ListEmptyComponent={busy ? undefined : <Text style={s.empty}>No rooms yet. Tap Find rooms to search this city.</Text>}
           renderItem={({ item: l }) => (
             <View style={s.card}>
               <Text style={s.meta} numberOfLines={1}>
@@ -75,10 +82,10 @@ export function RoomsScreen({ visible, city, leads, setLeads, canSearch, onClose
                   )}
                 </View>
                 {(l.contact || l.url) && (
-                  <Pressable onPress={() => contact(l)} style={({ pressed }) => [s.contact, pressed && { opacity: 0.7 }]}>
+                  <Tap onPress={() => contact(l)} style={s.contact} accessibilityLabel={`Contact ${l.venue}`}>
                     <Text style={s.contactText}>{l.contact?.includes("@") ? "Contact" : "Website"}</Text>
                     <Ionicons name="arrow-forward" size={14} color={C.ink} />
-                  </Pressable>
+                  </Tap>
                 )}
               </View>
             </View>
@@ -90,7 +97,7 @@ export function RoomsScreen({ visible, city, leads, setLeads, canSearch, onClose
 
 const s = StyleSheet.create({
   root: { flex: 1, backgroundColor: C.bg },
-  head: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 12 },
+  head: { paddingHorizontal: 4, paddingTop: 16, paddingBottom: 8 },
   close: { alignSelf: "flex-start", width: 36, height: 36, borderRadius: 18, backgroundColor: C.surface, alignItems: "center", justifyContent: "center", marginBottom: 14, ...shadow },
   eyebrow: { fontFamily: F.medium, fontSize: 12, color: C.ink3 },
   title: { fontFamily: F.display, fontSize: 44, lineHeight: 46, color: C.ink, marginTop: 6 },

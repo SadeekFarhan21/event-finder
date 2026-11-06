@@ -15,6 +15,7 @@ export const color = {
   yellow: "#FFE600",
   blue: "#1F4FFF",
   green: "#178A4C",
+  red: "#B42318", // errors only
 };
 
 // Instrument Serif is the display face on joinyelo.com; Inter does the rest.
