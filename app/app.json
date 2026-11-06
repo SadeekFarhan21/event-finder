@@ -17,7 +17,13 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.farhan.scout"
+      "package": "com.farhan.scout",
+      "permissions": [
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -38,6 +44,18 @@
           "locationWhenInUsePermission": "Scout uses your location to show how far each spot is and what a ride there costs."
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "72fa8ef5-91ea-484b-9439-fe09502f670b"
+      }
+    },
+    "owner": "fsadeek",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/72fa8ef5-91ea-484b-9439-fe09502f670b"
+    }
   }
 }
