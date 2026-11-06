@@ -11,6 +11,7 @@ import Exa from "exa-js";
 import { createClient } from "@supabase/supabase-js";
 import { discover, type YeloEvent } from "../_shared/discover.ts";
 import { findLeads, type Lead } from "../_shared/leads.ts";
+import { submissionToEvent, type Submission } from "../_shared/submissions.ts";
 import { dedupeEvents } from "../_shared/clean.ts";
 import { isPartner } from "../_shared/partners.ts";
 import { canonicalCity, cityKey } from "../_shared/cities.ts";
@@ -47,11 +48,14 @@ Deno.serve(async (req) => {
   if (req.method !== "POST") return json(405, { error: "POST { task, city }" });
 
   const { task = "events", city: rawCity, focus: rawFocus } = await req.json().catch(() => ({}));
+  const scoutKey = Deno.env.get("SCOUT_KEY");
+  const trusted = !!scoutKey && req.headers.get("Authorization") === `Bearer ${scoutKey}`;
+  // Put approved venue submissions on the map (the rolling tick calls this; no search, no Exa).
+  if (task === "publish") return trusted ? json(200, await publishApproved()) : json(401, { error: "Not allowed" });
+
   const city = canonicalCity(String(rawCity ?? ""));
   if (!city || !["events", "rooms"].includes(task)) return json(400, { error: "Expected { task: 'events' | 'rooms', city }" });
 
-  const scoutKey = Deno.env.get("SCOUT_KEY");
-  const trusted = !!scoutKey && req.headers.get("Authorization") === `Bearer ${scoutKey}`;
   const focus = trusted && task === "events" && Number.isInteger(rawFocus) && rawFocus >= 0 ? rawFocus as number : undefined;
   if (!trusted) {
     // Rolling single-search runs (focus set) don't count against the app's Scout button.
@@ -97,6 +101,24 @@ async function runEvents(city: string, started: number, focus?: number) {
   if (stale.length) await db.from("events").delete().in("id", stale);
 
   return { added: Math.max(0, merged.length - before.length), total: merged.length };
+}
+
+async function publishApproved() {
+  const { data } = await db.from("submissions").select("*").eq("status", "approved").is("published_at", null).limit(20);
+  let published = 0;
+  const failed: { id: number; why: string }[] = [];
+  for (const sub of (data ?? []) as Submission[]) {
+    const notes: string[] = [];
+    const e = await submissionToEvent(sub, canonicalCity(sub.city), geo, (m) => notes.push(m));
+    if (!e) { failed.push({ id: sub.id, why: notes.join("; ") || "address not found" }); continue; }
+    const { error } = await db.from("events").upsert(toRow({ ...e, city: cityKey(sub.city), partner: isPartner(e.venue) }));
+    if (error) { failed.push({ id: sub.id, why: describe(error) }); continue; }
+    await db.from("submissions").update({ published_at: new Date().toISOString(), event_id: e.id }).eq("id", sub.id);
+    published++;
+  }
+  // An address that won't geocode needs a person: send it back to review instead of retrying forever.
+  if (failed.length) await db.from("submissions").update({ status: "pending" }).in("id", failed.map((f) => f.id));
+  return { published, failed };
 }
 
 async function runRooms(city: string) {

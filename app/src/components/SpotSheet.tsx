@@ -143,7 +143,7 @@ export function SpotSheet({ spot, city, me, unlocked, canAskLocation, onAskLocat
           )}
 
           <Text style={s.source}>
-            {e.source === "demo" ? "Demo listing"
+            {e.source === "demo" ? "Demo listing" : e.source === "venue" ? "Listed by the venue"
               : e.confidence === "low" ? "Unconfirmed listing. Check the event page before you go."
               : "Found on the web"}
             {fare ? "  ·  Fares are estimates" : ""}

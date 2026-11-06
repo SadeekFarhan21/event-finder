@@ -19,7 +19,7 @@ export type Spot = {
   lat: number;
   lng: number;
   confidence: Confidence;
-  source: "exa" | "demo";
+  source: "exa" | "demo" | "venue";
   partner?: boolean; // one of Yelo's venue partners
 };
 
