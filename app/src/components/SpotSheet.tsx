@@ -192,7 +192,7 @@ export function SpotSheet({ spot, city, me, unlocked, canAskLocation, onAskLocat
               onPress={() => { Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); track(e, "unlock", city); onUnlock(e); }}>
               <Text style={s.btnDealText}>{unlocked ? "Unlocked" : "Unlock deal"}</Text>
             </Tap>
-          ) : e.url ? (
+          ) : e.url && /^https?:\/\//i.test(e.url) ? (
             <Tap style={[s.btn, s.btnQuiet]} onPress={() => Linking.openURL(e.url!)}>
               <Text style={s.btnQuietText}>Event page</Text>
             </Tap>
