@@ -8,7 +8,16 @@
 <meta property="og:description" content="Find tonight's spots. Ride there for less. A prototype built for Yelo.">
 <meta property="og:image" content="shot-map.jpg">
 <link rel="icon" href="favicon.png">
-<style>*,*::before,*::after{box-sizing:border-box}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<style>*,*::before,*::after{box-sizing:border-box}body{margin:0}img{max-width:100%}[hidden]{display:none!important}
+  /* Night palette, same as the app: warm near-blacks, one accent (Yelo yellow), red for errors.
+     Links and focus rings use ink instead of a second color. */
+  :root, :root:not([data-theme="light"]), :root[data-theme] {
+    --bg: #0C0C0A; --surface: #151513; --fill: #1D1C19; --line: #282723;
+    --ink: #F2F0E9; --ink-2: #C2BEB2; --ink-3: #8E8A7F; --placeholder: #6B675E;
+    --yellow: #FFE14A; --on-yellow: #14130F; --blue: #F2F0E9; --red: #FF7A6B;
+    color-scheme: dark;
+  }
+</style>
 <title>Scout for Android</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

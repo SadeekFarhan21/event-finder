@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&display=swap">
 <style>
-  /* Same five colors as the app: warm neutral ramp, Yelo yellow (one primary), blue (deals), red (errors). */
+  /* Tokens; the night palette at the end of this block is what renders. */
   :root {
     --bg: #FBFAF6; --surface: #FFFFFF; --fill: #F4F2EA; --line: #E8E5D9;
     --ink: #1A1814; --ink-2: #4F4B42; --ink-3: #6B665A; --placeholder: #8E897B;
@@ -25,7 +25,7 @@
   :focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; border-radius: 6px; }
   header { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
   .mark { display: flex; align-items: center; gap: 8px; min-height: 44px; font-weight: 600; text-decoration: none; }
-  .mark i { width: 28px; height: 28px; border-radius: 8px; background: var(--yellow); display: grid; place-items: center; font: 400 20px/1 var(--display); font-style: normal; }
+  .mark i { width: 28px; height: 28px; border-radius: 8px; background: var(--yellow); display: grid; place-items: center; font: 400 20px/1 var(--display); font-style: normal;  color: var(--on-yellow); }
   nav a { display: inline-flex; align-items: center; min-height: 44px; font-size: 15px; color: var(--ink-2); }
   h1 { font: 400 clamp(40px, 6vw, 64px)/1.05 var(--display); letter-spacing: -0.01em; margin: 32px 0 0; text-wrap: balance; }
   h1 em { color: inherit; }
@@ -40,8 +40,8 @@
   input::placeholder, textarea::placeholder { color: var(--placeholder); }
   .btn { font: 600 15px var(--body); min-height: 44px; border: 1px solid var(--ink); border-radius: 999px; padding: 10px 20px; cursor: pointer; background: var(--surface); color: var(--ink); }
   .btn:hover { background: var(--fill); }
-  .btn.primary { background: var(--yellow); border-color: var(--yellow); color: var(--ink); }
-  .btn.primary:hover { background: #F5DC00; }
+  .btn.primary { background: var(--yellow); border-color: var(--yellow); color: var(--on-yellow); }
+  .btn.primary:hover { background: #F2D43C; }
   .btn:disabled { opacity: .5; cursor: default; }
   .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; margin-top: 24px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
   .stat { padding: 16px; border-left: 1px solid var(--line); min-width: 0; }
@@ -74,6 +74,15 @@
     .stats:not(.three) .stat:nth-child(3) { border-left: 0; } .stats:not(.three) .stat:nth-child(n+3) { border-top: 1px solid var(--line); }
     .stats.three { grid-template-columns: minmax(0, 1fr); } .stats.three .stat { border-left: 0; } .stats.three .stat + .stat { border-top: 1px solid var(--line); }
     .form { grid-template-columns: minmax(0, 1fr); }
+  }
+
+  /* Night palette, same as the app: warm near-blacks, one accent (Yelo yellow), red for errors.
+     Links and focus rings use ink instead of a second color. */
+  :root, :root:not([data-theme="light"]), :root[data-theme] {
+    --bg: #0C0C0A; --surface: #151513; --fill: #1D1C19; --line: #282723;
+    --ink: #F2F0E9; --ink-2: #C2BEB2; --ink-3: #8E8A7F; --placeholder: #6B675E;
+    --yellow: #FFE14A; --on-yellow: #14130F; --blue: #F2F0E9; --red: #FF7A6B;
+    color-scheme: dark;
   }
 </style>
 </head>
