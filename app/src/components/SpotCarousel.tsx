@@ -107,12 +107,6 @@ function Card({ spot: e, isNew, going, index, x, onPress, onRide }: {
             <View style={s.going}>
               {going > 0 ? (
                 <>
-                  <View style={s.faces}>
-                    {Array.from({ length: Math.min(going, 3) }, (_, i) => (
-                      <View key={i} style={[s.face, { marginLeft: i ? -8 : 0, zIndex: 3 - i }]}>
-                      </View>
-                    ))}
-                  </View>
                   <Text style={s.goingText}>{going} going</Text>
                 </>
               ) : e.deal ? (
