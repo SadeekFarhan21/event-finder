@@ -25,7 +25,7 @@
   .keyrow label { flex-basis: 100%; font-size: 14px; font-weight: 500; color: var(--ink-2); }
   input, textarea { font: inherit; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; min-height: 44px; min-width: 0; }
   .keyrow input { flex: 0 1 360px; }
-  button { font: 600 16px var(--body); min-height: 44px; border: 1px solid var(--ink); border-radius: 999px; padding: 0 16px; cursor: pointer; background: var(--surface); color: var(--ink); }
+  button { font: 600 16px var(--body); min-height: 48px; border: 1px solid var(--ink); border-radius: 999px; padding: 0 16px; cursor: pointer; background: var(--surface); color: var(--ink); }
   button:hover { background: var(--fill); }
   /* Yellow only for the decision itself; "Open queue" stays outlined. */
   button.approve { background: var(--yellow); border-color: var(--yellow); color: var(--on-yellow); }
@@ -54,10 +54,15 @@
     --yellow: #FFE14A; --on-yellow: #14130F; --yellow-hover: #F5D63E; --blue: #F2F0E9; --red: #FF7A6B;
     color-scheme: dark;
   }
+  .top { margin-bottom: 32px; }
+  .mark { display: inline-flex; align-items: baseline; min-height: 44px; padding: 8px 0; font: 400 28px/1 var(--display); color: var(--ink); text-decoration: none; }
+  .mark i { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--yellow); margin-left: 3px; }
+  .mark-sub { font: 500 14px var(--body); color: var(--ink-3); margin-left: 10px; }
 </style>
 </head>
 <body>
 <div class="wrap">
+  <header class="top"><a class="mark" href="./">Scout<i aria-hidden="true"></i><span class="mark-sub">Review</span></a></header>
   <h1>Listing review</h1>
   <p class="note">Venue submissions waiting for a yes or no. Approved listings go on Scout's map right away.</p>
   <form class="keyrow" id="keyform">

@@ -24,7 +24,7 @@
   a { color: inherit; }
   :focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; border-radius: 8px; }
   header { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
-  .mark { display: inline-flex; align-items: baseline; gap: 0; font: 400 28px/1 var(--display); color: var(--ink); text-decoration: none; }
+  .mark { display: inline-flex; align-items: baseline; min-height: 44px; padding: 8px 0; gap: 0; font: 400 28px/1 var(--display); color: var(--ink); text-decoration: none; }
   .mark i { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--yellow); margin-left: 3px; }
   .mark-sub { font: 500 14px var(--body); color: var(--ink-3); margin-left: 10px; }
   nav a { display: inline-flex; align-items: center; min-height: 44px; font-size: 16px; color: var(--ink-2); }
@@ -39,7 +39,7 @@
   input, select, textarea { font: 400 16px/1.4 var(--body); color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; min-height: 44px; width: 100%; }
   input:hover, select:hover, textarea:hover { border-color: var(--ink-3); }
   input::placeholder, textarea::placeholder { color: var(--placeholder); }
-  .btn { text-decoration: none; align-items: center; justify-content: center; font: 600 16px var(--body); min-height: 44px; border: 1px solid var(--ink); border-radius: 999px; padding: 10px 20px; cursor: pointer; background: var(--surface); color: var(--ink); }
+  .btn { text-decoration: none; align-items: center; justify-content: center; font: 600 16px var(--body); min-height: 48px; border: 1px solid var(--ink); border-radius: 999px; padding: 10px 20px; cursor: pointer; background: var(--surface); color: var(--ink); }
   .btn:hover { background: var(--fill); }
   .btn.primary { background: var(--yellow); border-color: var(--yellow); color: var(--on-yellow); }
   .btn.primary:hover { background: var(--yellow-hover); }
