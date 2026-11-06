@@ -164,7 +164,9 @@ export function SpotSheet({ spot, city, me, unlocked, canAskLocation, onAskLocat
               ))}
             </View>
 
-            <Text style={s.bill} numberOfLines={2}>{calmCaps(e.title)}</Text>
+            {calmCaps(e.title).toLowerCase() !== whenLabel(e).toLowerCase() && (
+              <Text style={s.bill} numberOfLines={2}>{calmCaps(e.title)}</Text>
+            )}
             {!!e.description && (
               <Tap pressedScale={1} onPress={() => setMore((m) => !m)} accessibilityLabel={more ? "Show less" : "Show more"}>
                 <Text style={s.desc} numberOfLines={more ? undefined : 2}>{e.description}</Text>

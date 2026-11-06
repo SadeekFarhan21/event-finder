@@ -59,6 +59,15 @@ export function SpotCarousel({ ref, spots, fresh, going, activeId, onSettle, onP
 const bigTime = (e: Spot) => (isRecurring(e) || !e.start ? (/happy hour/i.test(`${e.title} ${e.deal ?? ""}`) ? "Happy hour" : "Any night") : clock(new Date(e.start)));
 const bigDay = (e: Spot) => (isRecurring(e) || !e.start ? "This week" : whenLabel(e).split(" · ")[0]);
 
+// One line under the venue, with nothing said twice: category (unless the Deal tag says it),
+// then the title (unless it's just "Happy hour" again), then the price.
+function cardLine(e: Spot) {
+  const title = calmCaps(e.title);
+  const sameAsWhen = title.toLowerCase() === whenLabel(e).toLowerCase();
+  return [e.category === "deal" ? null : CATEGORY[e.category].label, sameAsWhen ? null : title, e.price]
+    .filter(Boolean).join("  ·  ") || (e.deal ?? "");
+}
+
 // Photo first: the place, then when, then who's going and the ride. Most listings have no photo
 // (the web rarely has a good one), so the fallback is a designed panel, not an empty box.
 function Card({ spot: e, isNew, going, index, x, onPress, onRide }: {
@@ -101,7 +110,7 @@ function Card({ spot: e, isNew, going, index, x, onPress, onRide }: {
         <View style={s.body}>
           <Text style={s.title} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75}>{e.venue}</Text>
           <Text style={s.sub} numberOfLines={1}>
-            {CATEGORY[e.category].label}  ·  {calmCaps(e.title)}{e.price ? `  ·  ${e.price}` : ""}
+            {cardLine(e)}
           </Text>
           <View style={s.footer}>
             <View style={s.going}>
