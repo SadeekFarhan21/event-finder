@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Scout · A night out</title>
+<meta name="description" content="A friend invited you out. See the night on Scout.">
+<link rel="icon" href="favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&display=swap">
+<style>
+  :root {
+    --bg: #FBFAF6; --surface: #FFFFFF; --fill: #F4F2EA; --line: #E8E5D9;
+    --ink: #1A1814; --ink-2: #4F4B42; --ink-3: #6B665A;
+    --yellow: #FFE600; --blue: #1F4FFF;
+    --display: "Instrument Serif", "Iowan Old Style", Georgia, serif;
+    --body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  *,*::before,*::after { box-sizing: border-box }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 400 16px/1.55 var(--body); }
+  .wrap { max-width: 560px; margin: 0 auto; padding-inline: 16px; padding-block: 24px 64px; }
+  a { color: inherit; }
+  :focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; border-radius: 6px; }
+  .mark { display: inline-flex; align-items: center; gap: 10px; font-weight: 600; text-decoration: none; }
+  .mark i { width: 28px; height: 28px; border-radius: 8px; background: var(--yellow); display: grid; place-items: center; font: 400 20px/1 var(--display); font-style: normal; }
+  .card { margin-top: 24px; background: var(--surface); border: 1px solid var(--line); border-radius: 20px; overflow: hidden; }
+  .hero { display: block; width: 100%; height: 200px; object-fit: cover; background: var(--fill); }
+  .body { padding: 22px; }
+  .eyebrow { font-size: 13px; font-weight: 500; color: var(--ink-3); margin: 0; }
+  h1 { font: 400 44px/1.02 var(--display); margin: 4px 0 0; text-wrap: balance; overflow-wrap: anywhere; }
+  .title { font-weight: 600; margin: 10px 0 0; }
+  .desc { color: var(--ink-2); margin: 4px 0 0; }
+  dl { margin: 18px 0 0; border-top: 1px solid var(--line); }
+  dl div { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+  dt { width: 56px; flex: none; font-size: 13px; color: var(--ink-3); padding-top: 1px; }
+  dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+  .going { margin: 16px 0 0; font-size: 14px; color: var(--ink-2); }
+  .going b { color: var(--ink); }
+  .actions { display: grid; gap: 10px; margin-top: 20px; }
+  .btn { display: flex; align-items: center; justify-content: center; height: 52px; border-radius: 999px; font-weight: 600; text-decoration: none; }
+  .btn.primary { background: var(--yellow); }
+  .btn.quiet { background: var(--fill); }
+  .note { font-size: 13px; color: var(--ink-3); text-align: center; margin: 18px 0 0; }
+  .empty { margin-top: 48px; }
+  .empty h1 { font-size: 36px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="mark" href="./"><i>s</i> Scout</a>
+  <main id="app" aria-live="polite"><p class="note" style="text-align:left;margin-top:32px">Loading the night…</p></main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.0/dist/umd/supabase.js"></script>
+<script>
+  // Publishable key: read-only access to public listings and aggregate counts.
+  const db = supabase.createClient("https://ihxsdwpersowxxtgqcws.supabase.co", "sb_publishable_WGHco-ibd0wX9Jhe3x5vJQ_Rb5ys6UZ", { auth: { persistSession: false } });
+  const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+  const LABEL = { nightlife: "Nightlife", music: "Live music", food_drink: "Food & drink", arts: "Arts", sports: "Sports", community: "Community", deal: "Deal" };
+  const app = document.getElementById("app");
+
+  // Same rule as the app: a night runs until 6am, so a 1am set still reads "Tonight".
+  function when(e) {
+    if (e.category === "deal" || /happy hour|every (mon|tue|wed|thu|fri|sat|sun)|daily|weekly|nightly/i.test(`${e.title} ${e.deal ?? ""}`))
+      return /happy hour/i.test(`${e.title} ${e.deal ?? ""}`) ? "Happy hour" : "Recurring deal";
+    if (!e.start) return "Ongoing";
+    const d = new Date(e.start);
+    const night = (t) => { const x = new Date(t); x.setHours(x.getHours() - 6, 0, 0, 0); x.setHours(0, 0, 0, 0); return x; };
+    const days = Math.round((night(d) - night(Date.now())) / 864e5);
+    const day = days === 0 ? "Tonight" : days === 1 ? "Tomorrow" : d.toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" });
+    return `${day} · ${d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}`;
+  }
+
+  function gone() {
+    app.innerHTML = `<section class="empty"><h1>This night has passed.</h1>
+      <p class="desc">Spots on Scout last a week. Get the app to see what's on now.</p>
+      <div class="actions"><a class="btn primary" href="./">Get Scout for Android</a></div></section>`;
+  }
+
+  (async () => {
+    const id = new URLSearchParams(location.search).get("id");
+    if (!id) return gone();
+    const [{ data: e }, { data: g }] = await Promise.all([
+      db.from("upcoming_events").select("*").eq("id", id).maybeSingle(),
+      db.rpc("going_counts", { p_spot_ids: [id] }),
+    ]);
+    if (!e) return gone();
+    const going = Number(g?.[0]?.going ?? 0);
+    const dest = encodeURIComponent(`${e.venue}, ${e.address}`);
+    document.title = `${e.venue} · ${when(e)} · Scout`;
+    app.innerHTML = `
+      <article class="card">
+        ${e.image ? `<img class="hero" src="${esc(e.image)}" alt="" referrerpolicy="no-referrer" onerror="this.remove()">` : ""}
+        <div class="body">
+          <p class="eyebrow">${e.partner ? "Yelo partner · " : ""}${esc(LABEL[e.category] ?? "")}</p>
+          <h1>${esc(e.venue)}</h1>
+          <p class="title">${esc(e.title)}</p>
+          ${e.description ? `<p class="desc">${esc(e.description)}</p>` : ""}
+          <dl>
+            <div><dt>When</dt><dd>${esc(when(e))}</dd></div>
+            <div><dt>Where</dt><dd>${esc(e.address)}</dd></div>
+            ${e.price ? `<div><dt>Price</dt><dd>${esc(e.price)}</dd></div>` : ""}
+            ${e.deal ? `<div><dt>Deal</dt><dd>${esc(e.deal)} <span style="color:var(--ink-3)">(unlock in the app)</span></dd></div>` : ""}
+          </dl>
+          <p class="going">${going ? `<b>${going} ${going === 1 ? "person" : "people"}</b> on Scout ${going === 1 ? "is" : "are"} going.` : "A friend wants you there."}</p>
+          <div class="actions">
+            <a class="btn primary" href="./">Get Scout to say you're going</a>
+            <a class="btn quiet" href="https://www.google.com/maps/dir/?api=1&destination=${dest}" target="_blank" rel="noopener">Directions</a>
+            ${e.url && /^https?:\/\//.test(e.url) ? `<a class="btn quiet" href="${esc(e.url)}" target="_blank" rel="noopener">Event page</a>` : ""}
+          </div>
+        </div>
+      </article>
+      <p class="note">Scout is an independent prototype, not an official Yelo app.</p>`;
+  })().catch(gone);
+</script>
+</body>
+</html>
