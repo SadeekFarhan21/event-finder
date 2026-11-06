@@ -3,6 +3,7 @@
 // talks to the local dev server in /server.
 import { createClient } from "@supabase/supabase-js";
 import type { Lead, Spot } from "../lib/types";
+import { cityKey } from "../lib/cities";
 
 const url = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const key = process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
@@ -10,7 +11,6 @@ const key = process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 // No sign-in in this prototype, so no session storage.
 export const supabase = url && key ? createClient(url, key, { auth: { persistSession: false } }) : null;
 
-const cityKey = (c: string) => c.trim().toLowerCase();
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 export async function sbEvents(city: string): Promise<Spot[]> {

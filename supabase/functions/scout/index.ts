@@ -12,6 +12,7 @@ import { discover, type YeloEvent } from "../_shared/discover.ts";
 import { findLeads, type Lead } from "../_shared/leads.ts";
 import { dedupeEvents } from "../_shared/clean.ts";
 import { isPartner } from "../_shared/partners.ts";
+import { canonicalCity, cityKey } from "../_shared/cities.ts";
 import type { ExaLike, GeoCache } from "../_shared/deps.ts";
 
 const db = createClient(
@@ -21,6 +22,7 @@ const db = createClient(
 );
 const exa = new Exa(Deno.env.get("EXA_API_KEY")) as unknown as ExaLike;
 const COOLDOWN_MS = 60 * 60 * 1000;
+const PUBLIC_RUNS_PER_HOUR = 6; // across all cities, so typing new city names can't run up the Exa bill
 const BUDGET_MS = 135_000; // stop geocoding before the 150s wall clock
 
 const geo: GeoCache = {
@@ -34,7 +36,6 @@ const geo: GeoCache = {
   },
 };
 
-const cityKey = (c: string) => c.trim().toLowerCase();
 const json = (status: number, body: unknown) =>
   new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } });
 
@@ -45,7 +46,7 @@ Deno.serve(async (req) => {
   if (req.method !== "POST") return json(405, { error: "POST { task, city }" });
 
   const { task = "events", city: rawCity } = await req.json().catch(() => ({}));
-  const city = String(rawCity ?? "").trim();
+  const city = canonicalCity(String(rawCity ?? ""));
   if (!city || !["events", "rooms"].includes(task)) return json(400, { error: "Expected { task: 'events' | 'rooms', city }" });
 
   const scoutKey = Deno.env.get("SCOUT_KEY");
@@ -55,6 +56,9 @@ Deno.serve(async (req) => {
       .order("ran_at", { ascending: false }).limit(1).maybeSingle();
     const wait = last ? COOLDOWN_MS - (Date.now() - Date.parse(last.ran_at)) : 0;
     if (wait > 0) return json(429, { error: `Scouted recently. Try again in ${Math.ceil(wait / 60000)} min.` });
+    const { count } = await db.from("scout_runs").select("id", { count: "exact", head: true })
+      .gte("ran_at", new Date(Date.now() - 3600e3).toISOString());
+    if ((count ?? 0) >= PUBLIC_RUNS_PER_HOUR) return json(429, { error: "Scout is busy. Try again in a little while." });
   }
 
   // Claim the slot now so double-taps don't start two runs.

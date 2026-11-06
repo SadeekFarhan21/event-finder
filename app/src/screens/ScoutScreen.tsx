@@ -8,6 +8,7 @@ import Animated, { FadeIn } from "react-native-reanimated";
 import { ScoutMap, type Region, type ScoutMapRef } from "../map/ScoutMap";
 import { clusterEvents, coreOf } from "../lib/cluster";
 import { matches, sortSpots, type Filter } from "../lib/filters";
+import { canonicalCity } from "../lib/cities";
 import type { Spot } from "../lib/types";
 import { useSpots } from "../hooks/useSpots";
 import { useLeads } from "../hooks/useLeads";
@@ -52,7 +53,9 @@ export function ScoutScreen() {
     if (core.length) map.current?.fitTo(core.map((e) => ({ latitude: e.lat, longitude: e.lng })), FIT_PADDING);
   }, []);
 
-  const open = useCallback(async (city: string) => {
+  const open = useCallback(async (typed: string) => {
+    const city = canonicalCity(typed); // "nyc" and "New York, NY" are the same map
+    setCityInput(city);
     setActive(null);
     try {
       const list = await load(city);
@@ -67,9 +70,11 @@ export function ScoutScreen() {
 
   const runScout = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    show(`Searching ${cityInput.split(",")[0]} · about 2 min`, true);
+    const city = canonicalCity(cityInput);
+    setCityInput(city);
+    show(`Searching ${city.split(",")[0]} · about 2 min`, true);
     try {
-      const { list, added } = await scout(cityInput);
+      const { list, added } = await scout(city);
       setFilter("all");
       setActive(null);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
