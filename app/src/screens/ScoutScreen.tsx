@@ -1,6 +1,6 @@
 // The main screen: map of spots, search + filters on top, cards along the bottom.
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { Linking, StyleSheet, Text, View } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import * as Haptics from "expo-haptics";
 import { Ionicons } from "@expo/vector-icons";
@@ -42,6 +42,18 @@ export function ScoutScreen() {
   const { counts: going, mine: myGoing, go } = useGoing(spots, mapCity);
   const crewsApi = useCrews();
   const [crewsOpen, setCrewsOpen] = useState(false);
+  const [linkCode, setLinkCode] = useState<string | null>(null);
+
+  // A crew link opened on a phone with Scout (scout://crew/<code>) lands on Crews, code filled in.
+  useEffect(() => {
+    const handle = (url?: string | null) => {
+      const m = url && /^scout:\/\/crew\/([a-f0-9]{8,16})/i.exec(url);
+      if (m) { setLinkCode(m[1].toLowerCase()); setCrewsOpen(true); }
+    };
+    Linking.getInitialURL().then(handle).catch(() => {});
+    const sub = Linking.addEventListener("url", (e) => handle(e.url));
+    return () => sub.remove();
+  }, []);
   // Crews still on (anyone not out), for the pill count.
   const liveCrews = crewsApi.crews.filter((c) => c.members.some((m) => m.me && m.status !== "out"));
 
@@ -176,7 +188,7 @@ export function ScoutScreen() {
         </>
       )}
 
-      <CrewsScreen visible={crewsOpen} crews={crewsApi.crews} onJoin={crewsApi.join} onStatus={crewsApi.status}
+      <CrewsScreen visible={crewsOpen} crews={crewsApi.crews} linkCode={linkCode} onJoin={crewsApi.join} onStatus={crewsApi.status}
         onRide={(c) => openRide(c)} onClose={() => setCrewsOpen(false)}
         onOpen={(c) => {
           const spot = spots.find((e) => e.id === c.spotId);

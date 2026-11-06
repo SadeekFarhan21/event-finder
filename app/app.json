@@ -58,6 +58,7 @@
     },
     "updates": {
       "url": "https://u.expo.dev/72fa8ef5-91ea-484b-9439-fe09502f670b"
-    }
+    },
+    "scheme": "scout"
   }
 }

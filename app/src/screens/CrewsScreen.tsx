@@ -10,8 +10,9 @@ import { CrewCard } from "../components/CrewCard";
 import { Tap } from "../components/Tap";
 import { color as C, font as F, radius as R, shadow } from "../theme";
 
-export function CrewsScreen({ visible, crews, onJoin, onStatus, onRide, onOpen, onClose }: {
+export function CrewsScreen({ visible, crews, linkCode, onJoin, onStatus, onRide, onOpen, onClose }: {
   visible: boolean; crews: Crew[];
+  linkCode?: string | null; // a crew code from a scout://crew/<code> link, ready to join
   onJoin: (code: string, name: string) => Promise<string>;
   onStatus: (code: string, s: CrewStatus) => void;
   onRide: (crew: Crew) => void;
@@ -24,6 +25,7 @@ export function CrewsScreen({ visible, crews, onJoin, onStatus, onRide, onOpen, 
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   useEffect(() => { if (visible) savedName().then((n) => n && setName((cur) => cur || n)); }, [visible]);
+  useEffect(() => { if (linkCode && !crews.some((c) => c.code === linkCode)) setCode(linkCode); }, [linkCode, crews]);
 
   const join = async () => {
     setBusy(true);
