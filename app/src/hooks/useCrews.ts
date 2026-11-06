@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { AppState } from "react-native";
+import type { Spot } from "../lib/types";
 import { crewsAvailable, joinCrew, loadCrews, setStatus, startCrew, type Crew, type CrewStatus } from "../data/crews";
 
 // My crews, kept fresh: friends join and change status while you're looking, so refetch every
@@ -21,8 +22,8 @@ export function useCrews() {
     return () => { clearInterval(timer); sub.remove(); };
   }, [refresh]);
 
-  const start = useCallback(async (spotId: string, leaveAt: Date, name: string) => {
-    const code = await startCrew(spotId, leaveAt, name);
+  const start = useCallback(async (spot: Spot, leaveAt: Date, name: string) => {
+    const code = await startCrew(spot, leaveAt, name);
     refresh();
     return code;
   }, [refresh]);

@@ -4,6 +4,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getDeviceId } from "./activity";
 import { SITE } from "./social";
 import { supabase } from "./supabase";
+import type { Spot } from "../lib/types";
 
 export type CrewStatus = "in" | "on_way" | "out";
 export type CrewMember = { name: string; status: CrewStatus; me: boolean };
@@ -30,12 +31,18 @@ const remember = async (code: string) => {
 export const savedName = () => AsyncStorage.getItem(NAME_KEY).catch(() => null);
 const saveName = (name: string) => AsyncStorage.setItem(NAME_KEY, name.trim()).catch(() => {});
 
-// RPC errors are written for people ("Crew not found"); surface them as-is.
-const fail = (error: { message: string } | null) => { if (error) throw new Error(error.message); };
+// Our own RPC errors are written for people ("Crew not found"); anything else (a constraint,
+// the network) gets a plain sentence instead of database text.
+const fail = (error: { message: string; code?: string } | null) => {
+  if (!error) return;
+  throw new Error(error.code === "P0001" ? error.message : "Something went wrong. Try again in a moment.");
+};
 
-export async function startCrew(spotId: string, leaveAt: Date, name: string): Promise<string> {
+// The crew stores a copy of the spot, so it survives the scout re-merging or pruning listings.
+export async function startCrew(spot: Spot, leaveAt: Date, name: string): Promise<string> {
   const { data, error } = await supabase!.rpc("start_crew", {
-    p_spot_id: spotId, p_leave_at: leaveAt.toISOString(), p_device_id: await getDeviceId(), p_name: name,
+    p_spot_id: spot.id, p_leave_at: leaveAt.toISOString(), p_device_id: await getDeviceId(), p_name: name,
+    p_venue: spot.venue, p_title: spot.title, p_address: spot.address, p_lat: spot.lat, p_lng: spot.lng, p_start: spot.start,
   });
   fail(error);
   await Promise.all([remember(data as string), saveName(name)]);
