@@ -4,9 +4,11 @@ import { ActivityIndicator, Keyboard, Platform, ScrollView, StyleSheet, Text, Te
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 import { FILTERS, filterLabel, type Filter } from "../lib/filters";
 import { color as C, font as F, radius as R, shadow } from "../theme";
+import { HEADER_GAP, HEADER_H } from "../layout";
 import { Tap } from "./Tap";
 
 // Yelo's live markets (joinyelo.com/partner lists venues in both).
@@ -25,6 +27,7 @@ type Props = {
 
 export function SearchHeader({ city, onCityChange, onSubmitCity, onScout, scouting, scoutable, filter, onFilter }: Props) {
   const [editing, setEditing] = useState(false);
+  const insets = useSafeAreaInsets();
 
   const pickCity = (c: string) => {
     onCityChange(c);
@@ -37,8 +40,8 @@ export function SearchHeader({ city, onCityChange, onSubmitCity, onScout, scouti
     <>
       {/* Soft fade so map labels don't fight the controls */}
       <LinearGradient pointerEvents="none" colors={["rgba(250,248,242,0.98)", "rgba(250,248,242,0.75)", "rgba(250,248,242,0)"]}
-        locations={[0, 0.55, 1]} style={s.fade} />
-      <View style={s.top}>
+        locations={[0, 0.55, 1]} style={[s.fade, { height: insets.top + HEADER_GAP + HEADER_H + 26 }]} />
+      <View style={[s.top, { paddingTop: insets.top + HEADER_GAP }]}>
         <View style={s.row}>
           <Glass style={s.search}>
             <Ionicons name="location-outline" size={18} color={C.ink2} />
@@ -83,8 +86,8 @@ function Glass({ style, children }: { style: object; children: React.ReactNode }
 }
 
 const s = StyleSheet.create({
-  fade: { position: "absolute", top: 0, left: 0, right: 0, height: 180 },
-  top: { position: "absolute", top: 0, left: 0, right: 0, paddingTop: 58 },
+  fade: { position: "absolute", top: 0, left: 0, right: 0 },
+  top: { position: "absolute", top: 0, left: 0, right: 0 },
   row: { flexDirection: "row", gap: 8, paddingHorizontal: 16 },
   search: { flex: 1, flexDirection: "row", alignItems: "center", gap: 8, height: 48, paddingHorizontal: 16, borderRadius: R.pill,
     borderWidth: StyleSheet.hairlineWidth, borderColor: "rgba(17,17,17,0.08)", ...shadow },
