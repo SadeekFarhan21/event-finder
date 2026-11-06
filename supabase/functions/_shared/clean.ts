@@ -1,5 +1,6 @@
 // Cleanup shared by the agent (new results) and the store (merging runs).
 import type { YeloEvent } from "./discover.ts";
+import { calmCaps } from "./case.ts";
 
 // "Connolly's Pub (Times Square)" -> "Connolly's Pub"
 // "Dr. Martens Brand Centre, Herald Square" -> "Dr. Martens Brand Centre"
@@ -17,7 +18,7 @@ export function cleanVenue(name: string) {
 // "Happy Hour at Cubbyhole (Recurring)" -> "Happy Hour"; drops a trailing "at/@ <venue>"
 // (the sheet already shows the venue) and bracketed notes like "(Recurring)" or "[21+]".
 export function cleanTitle(title: string, venue: string) {
-  let t = title.replace(/\s*[([][^)\]]*[)\]]\s*/g, " ").replace(/\s+/g, " ").trim();
+  let t = calmCaps(title).replace(/\s*[([][^)\]]*[)\]]\s*/g, " ").replace(/\s+/g, " ").trim();
   const v = cleanVenue(venue).toLowerCase().replace(/^the\s+/, "");
   const m = /\s(?:at|@)\s+(.+)$/i.exec(t);
   if (m && m[1].toLowerCase().replace(/^the\s+/, "").startsWith(v.slice(0, 6))) t = t.slice(0, m.index).trim();

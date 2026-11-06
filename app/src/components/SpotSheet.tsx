@@ -19,6 +19,7 @@ import { inviteMessage } from "../data/social";
 import { crewInvite, leaveLabel, type Crew, type CrewStatus } from "../data/crews";
 import { HeadingOutSheet } from "./HeadingOutSheet";
 import { whenLabel } from "../lib/time";
+import { calmCaps } from "../lib/case";
 import type { Spot } from "../lib/types";
 import { CATEGORY, color as C, font as F, radius as R, shadow, text as T } from "../theme";
 import { Tap } from "./Tap";
@@ -162,7 +163,7 @@ export function SpotSheet({ spot, city, me, unlocked, canAskLocation, onAskLocat
               ))}
             </View>
 
-            <Text style={s.bill} numberOfLines={2}>{e.title}</Text>
+            <Text style={s.bill} numberOfLines={2}>{calmCaps(e.title)}</Text>
             {!!e.description && (
               <Tap pressedScale={1} onPress={() => setMore((m) => !m)} accessibilityLabel={more ? "Show less" : "Show more"}>
                 <Text style={s.desc} numberOfLines={more ? undefined : 2}>{e.description}</Text>

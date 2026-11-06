@@ -113,3 +113,11 @@ Deno.test("page photos: hostnames that resolve to private addresses are refused"
   assertEquals(await isSafeTarget("https://mixed.example.com/", dns({ "mixed.example.com": ["93.184.216.34", "10.0.0.5"] })), null);
   assertEquals(await isSafeTarget("https://nxdomain.example.com/", dns({})), null); // no records: fail closed
 });
+
+Deno.test("calmCaps: shouting scraped titles become title case, acronyms stay", async () => {
+  const { calmCaps } = await import("../_shared/case.ts");
+  assertEquals(calmCaps("AKIN B2B ABS - DERO B2B LATAS - ALPACA"), "Akin B2B Abs - Dero B2B Latas - Alpaca");
+  assertEquals(calmCaps("MEXAMORPHOSIS 10TH ANNIVERSARY WITH DJ SOL"), "Mexamorphosis 10th Anniversary with DJ Sol");
+  assertEquals(calmCaps("Corey King Live w/ Matthew Stevens"), "Corey King Live w/ Matthew Stevens"); // untouched
+  assertEquals(calmCaps("NYC"), "NYC");
+});

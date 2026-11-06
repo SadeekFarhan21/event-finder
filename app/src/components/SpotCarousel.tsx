@@ -10,6 +10,7 @@ import Animated, {
   type SharedValue,
 } from "react-native-reanimated";
 import { clock, isRecurring, whenLabel } from "../lib/time";
+import { calmCaps } from "../lib/case";
 import type { Spot } from "../lib/types";
 import { CARD_GAP, CARD_INSET, CARD_STEP, CARD_W, CAROUSEL_BOTTOM, MEDIA_H } from "../layout";
 import { CATEGORY, color as C, font as F, radius as R, shadow, text as T } from "../theme";
@@ -97,7 +98,7 @@ function Card({ spot: e, going, index, x, onPress, onRide }: {
         <View style={s.body}>
           <Text style={s.title} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75}>{e.venue}</Text>
           <Text style={s.sub} numberOfLines={1}>
-            {CATEGORY[e.category].label}  ·  {e.title}{e.price ? `  ·  ${e.price}` : ""}
+            {CATEGORY[e.category].label}  ·  {calmCaps(e.title)}{e.price ? `  ·  ${e.price}` : ""}
           </Text>
           <View style={s.footer}>
             <View style={s.going}>
