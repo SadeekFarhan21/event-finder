@@ -19,6 +19,7 @@ import type { ExaLike, GeoCache } from "../_shared/deps.ts";
 import type { Database } from "../_shared/database.types.ts";
 import { describeIssues, errorBody, ScoutRequest, SERVED_CITIES } from "../_shared/requests.ts";
 import { agentLogger, log } from "../_shared/log.ts";
+import { findPagePhoto } from "../_shared/photos.ts";
 
 type EventRow = Database["public"]["Tables"]["events"]["Row"];
 
@@ -66,6 +67,8 @@ Deno.serve(async (req) => {
   // Put approved venue submissions on the map (the rolling tick calls this; no search, no Exa).
   if (task === "publish") return trusted ? json(200, await publishApproved()) : json(401, errorBody("UNAUTHORIZED", "Not allowed."));
   if (task === "review") return review(req.headers.get("Authorization"), body);
+  // Fill in photos from event pages (the rolling tick calls this; no search, no Exa).
+  if (task === "photos") return trusted ? json(200, await fillPhotos()) : json(401, errorBody("UNAUTHORIZED", "Not allowed."));
 
   const city = canonicalCity(body.city);
   // Public runs only for the cities Yelo serves: arbitrary text never reaches the search prompt.
@@ -170,6 +173,29 @@ async function review(auth: string | null, body: Extract<ScoutRequest, { task: "
     return json(200, body.action === "approve" ? await publishApproved() : { ok: true });
   }
   return json(400, errorBody("BAD_REQUEST", "approve and reject need an id."));
+}
+
+// Up to 12 spots per call, soonest first, 4 pages at a time. Each spot is tried once.
+async function fillPhotos() {
+  const { data } = await db.from("events").select("id, url").is("image", null).is("photo_checked_at", null)
+    .like("url", "https://%").order("start", { ascending: true, nullsFirst: false }).limit(12);
+  const rows = data ?? [];
+  let found = 0;
+  for (let i = 0; i < rows.length; i += 4) {
+    await Promise.all(rows.slice(i, i + 4).map(async (r) => {
+      const image = await findPagePhoto(r.url!);
+      if (image) found++;
+      await db.from("events").update({ image, photo_checked_at: new Date().toISOString() }).eq("id", r.id);
+    }));
+  }
+  // A photo that turns up for more than one venue is a site's stock image, not this place.
+  const { data: dupes } = await db.from("events").select("image, venue").not("image", "is", null).not("photo_checked_at", "is", null);
+  const venuesBy = new Map<string, Set<string>>();
+  for (const d of dupes ?? []) venuesBy.set(d.image!, (venuesBy.get(d.image!) ?? new Set()).add(d.venue.toLowerCase()));
+  const stock = [...venuesBy].filter(([, v]) => v.size > 1).map(([img]) => img);
+  if (stock.length) await db.from("events").update({ image: null }).in("image", stock).not("photo_checked_at", "is", null);
+  log("photos.done", { tried: rows.length, found, droppedStock: stock.length });
+  return { tried: rows.length, found };
 }
 
 async function runRooms(city: string, say: (m: string) => void) {

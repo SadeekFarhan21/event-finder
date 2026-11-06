@@ -14,6 +14,7 @@ export const ScoutRequest = z.discriminatedUnion("task", [
   z.object({ task: z.literal("events"), city: City, focus: z.number().int().min(0).max(10_000).optional() }),
   z.object({ task: z.literal("rooms"), city: City }),
   z.object({ task: z.literal("publish") }),
+  z.object({ task: z.literal("photos") }),
   z.object({
     task: z.literal("review"),
     action: z.enum(["list", "approve", "reject"]),

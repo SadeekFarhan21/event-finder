@@ -99,6 +99,7 @@ export type Database = {
           lat: number
           lng: number
           partner: boolean
+          photo_checked_at: string | null
           price: string | null
           source: string
           start: string | null
@@ -119,6 +120,7 @@ export type Database = {
           lat: number
           lng: number
           partner?: boolean
+          photo_checked_at?: string | null
           price?: string | null
           source?: string
           start?: string | null
@@ -139,6 +141,7 @@ export type Database = {
           lat?: number
           lng?: number
           partner?: boolean
+          photo_checked_at?: string | null
           price?: string | null
           source?: string
           start?: string | null

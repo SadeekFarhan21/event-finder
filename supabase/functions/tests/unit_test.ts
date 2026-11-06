@@ -4,6 +4,7 @@ import { cleanTitle, cleanVenue, dedupeEvents } from "../_shared/clean.ts";
 import { canonicalCity, cityKey } from "../_shared/cities.ts";
 import { validDate, type YeloEvent } from "../_shared/discover.ts";
 import { describeIssues, errorBody, ScoutRequest } from "../_shared/requests.ts";
+import { isPublicHttps, ogImageFrom } from "../_shared/photos.ts";
 
 const ev = (over: Partial<YeloEvent>): YeloEvent => ({
   id: "x", city: "new york, ny", title: "Jazz", venue: "Nublu", address: "151 Avenue C", start: "2026-11-07T00:00:00Z",
@@ -78,4 +79,26 @@ Deno.test("scout requests are validated", () => {
   const bad = ScoutRequest.safeParse({ task: "events", city: "<script>" });
   assert(!bad.success && describeIssues(bad.error).startsWith("city:"));
   assertEquals(errorBody("BUSY", "Try later."), { error: "Try later.", code: "BUSY" });
+});
+
+Deno.test("page photos: og:image is read, made absolute, and junk is skipped", () => {
+  const page = "https://venue.example.com/events/jazz";
+  assertEquals(ogImageFrom(`<meta property="og:image" content="/img/night.jpg">`, page), "https://venue.example.com/img/night.jpg");
+  assertEquals(ogImageFrom(`<meta content="https://cdn.example.com/a.jpg?x=1&amp;y=2" name="twitter:image">`, page), "https://cdn.example.com/a.jpg?x=1&y=2");
+  assertEquals(ogImageFrom(`<meta property="og:image" content="https://cdn.example.com/logo.png">`, page), null);
+  assertEquals(ogImageFrom(`<meta property="og:image" content="data:image/png;base64,AAAA">`, page), null);
+  assertEquals(ogImageFrom(`<title>No preview</title>`, page), null);
+  // Site-wide share cards aren't a photo of this place.
+  assertEquals(ogImageFrom(`<meta property="og:image" content="https://heyfreenyc.com/brand/share/home.jpg">`, page), null);
+  assertEquals(ogImageFrom(`<meta property="og:image" content="https://askpigeon.com/nyc/pigeon-share.jpg">`, page), null);
+  assertEquals(ogImageFrom(`<meta property="og:image" content="https://dice.fm/static/images/dice-fan-social.png">`, page), null);
+  assert(ogImageFrom(`<meta property="og:image" content="https://gomag.com/wp-content/uploads/2023/06/cubbyhole.jpg">`, page));
+});
+
+Deno.test("page photos: only public https hosts are fetched (no SSRF to internal addresses)", () => {
+  assert(isPublicHttps("https://www.eventbrite.com/e/123"));
+  for (const bad of ["http://example.com", "https://localhost/x", "https://127.0.0.1/", "https://169.254.169.254/latest",
+    "https://[::1]/", "https://db.internal/", "https://user:pw@example.com/", "https://example.com:8443/", "file:///etc/passwd", "javascript:alert(1)"]) {
+    assertEquals(isPublicHttps(bad), null, bad);
+  }
 });
