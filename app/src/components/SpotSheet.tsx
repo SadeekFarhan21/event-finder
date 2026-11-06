@@ -228,8 +228,15 @@ export function SpotSheet({ spot, city, me, unlocked, canAskLocation, onAskLocat
             <View style={s.row}>
               <Ionicons name="location-outline" size={18} color={C.ink2} />
               <View style={{ flex: 1 }}>
-                <Text style={s.rowText} numberOfLines={1}>{addr.street}</Text>
-                <Text style={s.rowSub} numberOfLines={1}>{addr.rest}</Text>
+                {/* "Building 92, Brooklyn Navy Yard": don't repeat the venue name as the street. */}
+                {addr.street.toLowerCase() === e.venue.toLowerCase() && addr.rest ? (
+                  <Text style={s.rowText} numberOfLines={2}>{addr.rest}</Text>
+                ) : (
+                  <>
+                    <Text style={s.rowText} numberOfLines={1}>{addr.street}</Text>
+                    <Text style={s.rowSub} numberOfLines={1}>{addr.rest}</Text>
+                  </>
+                )}
               </View>
               <Tap onPress={() => Linking.openURL(config.directionsUrl(`${e.venue}, ${e.address}`))} hitSlop={10} accessibilityRole="link">
                 <Text style={s.link}>Directions</Text>
