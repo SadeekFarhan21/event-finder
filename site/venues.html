@@ -34,6 +34,10 @@
   h2 { font: 400 28px/1.1 var(--display); margin: 0 0 8px; }
   .note { font-size: 16px; color: var(--ink-3); margin: 0; max-width: 65ch; }
   section { margin-top: 48px; padding-top: 32px; border-top: 1px solid var(--line); }
+  /* Lookup: one row on desktop; on phones the city takes its own line and the button sits beside the name. */
+  .lookup { display: grid; grid-template-columns: 200px minmax(0, 1fr) auto; gap: 12px; align-items: end; margin-top: 16px; }
+  .lookup input, .lookup select { min-height: 48px; }
+  @media (max-width: 560px) { .lookup { grid-template-columns: minmax(0, 1fr) auto; } .lk-city { grid-column: 1 / -1; } }
   .row { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 16px; }
   label { display: grid; gap: 4px; font-size: 14px; font-weight: 500; color: var(--ink-2); min-width: 0; }
   input, select, textarea { font: 400 16px/1.4 var(--body); color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; min-height: 44px; width: 100%; }
@@ -131,15 +135,15 @@
   <section aria-labelledby="stats-h">
     <h2 id="stats-h">How riders engage with you</h2>
     <p class="note">Last 7 days. Counts come from the Scout app: people who opened your spot, tapped Ride, or unlocked your deal, and crews of friends heading to you together.</p>
-    <form class="row" id="lookup">
-      <label style="flex: 0 1 200px">City
+    <form class="lookup" id="lookup">
+      <label class="lk-city">City
         <select id="city"><option>New York, NY</option><option>Los Angeles, CA</option></select>
       </label>
-      <label style="flex: 1 1 260px">Venue name
+      <label class="lk-venue">Venue name
         <input id="venue" list="venues" placeholder="e.g. Nublu 151" autocomplete="off" required>
         <datalist id="venues"></datalist>
       </label>
-      <div style="align-self: end"><button class="btn" type="submit">Look up</button></div>
+      <button class="btn lk-go" type="submit">Look up</button>
     </form>
     <div id="result"></div>
   </section>
