@@ -56,8 +56,16 @@ export function SearchHeader({ city, onCityChange, onSubmitCity, onScout, scouti
           </Tap>
         </View>
 
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.chips}>
+          {FILTERS.map((k) => (
+            <Tap key={k} onPress={() => onFilter(k)} hitSlop={{ top: 6, bottom: 6 }} style={[s.chip, filter === k && s.chipOn]}
+              accessibilityRole="tab" accessibilityState={{ selected: filter === k }}>
+              <Text style={[s.chipText, filter === k && s.chipTextOn]}>{filterLabel(k)}</Text>
+            </Tap>
+          ))}
+        </ScrollView>
         {open && (
-          <Animated.View entering={FadeIn.duration(160)} exiting={FadeOut.duration(120)} style={s.menu}>
+          <Animated.View entering={FadeIn.duration(160)} exiting={FadeOut.duration(120)} style={[s.menu, { top: insets.top + HEADER_GAP + 52 }]}>
             {CITIES.map((c) => (
               <Tap key={c} pressedScale={0.99} style={s.menuRow} onPress={() => pickCity(c)} accessibilityState={{ selected: c === city }}>
                 <Text style={[s.menuText, c === city && { color: C.ink }]}>{c.split(",")[0]}</Text>
@@ -75,14 +83,6 @@ export function SearchHeader({ city, onCityChange, onSubmitCity, onScout, scouti
           </Animated.View>
         )}
 
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.chips}>
-          {FILTERS.map((k) => (
-            <Tap key={k} onPress={() => onFilter(k)} hitSlop={{ top: 6, bottom: 6 }} style={[s.chip, filter === k && s.chipOn]}
-              accessibilityRole="tab" accessibilityState={{ selected: filter === k }}>
-              <Text style={[s.chipText, filter === k && s.chipTextOn]}>{filterLabel(k)}</Text>
-            </Tap>
-          ))}
-        </ScrollView>
       </View>
     </>
   );
@@ -96,14 +96,14 @@ const s = StyleSheet.create({
   city: { flexShrink: 1, fontFamily: F.display, fontSize: 36, lineHeight: 44, color: C.ink },
   iconBtn: { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center",
     backgroundColor: "rgba(21,21,19,0.75)", borderWidth: StyleSheet.hairlineWidth, borderColor: C.d4 },
-  menu: { marginHorizontal: 16, marginTop: 4, backgroundColor: C.surface, borderRadius: R.md, paddingVertical: 4,
+  menu: { position: "absolute", left: 16, right: 16, zIndex: 10, backgroundColor: C.surface, borderRadius: R.md, paddingVertical: 4,
     borderWidth: StyleSheet.hairlineWidth, borderColor: C.d4, ...shadow },
   menuRow: { flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 16, minHeight: 48 },
   menuDivider: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: C.hairline },
   menuText: { fontFamily: F.medium, fontSize: T.body, color: C.ink2, flex: 1 },
   menuHint: { fontFamily: F.regular, fontSize: T.meta, color: C.ink3 },
-  chips: { gap: 8, paddingHorizontal: 16, paddingTop: 12, paddingBottom: 8 },
-  chip: { height: 32, paddingHorizontal: 14, justifyContent: "center", borderRadius: R.pill, backgroundColor: "rgba(21,21,19,0.75)",
+  chips: { gap: 6, paddingHorizontal: 16, paddingTop: 12, paddingBottom: 8 },
+  chip: { height: 32, paddingHorizontal: 12, justifyContent: "center", borderRadius: R.pill, backgroundColor: "rgba(21,21,19,0.75)",
     borderWidth: StyleSheet.hairlineWidth, borderColor: C.d4 },
   chipOn: { backgroundColor: C.ink, borderColor: C.ink },
   chipText: { fontFamily: F.medium, fontSize: T.small, color: C.ink2 },

@@ -68,7 +68,7 @@ export function ScoutScreen() {
   const liveCrews = crewsApi.crews.filter((c) => c.members.some((m) => m.me && m.status !== "out"));
 
   const [cityInput, setCityInput] = useState("New York, NY");
-  const [filter, setFilter] = useState<Filter>("all");
+  const [filter, setFilter] = useState<Filter>("tonight"); // Principle 1: open on tonight
   const [region, setRegion] = useState<Region>(START);
   const [active, setActive] = useState<Spot | null>(null); // highlighted on map + carousel
   const [detail, setDetail] = useState<Spot | null>(null); // open in the sheet
@@ -98,7 +98,10 @@ export function ScoutScreen() {
     setActive(null);
     try {
       const list = await load(city);
-      if (list.length) show(`${list.length} spots this week`);
+      // Open on tonight; on a quiet night (fewer than 3 things on), show the week instead.
+      const tonight = list.filter((e) => matches(e, "tonight")).length;
+      setFilter(tonight >= 3 ? "tonight" : "all");
+      if (list.length) show(tonight >= 3 ? `${tonight} things on tonight` : `${list.length} spots this week`);
       setTimeout(() => fit(list), 300);
     } catch (err) {
       show((err as Error).message || "Couldn't load spots", true);
