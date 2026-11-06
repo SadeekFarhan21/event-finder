@@ -87,7 +87,7 @@
     const res = await fetch(FN, { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${$("key").value}` },
       body: JSON.stringify({ task: "review", ...body }) });
     const data = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+    if (!res.ok) throw new Error(data.error || (res.status === 401 ? "That review key didn't work. Check it and try again." : "Couldn't reach Scout. Try again in a moment."));
     return data;
   }
 

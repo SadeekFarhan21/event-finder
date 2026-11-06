@@ -44,6 +44,10 @@
   .btn.primary:hover { background: var(--yellow-hover); }
   .btn.quiet { background: var(--surface); border: 1px solid var(--line); }
   .btn.quiet:hover { border-color: var(--ink-3); }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .band { display: flex; align-items: baseline; gap: 12px; padding: 24px 24px 20px; background: var(--fill); border-bottom: 1px solid var(--line); }
+  .band b { font: 400 48px/1 var(--display); color: var(--ink); }
+  .band span { font-size: 14px; color: var(--ink-3); }
   .note { font-size: 14px; color: var(--ink-3); margin: 16px 0 0; }
   .empty { margin-top: 48px; }
   .invite { font: 400 28px/1.2 var(--display); margin: 32px 0 0; text-wrap: balance; }
@@ -81,7 +85,8 @@
 <body>
 <div class="wrap">
   <a class="mark" href="./">Scout<i aria-hidden="true"></i></a>
-  <main id="app" aria-live="polite"><p class="note" style="margin-top:32px">Loading the night…</p></main>
+  <p id="live" class="sr" aria-live="polite"></p>
+  <main id="app"><p class="note" style="margin-top:32px">Loading the night…</p></main>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.0/dist/umd/supabase.js"></script>
@@ -161,6 +166,24 @@
       <div class="members">${chips}</div>${action}</section>`;
   }
 
+  // No photo (most scraped listings): the start time set large on a tonal band, as in the app.
+  function band(e) {
+    if (!e.start) return "";
+    const d = new Date(e.start), now = new Date();
+    const time = d.toLocaleTimeString(undefined, { hour: "numeric", minute: d.getMinutes() ? "2-digit" : undefined });
+    const night = (x) => new Date(x.getTime() - 6 * 3600e3).toDateString(); // a night runs until 6am
+    const day = night(d) === night(now) ? "Tonight" : d.toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" });
+    return `<div class="band" aria-hidden="true"><b>${esc(time)}</b><span>${esc(day)}</span></div>`;
+  }
+
+  // The page refreshes every 20 s; only a change in who's coming is announced, not the whole page.
+  let lastComing = null;
+  function announce(crew) {
+    const n = crew.members.filter((m) => m.status !== "out").length;
+    if (lastComing !== null && n !== lastComing) document.getElementById("live").textContent = `${n} coming now`;
+    lastComing = n;
+  }
+
   async function render() {
     const q = new URLSearchParams(location.search);
     const code = (q.get("crew") || "").toLowerCase();
@@ -191,7 +214,7 @@
     app.innerHTML = `
       ${crew ? `<p class="invite">${esc(crew.members[0]?.name ?? "A friend")} is heading out. Come with.</p>` : ""}
       <article class="card">
-        ${e.image ? `<img class="hero" src="${esc(e.image)}" alt="" referrerpolicy="no-referrer" onerror="this.remove()">` : ""}
+        ${e.image ? `<img class="hero" src="${esc(e.image)}" alt="" referrerpolicy="no-referrer" onerror="this.remove()">` : band(e)}
         <div class="body">
           <p class="eyebrow">${e.partner ? "Yelo partner · " : ""}${esc(LABEL[e.category] ?? "")}</p>
           <h1>${esc(e.venue)}</h1>
@@ -213,9 +236,10 @@
           </div>
         </div>
       </article>
-      <p class="note">Scout is an independent prototype, not an official Yelo app.</p>`;
+      <p class="note">Scout finds what's on tonight in New York and Los Angeles and shows the ride there. An independent prototype, not an official Yelo app.</p>`;
 
     if (!crew) return;
+    announce(crew);
     document.getElementById("join")?.addEventListener("submit", async (ev) => {
       ev.preventDefault();
       const name = document.getElementById("nm").value.trim(), btn = ev.target.querySelector("button");
