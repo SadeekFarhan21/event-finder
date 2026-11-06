@@ -24,7 +24,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { useFonts, InstrumentSerif_400Regular, InstrumentSerif_400Regular_Italic } from "@expo-google-fonts/instrument-serif";
 import { Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold } from "@expo-google-fonts/inter";
-import { API_URL, getEvents, getHealth, isRecurring, runDiscovery, whenLabel, type Category, type YeloEvent } from "./src/api";
+import { API_URL, getEvents, getHealth, isRecurring, nightEnd, runDiscovery, whenLabel, type Category, type YeloEvent } from "./src/api";
 import { clusterEvents, coreOf } from "./src/cluster";
 import { CATEGORY, color as C, font as F, radius as R, shadow } from "./src/theme";
 import { ScoutMap, ScoutMarker, type Region, type ScoutMapRef } from "./src/map/ScoutMap";
@@ -50,9 +50,7 @@ function matches(e: YeloEvent, f: Filter) {
     if (isRecurring(e)) return true;
     if (!e.start) return false;
     const t = Date.parse(e.start);
-    const end = new Date();
-    end.setHours(30, 0, 0, 0); // 6am tomorrow
-    return t > Date.now() - 3 * 3600e3 && t < end.getTime();
+    return t > Date.now() - 3 * 3600e3 && t < nightEnd();
   }
   return e.category === f;
 }
