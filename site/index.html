@@ -46,12 +46,13 @@
   :focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; border-radius: 8px; }
 
   header { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
-  .mark { display: flex; align-items: center; gap: 8px; font: 600 15px var(--body); }
-  .mark i { width: 28px; height: 28px; border-radius: 8px; background: var(--yellow); color: var(--on-yellow);
-    display: grid; place-items: center; font: 400 20px/1 var(--display); font-style: normal; }
+  .mark { display: inline-flex; align-items: baseline; gap: 0; font: 400 26px/1 var(--display); color: var(--ink); text-decoration: none; }
+  .mark i { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--yellow); margin-left: 3px; }
+  .mark-sub { font: 500 14px var(--body); color: var(--ink-3); margin-left: 10px; }
   .badge { font-size: 13px; color: var(--ink-3); }
 
-  .hero { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr); gap: 48px; align-items: center; margin-top: 48px; }
+  .hero { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr); gap: 48px; align-items: start; margin-top: 48px; }
+  .hero > :first-child { padding-top: 48px; }
   .eyebrow { font-size: 13px; color: var(--ink-3); }
   h1 { font: 400 clamp(44px, 7vw, 80px)/1 var(--display); letter-spacing: -0.015em; margin: 8px 0 0; text-wrap: balance; }
   h1 em { color: inherit; }
@@ -106,7 +107,7 @@
 
 <div class="wrap">
   <header>
-    <div class="mark"><i>s</i> Scout</div>
+    <a class="mark" href="./">Scout<i aria-hidden="true"></i></a>
     <span class="badge">Android · v1.0.0 · Nov 6, 2026</span>
   </header>
 

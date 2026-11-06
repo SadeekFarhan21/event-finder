@@ -24,8 +24,9 @@
   a { color: inherit; }
   :focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; border-radius: 8px; }
   header { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
-  .mark { display: flex; align-items: center; gap: 8px; min-height: 44px; font-weight: 600; text-decoration: none; }
-  .mark i { width: 28px; height: 28px; border-radius: 8px; background: var(--yellow); display: grid; place-items: center; font: 400 20px/1 var(--display); font-style: normal;  color: var(--on-yellow); }
+  .mark { display: inline-flex; align-items: baseline; gap: 0; font: 400 26px/1 var(--display); color: var(--ink); text-decoration: none; }
+  .mark i { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--yellow); margin-left: 3px; }
+  .mark-sub { font: 500 14px var(--body); color: var(--ink-3); margin-left: 10px; }
   nav a { display: inline-flex; align-items: center; min-height: 44px; font-size: 15px; color: var(--ink-2); }
   h1 { font: 400 clamp(40px, 6vw, 64px)/1.05 var(--display); letter-spacing: -0.01em; margin: 32px 0 0; text-wrap: balance; }
   h1 em { color: inherit; }
@@ -107,7 +108,7 @@
 <body>
 <div class="wrap">
   <header>
-    <a class="mark" href="./"><i>s</i> Scout for Venues</a>
+    <a class="mark" href="./">Scout<i aria-hidden="true"></i><span class="mark-sub">for Venues</span></a>
     <nav><a href="./">Get the app</a></nav>
   </header>
 
