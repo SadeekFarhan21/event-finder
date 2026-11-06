@@ -1,0 +1,17 @@
+{
+  "name": "yelo-discover-server",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node --env-file-if-exists=.env server.ts",
+    "discover": "node --env-file-if-exists=.env cli.ts",
+    "push": "node --env-file-if-exists=.env push-to-supabase.ts"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.119.0",
+    "exa-js": "^2.27.0"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6"
+  }
+}

@@ -1,0 +1,227 @@
+// The discovery agent: Exa search -> structured events -> geocode -> dedupe.
+import { isRateLimit, type AgentDeps, type GeoCache, type Point } from "./deps.ts";
+import { cleanTitle, cleanVenue } from "./clean.ts";
+import { partnerAddress, partnersIn } from "./partners.ts";
+
+export type Category = "nightlife" | "music" | "food_drink" | "arts" | "sports" | "community" | "deal";
+
+export type YeloEvent = {
+  id: string;
+  title: string;
+  venue: string;
+  address: string;
+  start: string | null; // ISO 8601 when the source gives one
+  category: Category;
+  price: string | null;
+  deal: string | null;
+  description: string;
+  url: string | null;
+  lat: number;
+  lng: number;
+  city: string;
+  confidence: "low" | "medium" | "high";
+  source: "exa" | "demo";
+  partner?: boolean; // one of Yelo's venue partners (see partners.ts)
+  discoveredAt: string;
+};
+
+const CATEGORIES: Category[] = ["nightlife", "music", "food_drink", "arts", "sports", "community", "deal"];
+
+// Exa caps an outputSchema at 10 properties total, so this is deliberately tight.
+const EVENT_SCHEMA = {
+  type: "object",
+  properties: {
+    events: {
+      type: "array",
+      maxItems: 12,
+      items: {
+        type: "object",
+        properties: {
+          title: { type: "string" },
+          venue: { type: "string", description: "Short venue name only, as on its sign (no neighborhood, room, or address)" },
+          address: { type: "string", description: "Street address of the venue, including neighborhood if known" },
+          start: { type: "string", description: "Start date and time in ISO 8601 with local offset, or empty if unknown" },
+          category: { type: "string", enum: CATEGORIES },
+          price: { type: "string", description: "Ticket price or cover, e.g. 'Free', '$25', or empty" },
+          deal: { type: "string", description: "Drink or food special / promo code, or empty" },
+          description: { type: "string", description: "One short, punchy line (under 90 chars) on the vibe, like 'Petite wine bar pairing natural wines with small plates.'" },
+          url: { type: "string", description: "Link to the event or venue page" },
+        },
+        required: ["title", "venue", "address", "start", "category", "description"],
+      },
+    },
+  },
+  required: ["events"],
+};
+
+// Several angles per city: Exa returns better lists when each query has one intent.
+function queriesFor(city: string) {
+  return [
+    `Events, parties and things to do in ${city} tonight and this weekend`,
+    `Live music and concerts in ${city} this week at bars and small venues`,
+    `Happy hour deals and drink specials at bars in ${city}`,
+    `Club nights, DJ sets and nightlife events in ${city} this week`,
+    `Free community events, pop-ups, and art openings in ${city} this week`,
+    // Yelo builds nights at its partner rooms; always check what's on there.
+    ...(partnersIn(city).length
+      ? [`Upcoming events and nights this week at ${partnersIn(city).map((p) => p.name + (p.area ? ` (${p.area})` : "")).join(", ")} in ${city}`]
+      : []),
+  ];
+}
+
+type RawEvent = Partial<Record<keyof YeloEvent, string>>;
+
+export async function discover(city: string, { exa, geo, log = () => {}, deadline = Infinity }: AgentDeps): Promise<YeloEvent[]> {
+  const now = new Date();
+  const weekOut = new Date(now.getTime() + 7 * 864e5);
+  const systemPrompt = [
+    `Today is ${now.toDateString()}. Only include events in ${city} between now and ${weekOut.toDateString()},`,
+    `plus recurring bar deals (happy hours) that are currently running.`,
+    `Every item must be a real, specific venue with a street address someone could take a ride to.`,
+    `Skip listicles' generic advice, past events, virtual events, and anything outside ${city}.`,
+    `Favor places a group of 20-somethings would ride to tonight: bars, small venues, parties, pop-ups, deals.`,
+  ].join(" ");
+
+  const runs = await Promise.allSettled(
+    queriesFor(city).map(async (query, i) => {
+      // Stagger starts: deep search fans out internally, and firing all at once trips
+      // Exa's 10 req/s team limit. One retry on a rate-limit error.
+      await sleep(i * 700);
+      log(`exa: ${query}`);
+      const res = await withRateLimitRetry(() => exa.search(query, {
+        // Per Exa's guidance: structured output with 3+ fields -> "deep".
+        // Listings change daily, so refetch pages older than a day.
+        type: "deep",
+        numResults: 10,
+        systemPrompt,
+        outputSchema: EVENT_SCHEMA,
+        contents: { highlights: true, maxAgeHours: 24 },
+      }), log);
+      const content = res.output?.content;
+      const parsed = typeof content === "string" ? JSON.parse(content) : content;
+      const events: RawEvent[] = Array.isArray(parsed?.events) ? parsed.events : [];
+      // Grounding is per field, e.g. "events[3].title" -> confidence + citations.
+      const grounding = res.output?.grounding ?? [];
+      return events.map((e, i): RawEvent & { confidence: YeloEvent["confidence"] } => {
+        const g = grounding.filter((x) => x.field.startsWith(`events[${i}]`));
+        const rank = { low: 0, medium: 1, high: 2 } as const;
+        const confidence = g.length ? g.reduce((m, x) => (rank[x.confidence] < rank[m] ? x.confidence : m), "high" as YeloEvent["confidence"]) : "medium";
+        return { ...e, url: e.url || g.flatMap((x) => x.citations)[0]?.url || "", confidence };
+      });
+    }),
+  );
+
+  const raw = runs.flatMap((r) => {
+    if (r.status === "rejected") log(`exa error: ${r.reason}`);
+    return r.status === "fulfilled" ? r.value : [];
+  });
+  log(`exa returned ${raw.length} candidates`);
+
+  const unique = dedupe(raw.filter((e) => e.title && e.venue && e.address));
+  log(`${unique.length} after dedupe, geocoding...`);
+
+  // Geocoders sometimes match a venue name to a same-named place far away; keep pins near the city.
+  const geocode = (q: string, c: string) => geocodeWith(geo, q, c);
+  const center = await geocode(city, city);
+  const out: YeloEvent[] = [];
+  for (const e of unique) {
+    if (Date.now() > deadline) {
+      log(`  out of time, placed what we could`);
+      break;
+    }
+    // Most specific first; the bare venue name catches well-known rooms whose scraped address is off.
+    const known = partnerAddress(e.venue!);
+    const pt = (known && await geocode(known, city))
+      ?? await geocode(`${e.venue}, ${e.address}`, city) ?? await geocode(e.address!, city) ?? await geocode(e.venue!, city);
+    if (!pt) {
+      log(`  could not place "${e.venue}"`);
+      continue;
+    }
+    if (center && km(center, pt) > MAX_KM_FROM_CENTER) {
+      log(`  dropped "${e.venue}": geocoded ${Math.round(km(center, pt))} km from ${city}`);
+      continue;
+    }
+    out.push({
+      id: slug(`${city}-${e.venue}-${e.title}-${e.start ?? ""}`),
+      title: cleanTitle(e.title!, e.venue!),
+      venue: cleanVenue(e.venue!),
+      address: e.address!,
+      start: validDate(e.start),
+      category: CATEGORIES.includes(e.category as Category) ? (e.category as Category) : "community",
+      price: e.price || null,
+      deal: e.deal || null,
+      description: e.description ?? "",
+      url: e.url || null,
+      lat: pt.lat,
+      lng: pt.lng,
+      city,
+      confidence: (e.confidence as YeloEvent["confidence"]) ?? "medium",
+      source: "exa",
+      discoveredAt: now.toISOString(),
+    });
+  }
+  log(`placed ${out.length} events on the map`);
+  return out;
+}
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+async function withRateLimitRetry<T>(fn: () => Promise<T>, log: (m: string) => void): Promise<T> {
+  try {
+    return await fn();
+  } catch (err) {
+    if (!isRateLimit(err)) throw err;
+    log("  exa rate-limited, retrying in 2s");
+    await sleep(2000);
+    return fn();
+  }
+}
+
+function dedupe(events: RawEvent[]) {
+  const seen = new Map<string, RawEvent>();
+  for (const e of events) {
+    const key = `${norm(e.venue!)}|${norm(e.title!).slice(0, 24)}|${(e.start ?? "").slice(0, 10)}`;
+    if (!seen.has(key)) seen.set(key, e);
+  }
+  return [...seen.values()];
+}
+
+const MAX_KM_FROM_CENTER = 40;
+
+export function km(a: { lat: number; lng: number }, b: { lat: number; lng: number }) {
+  const rad = Math.PI / 180;
+  const dLat = (b.lat - a.lat) * rad, dLng = (b.lng - a.lng) * rad;
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(a.lat * rad) * Math.cos(b.lat * rad) * Math.sin(dLng / 2) ** 2;
+  return 12742 * Math.asin(Math.sqrt(h));
+}
+
+const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
+const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 80);
+const validDate = (s?: string) => (s && !Number.isNaN(Date.parse(s)) ? new Date(s).toISOString() : null);
+
+// --- Geocoding (OpenStreetMap Nominatim: free, 1 req/sec; results cached by the host) ---
+let lastGeo = 0;
+
+async function geocodeWith(cache: GeoCache, raw: string, city: string): Promise<Point | null> {
+  // "943 N Broadway, Los Angeles, CA 90012 (Chinatown)" -> Nominatim finds nothing with the note attached.
+  const q = raw.replace(/\s*\([^)]*\)/g, "").replace(/\s+/g, " ").trim();
+  if (!q) return null;
+  const key = `${q}|${city}`.toLowerCase();
+  const cached = await cache.get(key);
+  if (cached !== undefined) return cached;
+  const wait = lastGeo + 1100 - Date.now();
+  if (wait > 0) await new Promise((r) => setTimeout(r, wait));
+  lastGeo = Date.now();
+  const query = q.toLowerCase().includes(city.toLowerCase().split(",")[0]) ? q : `${q}, ${city}`;
+  try {
+    const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(query)}`, {
+      headers: { "User-Agent": "yelo-scout-prototype/0.1" },
+    });
+    const [hit] = (await res.json()) as { lat: string; lon: string }[];
+    const pt = hit ? { lat: +hit.lat, lng: +hit.lon } : null;
+    await cache.set(key, pt);
+    return pt;
+  } catch {
+    return null; // network blip: don't cache the miss
+  }
+}
