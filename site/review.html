@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Scout Listing Review</title>
+<link rel="icon" href="favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=Inter:wght@400;500;600&display=swap">
+<style>
+  :root {
+    --bg: #FBFAF6; --surface: #FFFFFF; --fill: #F4F2EA; --line: #E8E5D9;
+    --ink: #1A1814; --ink-2: #4F4B42; --ink-3: #6B665A; --yellow: #FFE600; --blue: #1F4FFF; --red: #B42318;
+    --display: "Instrument Serif", Georgia, serif; --body: "Inter", system-ui, sans-serif;
+  }
+  *,*::before,*::after { box-sizing: border-box }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 400 15px/1.5 var(--body); }
+  .wrap { max-width: 860px; margin: 0 auto; padding: 28px 16px 64px; }
+  :focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; border-radius: 6px; }
+  h1 { font: 400 44px/1 var(--display); margin: 0; }
+  .note { color: var(--ink-3); font-size: 14px; margin: 8px 0 0; }
+  .keyrow { display: flex; gap: 8px; margin-top: 20px; flex-wrap: wrap; }
+  input, textarea { font: inherit; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; min-width: 0; }
+  .keyrow input { flex: 1 1 260px; }
+  button { font: 600 14px var(--body); border: 0; border-radius: 999px; padding: 10px 16px; cursor: pointer; background: var(--ink); color: #fff; }
+  button.approve { background: var(--yellow); color: var(--ink); }
+  button.reject { background: var(--fill); color: var(--ink); }
+  button:disabled { opacity: .5; cursor: default; }
+  h2 { font: 400 28px/1.1 var(--display); margin: 36px 0 10px; }
+  .item { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px; margin-top: 10px; }
+  .meta { font-size: 12px; color: var(--ink-3); margin: 0; }
+  .venue { font: 400 26px/1.1 var(--display); margin: 4px 0 0; }
+  .title { font-weight: 600; margin: 4px 0 0; }
+  dl { display: grid; grid-template-columns: 80px minmax(0, 1fr); gap: 4px 12px; margin: 12px 0 0; font-size: 14px; }
+  dt { color: var(--ink-3); } dd { margin: 0; overflow-wrap: anywhere; }
+  .actions { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; align-items: center; }
+  .actions input { flex: 1 1 200px; }
+  .empty { color: var(--ink-3); }
+  .err { color: var(--red); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Listing review</h1>
+  <p class="note">Venue submissions waiting for a yes or no. Approved listings go on Scout's map right away.</p>
+  <form class="keyrow" id="keyform">
+    <input id="key" type="password" placeholder="Review key" autocomplete="current-password" aria-label="Review key" required>
+    <button type="submit">Open queue</button>
+  </form>
+  <p class="err" id="err" role="alert"></p>
+  <div id="queue"></div>
+</div>
+<script>
+  const FN = "https://ihxsdwpersowxxtgqcws.supabase.co/functions/v1/scout";
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+  // The key stays in this browser only (it's the reviewer's own browser), so the queue reopens on reload.
+  const store = { get: () => { try { return localStorage.getItem("scout.reviewKey"); } catch { return null; } },
+                  set: (k) => { try { localStorage.setItem("scout.reviewKey", k); } catch {} } };
+
+  async function call(body) {
+    const res = await fetch(FN, { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${$("key").value}` },
+      body: JSON.stringify({ task: "review", ...body }) });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+    return data;
+  }
+
+  function item(s) {
+    const when = s.start ? new Date(s.start).toLocaleString(undefined, { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "Standing deal";
+    return `<article class="item" data-id="${s.id}">
+      <p class="meta">${esc(s.city)} · ${esc(s.category)} · sent ${new Date(s.updated_at).toLocaleString()}</p>
+      <p class="venue">${esc(s.venue)}</p><p class="title">${esc(s.title)}</p>
+      <dl><dt>When</dt><dd>${esc(when)}</dd><dt>Address</dt><dd>${esc(s.address)}</dd>
+        ${s.deal ? `<dt>Deal</dt><dd>${esc(s.deal)}</dd>` : ""}${s.description ? `<dt>About</dt><dd>${esc(s.description)}</dd>` : ""}
+        ${s.url ? `<dt>Link</dt><dd><a href="${esc(s.url)}" target="_blank" rel="noopener noreferrer">${esc(s.url)}</a></dd>` : ""}
+        <dt>Contact</dt><dd>${esc(s.contact_email)}</dd></dl>
+      ${s.status === "pending" ? `<div class="actions"><button class="approve" data-act="approve">Approve</button>
+        <input placeholder="Note to the venue if rejecting (optional)" maxlength="300" aria-label="Rejection note">
+        <button class="reject" data-act="reject">Reject</button></div>` : ""}
+    </article>`;
+  }
+
+  async function load() {
+    $("err").textContent = "";
+    try {
+      const { submissions } = await call({ action: "list" });
+      store.set($("key").value);
+      const group = (st) => submissions.filter((s) => s.status === st);
+      const pending = group("pending");
+      $("queue").innerHTML = `<h2>Waiting (${pending.length})</h2>${pending.map(item).join("") || `<p class="empty">Nothing to review.</p>`}
+        <h2>Approved</h2>${group("approved").map(item).join("") || `<p class="empty">None yet.</p>`}
+        ${group("rejected").length ? `<h2>Rejected</h2>${group("rejected").map(item).join("")}` : ""}`;
+    } catch (e) { $("err").textContent = e.message; }
+  }
+
+  $("keyform").addEventListener("submit", (ev) => { ev.preventDefault(); load(); });
+  $("queue").addEventListener("click", async (ev) => {
+    const b = ev.target.closest("button[data-act]"); if (!b) return;
+    const card = b.closest(".item"); card.querySelectorAll("button").forEach((x) => (x.disabled = true));
+    try {
+      const r = await call({ action: b.dataset.act, id: Number(card.dataset.id), note: card.querySelector("input")?.value });
+      if (r.failed?.length) $("err").textContent = `Couldn't place it on the map: ${r.failed[0].why}. It's back in the queue.`;
+      load();
+    } catch (e) { $("err").textContent = e.message; card.querySelectorAll("button").forEach((x) => (x.disabled = false)); }
+  });
+  const saved = store.get(); if (saved) { $("key").value = saved; load(); }
+</script>
+</body>
+</html>
