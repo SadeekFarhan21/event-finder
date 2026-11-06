@@ -1,7 +1,7 @@
 // Spot details, modeled on Yelo's spot card: venue, when/where/price, Ride and Unlock.
 // A real bottom sheet: springs up, drags down to dismiss, backdrop fades with the drag.
 import { useEffect, useState, type ComponentProps } from "react";
-import { Dimensions, Linking, Pressable, StyleSheet, Text, View } from "react-native";
+import { BackHandler, Dimensions, Linking, Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Image } from "expo-image";
 import * as Haptics from "expo-haptics";
@@ -37,6 +37,13 @@ export function SpotSheet({ spot, me, unlocked, onUnlock, onClose }: Props) {
     y.value = withTiming(OFFSCREEN, { duration: 240 }, (done) => { if (done) scheduleOnRN(finish); });
   };
   const finish = () => { setShown(null); onClose(); };
+
+  // Android's back button closes the sheet instead of leaving the app.
+  useEffect(() => {
+    if (!shown) return;
+    const sub = BackHandler.addEventListener("hardwareBackPress", () => { close(); return true; });
+    return () => sub.remove();
+  }, [shown]);
 
   const drag = Gesture.Pan()
     .onUpdate((e) => { y.value = Math.max(0, e.translationY); })

@@ -12,11 +12,11 @@ type Props = Omit<PressableProps, "style" | "children"> & {
   children: ReactNode;
 };
 
-export function Tap({ style, pressedScale = 0.97, onPressIn, onPressOut, children, ...rest }: Props) {
+export function Tap({ style, pressedScale = 0.97, onPressIn, onPressOut, accessibilityRole = "button", children, ...rest }: Props) {
   const scale = useSharedValue(1);
   const animated = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
   return (
-    <AnimatedPressable {...rest} style={[style, animated]}
+    <AnimatedPressable {...rest} accessibilityRole={accessibilityRole} style={[style, animated]}
       onPressIn={(e) => { scale.value = withSpring(pressedScale, SPRING); onPressIn?.(e); }}
       onPressOut={(e) => { scale.value = withSpring(1, SPRING); onPressOut?.(e); }}>
       {children}

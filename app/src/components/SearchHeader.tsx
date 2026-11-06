@@ -46,7 +46,8 @@ export function SearchHeader({ city, onCityChange, onSubmitCity, onScout, scouti
               placeholderTextColor={C.ink3} style={s.input} returnKeyType="search" selectTextOnFocus
               onFocus={() => setEditing(true)} onBlur={() => setEditing(false)} />
           </Glass>
-          <Tap onPress={onScout} disabled={scouting || !scoutable} style={[s.scout, !scoutable && { opacity: 0.4 }]}>
+          <Tap onPress={onScout} disabled={scouting || !scoutable} style={[s.scout, !scoutable && { opacity: 0.4 }]}
+            accessibilityLabel={scouting ? "Scouting this city" : "Scout this city"} accessibilityState={{ busy: scouting, disabled: scouting || !scoutable }}>
             {scouting ? <ActivityIndicator color="#fff" size="small" /> : <Text style={s.scoutText}>Scout</Text>}
           </Tap>
         </View>
@@ -65,7 +66,7 @@ export function SearchHeader({ city, onCityChange, onSubmitCity, onScout, scouti
 
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.chips}>
           {FILTERS.map((k) => (
-            <Tap key={k} onPress={() => onFilter(k)} style={[s.chip, filter === k && s.chipOn]}>
+            <Tap key={k} onPress={() => onFilter(k)} style={[s.chip, filter === k && s.chipOn]} accessibilityState={{ selected: filter === k }}>
               <Text style={[s.chipText, filter === k && s.chipTextOn]}>{filterLabel(k)}</Text>
             </Tap>
           ))}
