@@ -468,6 +468,7 @@ export type Database = {
         Returns: undefined
       }
       prune_events: { Args: never; Returns: number }
+      same_venue: { Args: { a: string; b: string }; Returns: boolean }
       scout_tick: { Args: never; Returns: undefined }
       set_crew_status: {
         Args: { p_code: string; p_device_id: string; p_status: string }
@@ -503,6 +504,10 @@ export type Database = {
         }
         Returns: string
       }
+      ungo: {
+        Args: { p_device_id: string; p_spot_id: string }
+        Returns: undefined
+      }
       update_listing: {
         Args: {
           p_address: string
@@ -532,6 +537,7 @@ export type Database = {
           partner: boolean
           start: string
           title: string
+          venue: string
         }[]
       }
       venue_stats: {
@@ -540,6 +546,12 @@ export type Database = {
           kind: string
           people: number
           total: number
+        }[]
+      }
+      venue_suggest: {
+        Args: { p_city: string; p_venue: string }
+        Returns: {
+          venue: string
         }[]
       }
       withdraw_listing: { Args: { p_token: string }; Returns: undefined }
