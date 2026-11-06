@@ -184,7 +184,7 @@ export function SpotSheet({ spot, city, me, unlocked, canAskLocation, onAskLocat
         {/* Actions stay put while the details scroll */}
         <View style={[s.actions, { paddingBottom: Math.max(insets.bottom, 16) + 8 }]}>
           <Tap style={[s.btn, s.btnPrimary]} onPress={() => { track(e, "ride", city); openRide(e); }}>
-            <Ionicons name="car-outline" size={18} color={C.ink} />
+            <Ionicons name="car-outline" size={18} color={C.onAccent} />
             <Text style={s.btnPrimaryText}>{fare ? `Ride · ~$${fare.yelo}` : "Ride there"}</Text>
           </Tap>
           {e.deal ? (
@@ -237,17 +237,17 @@ const s = StyleSheet.create({
   chipOn: { backgroundColor: C.fill, borderColor: C.ink2 },
   chipIcon: { flex: 0, width: 44 },
   chipText: { fontFamily: F.semibold, fontSize: T.small, color: C.ink },
-  dealCard: { marginTop: 20, padding: 16, borderRadius: R.md, backgroundColor: C.blue },
-  dealLabel: { fontFamily: F.medium, fontSize: T.meta, color: "rgba(255,255,255,0.7)" },
-  dealText: { fontFamily: F.semibold, fontSize: T.body, lineHeight: 24, color: C.surface, marginTop: 4 },
-  dealHint: { fontFamily: F.regular, fontSize: T.small, color: "rgba(255,255,255,0.7)", marginTop: 8 },
+  dealCard: { marginTop: 20, padding: 16, borderRadius: R.md, backgroundColor: C.fill, borderLeftWidth: 3, borderLeftColor: C.accent },
+  dealLabel: { fontFamily: F.medium, fontSize: T.meta, color: C.ink3 },
+  dealText: { fontFamily: F.semibold, fontSize: T.body, lineHeight: 24, color: C.ink, marginTop: 4 },
+  dealHint: { fontFamily: F.regular, fontSize: T.small, color: C.ink3, marginTop: 8 },
   actions: { flexDirection: "row", gap: 12, paddingHorizontal: 24, paddingTop: 12,
     borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: C.hairline, backgroundColor: C.surface },
   btn: { flex: 1, height: 52, borderRadius: R.pill, flexDirection: "row", gap: 8, alignItems: "center", justifyContent: "center" },
-  btnPrimary: { backgroundColor: C.yellow },
-  btnPrimaryText: { fontFamily: F.semibold, fontSize: T.body, color: C.ink },
-  btnDeal: { backgroundColor: C.surface, borderWidth: 1.5, borderColor: C.blue },
-  btnDealText: { fontFamily: F.semibold, fontSize: T.body, color: C.blue },
+  btnPrimary: { backgroundColor: C.accent },
+  btnPrimaryText: { fontFamily: F.semibold, fontSize: T.body, color: C.onAccent },
+  btnDeal: { backgroundColor: C.surface, borderWidth: 1, borderColor: C.strong },
+  btnDealText: { fontFamily: F.semibold, fontSize: T.body, color: C.ink },
   btnQuiet: { backgroundColor: C.fill },
   btnQuietText: { fontFamily: F.semibold, fontSize: T.body, color: C.ink },
   source: { fontFamily: F.regular, fontSize: T.meta, color: C.ink3, marginTop: 16 },

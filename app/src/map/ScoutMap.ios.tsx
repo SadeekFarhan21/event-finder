@@ -12,7 +12,7 @@ export function ScoutMap({ ref, initialRegion, showsUserLocation, onRegionChange
   }), []);
 
   return (
-    <MapView ref={map} style={StyleSheet.absoluteFill} initialRegion={initialRegion} userInterfaceStyle="light"
+    <MapView ref={map} style={StyleSheet.absoluteFill} initialRegion={initialRegion} userInterfaceStyle="dark"
       mapType="mutedStandard" showsPointsOfInterests={false} showsCompass={false} toolbarEnabled={false}
       showsUserLocation={showsUserLocation} onRegionChangeComplete={onRegionChange} onPress={onPress}>
       {children}

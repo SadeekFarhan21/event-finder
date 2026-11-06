@@ -39,7 +39,7 @@ export function SearchHeader({ city, onCityChange, onSubmitCity, onScout, scouti
   return (
     <>
       {/* Soft fade so map labels don't fight the controls */}
-      <LinearGradient pointerEvents="none" colors={["rgba(251,250,246,0.98)", "rgba(251,250,246,0.75)", "rgba(251,250,246,0)"]}
+      <LinearGradient pointerEvents="none" colors={["rgba(12,12,10,0.96)", "rgba(12,12,10,0.7)", "rgba(12,12,10,0)"]}
         locations={[0, 0.55, 1]} style={[s.fade, { height: insets.top + HEADER_GAP + HEADER_H + 26 }]} />
       <View style={[s.top, { paddingTop: insets.top + HEADER_GAP }]}>
         <View style={s.row}>
@@ -83,7 +83,7 @@ export function SearchHeader({ city, onCityChange, onSubmitCity, onScout, scouti
 // Frosted glass on iOS; Android's blur is costly on older devices, so it gets a solid surface.
 function Glass({ style, children }: { style: object; children: React.ReactNode }) {
   if (Platform.OS !== "ios") return <View style={[style, { backgroundColor: C.surface }]}>{children}</View>;
-  return <BlurView intensity={60} tint="systemChromeMaterialLight" style={[style, { overflow: "hidden" }]}>{children}</BlurView>;
+  return <BlurView intensity={60} tint="systemChromeMaterialDark" style={[style, { overflow: "hidden" }]}>{children}</BlurView>;
 }
 
 const s = StyleSheet.create({

@@ -16,6 +16,7 @@ import { useMyLocation } from "../hooks/useMyLocation";
 import { useGoing } from "../hooks/useGoing";
 import { useCrews } from "../hooks/useCrews";
 import { openRide } from "../lib/ride";
+import { track } from "../data/activity";
 import { useToast } from "../hooks/useToast";
 import { SearchHeader } from "../components/SearchHeader";
 import { SpotPins } from "../components/SpotPins";
@@ -156,7 +157,7 @@ export function ScoutScreen() {
 
   return (
     <View style={s.root}>
-      <StatusBar style="dark" />
+      <StatusBar style="light" />
       <ScoutMap ref={map} initialRegion={START} showsUserLocation={!!me} onRegionChange={setRegion} onPress={() => setActive(null)}>
         <SpotPins clusters={clusters} active={active}
           onSpot={(e) => focus(e, true)} onCluster={openCluster} onActive={setDetail} />
@@ -188,7 +189,8 @@ export function ScoutScreen() {
           </Animated.View>
           <SpotCarousel ref={carousel} spots={shown} going={going} activeId={active?.id ?? null}
             onSettle={(e) => { Haptics.selectionAsync(); focus(e); }}
-            onPress={(e) => (active?.id === e.id ? setDetail(e) : focus(e, true))} />
+            onPress={(e) => (active?.id === e.id ? setDetail(e) : focus(e, true))}
+            onRide={(e) => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); track(e, "ride", mapCity ?? cityInput); openRide(e); }} />
         </>
       )}
 

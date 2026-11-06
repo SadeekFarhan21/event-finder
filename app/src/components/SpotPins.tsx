@@ -35,7 +35,7 @@ export function SpotPins({ clusters, active, onSpot, onCluster, onActive }: Prop
         <ScoutMarker key={`active-${active.id}`} coordinate={{ latitude: active.lat, longitude: active.lng }} zIndex={999}
           anchor={{ x: 0.5, y: 0.3 }} live onPress={() => onActive(active)}>
           <View style={{ alignItems: "center" }}>
-            <View style={s.pinActive}><Ionicons name={CATEGORY[active.category].icon} size={20} color={C.ink} /></View>
+            <View style={s.pinActive}><Ionicons name={CATEGORY[active.category].icon} size={20} color={C.onAccent} /></View>
             <View style={s.label}><Text style={s.labelText} numberOfLines={1}>{active.venue}</Text></View>
           </View>
         </ScoutMarker>
@@ -53,10 +53,10 @@ const clusterSize = (n: number) => {
 
 const s = StyleSheet.create({
   pin: { width: 28, height: 28, borderRadius: 14, backgroundColor: C.ink, borderWidth: 2, borderColor: C.surface, alignItems: "center", justifyContent: "center", ...shadow },
-  pinPartner: { borderColor: C.yellow, borderWidth: 3 },
-  pinActive: { width: 42, height: 42, borderRadius: 21, backgroundColor: C.yellow, borderWidth: 3, borderColor: C.surface, alignItems: "center", justifyContent: "center", ...shadow },
+  pinPartner: { borderColor: C.accent, borderWidth: 3 },
+  pinActive: { width: 42, height: 42, borderRadius: 21, backgroundColor: C.accent, borderWidth: 3, borderColor: C.bg, alignItems: "center", justifyContent: "center", ...shadow },
   label: { marginTop: 4, paddingHorizontal: 8, paddingVertical: 4, borderRadius: R.pill, backgroundColor: C.surface, maxWidth: 180, ...shadow },
   labelText: { fontFamily: F.semibold, fontSize: T.meta, color: C.ink },
-  cluster: { paddingHorizontal: 8, backgroundColor: C.surface, borderWidth: 1.5, borderColor: C.ink, alignItems: "center", justifyContent: "center", ...shadow },
+  cluster: { paddingHorizontal: 8, backgroundColor: C.surface, borderWidth: 1.5, borderColor: C.ink2, alignItems: "center", justifyContent: "center", ...shadow },
   clusterText: { fontFamily: F.semibold, fontSize: T.small, color: C.ink },
 });

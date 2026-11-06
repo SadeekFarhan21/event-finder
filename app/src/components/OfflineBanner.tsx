@@ -15,7 +15,7 @@ export function OfflineBanner({ top }: { top: number }) {
   return (
     <Animated.View entering={FadeInUp} exiting={FadeOutUp} style={[s.banner, { top: top + HEADER_GAP + HEADER_H + 8 }]}
       accessibilityRole="alert" accessibilityLiveRegion="polite">
-      <Ionicons name="cloud-offline-outline" size={16} color={C.surface} />
+      <Ionicons name="cloud-offline-outline" size={16} color={C.ink2} />
       <Text style={s.text}>No connection. Showing what loaded last.</Text>
     </Animated.View>
   );
@@ -23,6 +23,6 @@ export function OfflineBanner({ top }: { top: number }) {
 
 const s = StyleSheet.create({
   banner: { position: "absolute", left: 16, right: 16, flexDirection: "row", alignItems: "center", gap: 8,
-    paddingHorizontal: 16, paddingVertical: 12, borderRadius: R.md, backgroundColor: C.ink, ...shadow },
-  text: { flex: 1, fontFamily: F.medium, fontSize: T.small, color: C.surface },
+    paddingHorizontal: 16, paddingVertical: 12, borderRadius: R.md, backgroundColor: C.d3, borderWidth: StyleSheet.hairlineWidth, borderColor: C.d4, ...shadow },
+  text: { flex: 1, fontFamily: F.medium, fontSize: T.small, color: C.ink },
 });

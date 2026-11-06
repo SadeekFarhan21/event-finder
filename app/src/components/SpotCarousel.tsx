@@ -3,13 +3,15 @@
 import { useImperativeHandle, type Ref } from "react";
 import { StyleSheet, Text, View, type NativeScrollEvent, type NativeSyntheticEvent } from "react-native";
 import { Image } from "expo-image";
+import { LinearGradient } from "expo-linear-gradient";
+import { Ionicons } from "@expo/vector-icons";
 import Animated, {
   Extrapolation, FadeInDown, interpolate, useAnimatedRef, useAnimatedScrollHandler, useAnimatedStyle, useSharedValue,
   type SharedValue,
 } from "react-native-reanimated";
 import { whenLabel } from "../lib/time";
 import type { Spot } from "../lib/types";
-import { CARD_GAP, CARD_INSET, CARD_STEP, CARD_W, CAROUSEL_BOTTOM } from "../layout";
+import { CARD_GAP, CARD_INSET, CARD_STEP, CARD_W, CAROUSEL_BOTTOM, MEDIA_H } from "../layout";
 import { CATEGORY, color as C, font as F, radius as R, shadow, text as T } from "../theme";
 import { Tap } from "./Tap";
 
@@ -22,9 +24,10 @@ type Props = {
   activeId: string | null;
   onSettle: (spot: Spot) => void; // a swipe came to rest on this card
   onPress: (spot: Spot, index: number) => void;
+  onRide: (spot: Spot) => void;
 };
 
-export function SpotCarousel({ ref, spots, going, activeId, onSettle, onPress }: Props) {
+export function SpotCarousel({ ref, spots, going, activeId, onSettle, onPress, onRide }: Props) {
   const list = useAnimatedRef<Animated.FlatList<Spot>>();
   const x = useSharedValue(0);
   const onScroll = useAnimatedScrollHandler((e) => { x.value = e.contentOffset.x; });
@@ -45,31 +48,65 @@ export function SpotCarousel({ ref, spots, going, activeId, onSettle, onPress }:
         snapToInterval={CARD_STEP} decelerationRate="fast" disableIntervalMomentum
         contentContainerStyle={{ gap: CARD_GAP, paddingHorizontal: CARD_INSET }}
         onScroll={onScroll} scrollEventThrottle={16} onMomentumScrollEnd={onEnd}
-        renderItem={({ item, index }) => <Card spot={item} going={going[item.id] ?? 0} index={index} x={x} onPress={() => onPress(item, index)} />} />
+        renderItem={({ item, index }) => <Card spot={item} going={going[item.id] ?? 0} index={index} x={x} onPress={() => onPress(item, index)} onRide={() => onRide(item)} />} />
     </Animated.View>
   );
 }
 
-function Card({ spot: e, going, index, x, onPress }: { spot: Spot; going: number; index: number; x: SharedValue<number>; onPress: () => void }) {
+// Photo first: the place, then when, then who's going and the ride. Most listings have no photo
+// (the web rarely has a good one), so the fallback is a designed panel, not an empty box.
+function Card({ spot: e, going, index, x, onPress, onRide }: {
+  spot: Spot; going: number; index: number; x: SharedValue<number>; onPress: () => void; onRide: () => void;
+}) {
   const style = useAnimatedStyle(() => {
     const d = (x.value - index * CARD_STEP) / CARD_STEP; // 0 = centered, ±1 = one card away
     return {
-      opacity: interpolate(Math.abs(d), [0, 1], [1, 0.75], Extrapolation.CLAMP),
+      opacity: interpolate(Math.abs(d), [0, 1], [1, 0.6], Extrapolation.CLAMP),
       transform: [{ scale: interpolate(Math.abs(d), [0, 1], [1, 0.94], Extrapolation.CLAMP) }],
     };
   });
   return (
     <Animated.View style={style}>
-      <Tap onPress={onPress} style={s.card}>
-        {e.image ? <Image source={e.image} style={s.thumb} contentFit="cover" transition={250} /> : null}
-        <View style={s.body}>
-          <View style={s.top}>
-            <Text style={s.meta} numberOfLines={1}>{CATEGORY[e.category].label}  ·  {whenLabel(e)}</Text>
-            {e.partner ? <View style={s.partner}><Text style={s.partnerText}>Yelo partner</Text></View>
-              : e.deal ? <View style={s.deal}><Text style={s.dealText}>Deal</Text></View> : null}
+      <Tap onPress={onPress} pressedScale={0.985} style={s.card}>
+        <View style={s.media}>
+          {e.image
+            ? <Image source={e.image} style={StyleSheet.absoluteFill} contentFit="cover" transition={250} />
+            : <View style={s.noPhoto}><Ionicons name={CATEGORY[e.category].icon} size={56} color={C.d4} /></View>}
+          <LinearGradient pointerEvents="none" colors={["rgba(0,0,0,0.0)", "rgba(0,0,0,0.55)"]} style={s.shade} />
+          <View style={s.chips}>
+            <View style={s.when}><Text style={s.whenText} numberOfLines={1}>{whenLabel(e)}</Text></View>
+            {e.partner && <View style={s.partner}><Text style={s.partnerText}>Yelo partner</Text></View>}
           </View>
-          <Text style={s.title} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.72}>{e.venue}</Text>
-          <Text style={s.sub} numberOfLines={1}>{going ? `${going} going  ·  ` : ""}{e.deal ?? e.title}</Text>
+        </View>
+        <View style={s.body}>
+          <Text style={s.title} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75}>{e.venue}</Text>
+          <Text style={s.sub} numberOfLines={1}>
+            {CATEGORY[e.category].label}  ·  {e.title}{e.price ? `  ·  ${e.price}` : ""}
+          </Text>
+          <View style={s.footer}>
+            <View style={s.going}>
+              {going > 0 ? (
+                <>
+                  <View style={s.faces}>
+                    {Array.from({ length: Math.min(going, 3) }, (_, i) => (
+                      <View key={i} style={[s.face, { marginLeft: i ? -8 : 0, zIndex: 3 - i }]}>
+                        <Ionicons name="person" size={11} color={C.ink3} />
+                      </View>
+                    ))}
+                  </View>
+                  <Text style={s.goingText}>{going} going</Text>
+                </>
+              ) : e.deal ? (
+                <View style={s.deal}><Ionicons name="pricetag-outline" size={12} color={C.ink2} /><Text style={s.dealText} numberOfLines={1}>Deal</Text></View>
+              ) : (
+                <Text style={s.goingText}>Be the first to go</Text>
+              )}
+            </View>
+            <Tap onPress={onRide} style={s.ride} accessibilityLabel={`Ride to ${e.venue}`} hitSlop={6}>
+              <Ionicons name="car" size={15} color={C.onAccent} />
+              <Text style={s.rideText}>Ride</Text>
+            </Tap>
+          </View>
         </View>
       </Tap>
     </Animated.View>
@@ -78,16 +115,26 @@ function Card({ spot: e, going, index, x, onPress }: { spot: Spot; going: number
 
 const s = StyleSheet.create({
   wrap: { position: "absolute", left: 0, right: 0, bottom: CAROUSEL_BOTTOM },
-  card: { width: CARD_W, flexDirection: "row", alignItems: "center", gap: 12, backgroundColor: C.surface, borderRadius: R.lg,
-    paddingHorizontal: 16, paddingVertical: 12, ...shadow },
-  thumb: { width: 64, height: 64, borderRadius: R.md, backgroundColor: C.fill },
-  body: { flex: 1, minWidth: 0 },
-  top: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8 },
-  meta: { flex: 1, fontFamily: F.medium, fontSize: T.meta, color: C.ink3 },
-  title: { fontFamily: F.display, fontSize: T.title, lineHeight: 32, color: C.ink, marginTop: 4 },
+  card: { width: CARD_W, backgroundColor: C.surface, borderRadius: R.lg, overflow: "hidden",
+    borderWidth: StyleSheet.hairlineWidth, borderColor: C.d4, ...shadow },
+  media: { height: MEDIA_H, backgroundColor: C.fill },
+  noPhoto: { position: "absolute", top: 0, right: 0, bottom: 0, left: 0, alignItems: "flex-end", justifyContent: "center", paddingRight: 24, backgroundColor: C.d2 },
+  shade: { position: "absolute", left: 0, right: 0, bottom: 0, height: 56 },
+  chips: { position: "absolute", left: 12, right: 12, top: 12, flexDirection: "row", justifyContent: "space-between", gap: 8 },
+  when: { paddingHorizontal: 12, height: 28, borderRadius: R.pill, justifyContent: "center", backgroundColor: "rgba(12,12,10,0.78)", flexShrink: 1 },
+  whenText: { fontFamily: F.semibold, fontSize: T.meta, color: C.ink },
+  partner: { paddingHorizontal: 12, height: 28, borderRadius: R.pill, justifyContent: "center", backgroundColor: C.accent },
+  partnerText: { fontFamily: F.semibold, fontSize: T.meta, color: C.onAccent },
+  body: { paddingHorizontal: 16, paddingTop: 12, paddingBottom: 12 },
+  title: { fontFamily: F.display, fontSize: T.title, lineHeight: 32, color: C.ink },
   sub: { fontFamily: F.regular, fontSize: T.small, color: C.ink2, marginTop: 2 },
-  partner: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: R.pill, backgroundColor: C.ink },
-  partnerText: { fontFamily: F.semibold, fontSize: T.meta, color: C.surface },
-  deal: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: R.pill, backgroundColor: C.blue },
-  dealText: { fontFamily: F.semibold, fontSize: T.meta, color: C.surface },
+  footer: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 12, gap: 12 },
+  going: { flexDirection: "row", alignItems: "center", gap: 8, flexShrink: 1 },
+  faces: { flexDirection: "row" },
+  face: { width: 24, height: 24, borderRadius: 12, backgroundColor: C.d3, borderWidth: 2, borderColor: C.surface, alignItems: "center", justifyContent: "center" },
+  goingText: { fontFamily: F.medium, fontSize: T.small, color: C.ink2 },
+  deal: { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 8, height: 24, borderRadius: R.pill, borderWidth: 1, borderColor: C.strong },
+  dealText: { fontFamily: F.semibold, fontSize: T.meta, color: C.ink2 },
+  ride: { flexDirection: "row", alignItems: "center", gap: 6, height: 36, paddingHorizontal: 16, borderRadius: R.pill, backgroundColor: C.accent },
+  rideText: { fontFamily: F.semibold, fontSize: T.small, color: C.onAccent },
 });

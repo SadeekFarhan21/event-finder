@@ -15,7 +15,7 @@ export const config = {
   // Public web pages: crew and spot invites, the download page.
   siteUrl: process.env.EXPO_PUBLIC_SITE_URL ?? "https://scout-download.vercel.app",
   // Android map tiles (OpenStreetMap data via OpenFreeMap; no key).
-  mapStyleUrl: "https://tiles.openfreemap.org/styles/positron",
+  mapStyleUrl: "https://tiles.openfreemap.org/styles/dark",
   // Web fallback when the phone has no maps app for a ride hand-off.
   directionsUrl: (destination: string) => `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(destination)}`,
   // A request that takes longer than this is treated as a network failure.
