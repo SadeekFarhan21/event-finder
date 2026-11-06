@@ -4,6 +4,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import type { Spot } from "../lib/types";
 import { shortTitle, whenPhrase } from "../lib/time";
 import { supabase } from "./supabase";
+import { getDeviceId } from "./activity";
 
 const MINE_KEY = "scout.going";
 import { config } from "../config";
@@ -19,6 +20,13 @@ export async function goingCounts(ids: string[]): Promise<Record<string, number>
 export async function loadMine(): Promise<Set<string>> {
   const raw = await AsyncStorage.getItem(MINE_KEY).catch(() => null);
   return new Set(raw ? (JSON.parse(raw) as string[]) : []);
+}
+
+// Take back "I'm going" (only this device's tap; the server checks the device id).
+export async function ungo(spotId: string) {
+  if (!supabase) return;
+  const { error } = await supabase.rpc("ungo", { p_spot_id: spotId, p_device_id: await getDeviceId() });
+  if (error) throw new Error(error.message);
 }
 
 export const saveMine = (mine: Set<string>) =>

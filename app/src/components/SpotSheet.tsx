@@ -34,6 +34,7 @@ type Props = {
   canAskLocation: boolean; onAskLocation: () => void; // ask for location here, where the ride price explains why
   onUnlock: (spot: Spot) => void; onClose: () => void;
   going: number; isGoing: boolean; onGo: (spot: Spot) => void; // "I'm going" + live count
+  onUnGo?: (spot: Spot) => void; // take it back (absent when you're going via a crew)
   crew?: Crew; canCrew: boolean; // my crew for this spot, if any
   onStartCrew: (spot: Spot, leaveAt: Date, name: string) => Promise<string>;
   onCrewStatus: (code: string, s: CrewStatus) => void;
@@ -48,7 +49,7 @@ function splitAddress(address: string) {
 
 const initials = (name: string) => name.split(/\s+/).map((w) => w[0]).join("").slice(0, 2).toUpperCase();
 
-export function SpotSheet({ spot, city, me, unlocked, canAskLocation, onAskLocation, onUnlock, onClose, going, isGoing, onGo,
+export function SpotSheet({ spot, city, me, unlocked, canAskLocation, onAskLocation, onUnlock, onClose, going, isGoing, onGo, onUnGo,
   crew, canCrew, onStartCrew, onCrewStatus }: Props) {
   const y = useSharedValue(OFFSCREEN);
   const [shown, setShown] = useState<Spot | null>(null); // stays mounted while sliding out
@@ -184,8 +185,12 @@ export function SpotSheet({ spot, city, me, unlocked, canAskLocation, onAskLocat
               <Text style={s.rowText} numberOfLines={1}>
                 {going ? `${going} going` : "Nobody yet"}{isGoing && going > 1 ? ", including you" : ""}
               </Text>
-              <Tap style={[s.pill, isGoing && s.pillOn]} disabled={isGoing} accessibilityState={{ selected: isGoing }}
-                onPress={() => { Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); onGo(e); }}>
+              <Tap style={[s.pill, isGoing && s.pillOn]} disabled={isGoing && !onUnGo} accessibilityState={{ selected: isGoing }}
+                accessibilityHint={isGoing && onUnGo ? "Tap to take it back" : undefined}
+                onPress={() => {
+                  if (isGoing) { Haptics.selectionAsync(); onUnGo?.(e); return; }
+                  Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); onGo(e);
+                }}>
                 {isGoing && <Ionicons name="checkmark" size={14} color={C.ink} />}
                 <Text style={[s.pillText, isGoing && { color: C.ink }]}>{isGoing ? "Going" : "I'm going"}</Text>
               </Tap>

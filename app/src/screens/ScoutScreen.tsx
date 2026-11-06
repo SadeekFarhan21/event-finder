@@ -49,7 +49,7 @@ export function ScoutScreen() {
   const [leads, setLeads] = useLeads(mapCity);
   const { me, canAsk: canAskLocation, ask: askLocation } = useMyLocation();
   const { toast, show } = useToast();
-  const { counts: going, mine: myGoing, go } = useGoing(spots, mapCity);
+  const { counts: going, mine: myGoing, go, unGo } = useGoing(spots, mapCity);
   const crewsApi = useCrews();
   const insets = useSafeAreaInsets();
   const [crewsOpen, setCrewsOpen] = useState(false);
@@ -225,6 +225,8 @@ export function ScoutScreen() {
       <SpotSheet spot={detail} city={mapCity ?? cityInput} me={me} canAskLocation={canAskLocation} onAskLocation={askLocation} unlocked={!!detail && unlocked.has(detail.id)}
         onUnlock={(e) => setUnlocked((u) => new Set(u).add(e.id))}
         going={detail ? going[detail.id] ?? 0 : 0} isGoing={!!detail && (myGoing.has(detail.id) || crewsApi.crews.some((c) => c.spotId === detail.id && c.members.some((m) => m.me && m.status !== "out")))} onGo={go}
+        onUnGo={detail && myGoing.has(detail.id) && !crewsApi.crews.some((c) => c.spotId === detail.id && c.members.some((m) => m.me && m.status !== "out"))
+          ? (e) => { unGo(e); show("You're no longer going"); } : undefined}
         crew={detail ? crewsApi.crews.find((c) => c.spotId === detail.id) : undefined} canCrew={crewsApi.available}
         onStartCrew={(e, leaveAt, name) => crewsApi.start(e, leaveAt, name)} onCrewStatus={crewsApi.status} onClose={() => setDetail(null)} />
     </View>
