@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Scout for Venues</title>
+<meta name="description" content="See how riders engage with your venue on Scout, and submit events and deals for Yelo's map.">
+<link rel="icon" href="favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&display=swap">
+<style>
+  /* Same five colors as the app: warm neutral ramp, Yelo yellow (one primary), blue (deals), red (errors). */
+  :root {
+    --bg: #FBFAF6; --surface: #FFFFFF; --fill: #F4F2EA; --line: #E8E5D9;
+    --ink: #1A1814; --ink-2: #4F4B42; --ink-3: #6B665A; --placeholder: #8E897B;
+    --yellow: #FFE600; --blue: #1F4FFF; --red: #B42318;
+    --display: "Instrument Serif", "Iowan Old Style", Georgia, serif;
+    --body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  *,*::before,*::after { box-sizing: border-box }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 400 16px/1.55 var(--body); }
+  .wrap { max-width: 980px; margin: 0 auto; padding-inline: 20px; padding-block: 28px 72px; }
+  a { color: inherit; }
+  :focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; border-radius: 6px; }
+  header { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .mark { display: flex; align-items: center; gap: 10px; font-weight: 600; text-decoration: none; }
+  .mark i { width: 30px; height: 30px; border-radius: 9px; background: var(--yellow); display: grid; place-items: center; font: 400 22px/1 var(--display); font-style: normal; }
+  nav a { font-size: 14px; color: var(--ink-2); }
+  h1 { font: 400 clamp(42px, 6vw, 68px)/1 var(--display); letter-spacing: -0.01em; margin: 44px 0 0; text-wrap: balance; }
+  h1 em { color: var(--blue); }
+  .lede { color: var(--ink-2); font-size: 18px; max-width: 36em; margin: 16px 0 0; }
+  h2 { font: 400 32px/1.1 var(--display); margin: 0 0 6px; }
+  .note { font-size: 14px; color: var(--ink-3); margin: 0; }
+  section { margin-top: 48px; padding-top: 28px; border-top: 1px solid var(--line); }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
+  label { display: grid; gap: 6px; font-size: 13px; font-weight: 500; color: var(--ink-2); min-width: 0; }
+  input, select, textarea { font: inherit; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 11px 12px; width: 100%; }
+  input::placeholder, textarea::placeholder { color: var(--placeholder); }
+  .btn { font: 600 15px var(--body); border: 0; border-radius: 999px; padding: 12px 20px; cursor: pointer; background: var(--ink); color: #fff; }
+  .btn.primary { background: var(--yellow); color: var(--ink); }
+  .btn:disabled { opacity: .5; cursor: default; }
+  .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; margin-top: 20px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); }
+  .stat { padding: 18px; border-left: 1px solid var(--line); min-width: 0; }
+  .stat:first-child { border-left: 0; }
+  .stat b { display: block; font: 400 40px/1 var(--display); font-variant-numeric: tabular-nums; }
+  .stat span { font-size: 13px; color: var(--ink-3); }
+  ul.spots { list-style: none; padding: 0; margin: 16px 0 0; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); }
+  ul.spots li { padding: 14px 16px; border-top: 1px solid var(--line); display: flex; justify-content: space-between; gap: 12px; }
+  ul.spots li:first-child { border-top: 0; }
+  ul.spots small { color: var(--ink-3); white-space: nowrap; }
+  .tag { font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 999px; background: var(--ink); color: var(--yellow); margin-left: 6px; }
+  .form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-top: 20px; }
+  .form .full { grid-column: 1 / -1; }
+  .msg { font-size: 14px; margin-top: 12px; }
+  .msg.ok { color: var(--ink); } .msg.err { color: var(--red); }
+  .empty { color: var(--ink-3); font-size: 15px; margin-top: 14px; }
+  @media (max-width: 700px) {
+    .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .stat:nth-child(3) { border-left: 0; } .stat:nth-child(n+3) { border-top: 1px solid var(--line); }
+    .form { grid-template-columns: minmax(0, 1fr); }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <a class="mark" href="./"><i>s</i> Scout for Venues</a>
+    <nav><a href="./">Get the app</a></nav>
+  </header>
+
+  <h1>Your room, on the map <em>tonight.</em></h1>
+  <p class="lede">See how Scout riders engage with your venue, and send us your nights and deals.
+    Approved listings show up on the map, with a ride button that brings people to your door.</p>
+
+  <section aria-labelledby="stats-h">
+    <h2 id="stats-h">How riders engage with you</h2>
+    <p class="note">Last 7 days. Counts come from the Scout app: people who opened your spot, tapped Ride, or unlocked your deal.</p>
+    <form class="row" id="lookup">
+      <label style="flex: 0 1 200px">City
+        <select id="city"><option>New York, NY</option><option>Los Angeles, CA</option></select>
+      </label>
+      <label style="flex: 1 1 260px">Venue name
+        <input id="venue" list="venues" placeholder="e.g. Nublu 151" autocomplete="off" required>
+        <datalist id="venues"></datalist>
+      </label>
+      <div style="align-self: end"><button class="btn" type="submit">Look up</button></div>
+    </form>
+    <div id="result"></div>
+  </section>
+
+  <section aria-labelledby="submit-h">
+    <h2 id="submit-h">List an event or deal</h2>
+    <p class="note">We review every submission before it goes on the map, usually within a day.</p>
+    <form class="form" id="submit">
+      <label>City<select name="city"><option>New York, NY</option><option>Los Angeles, CA</option></select></label>
+      <label>Venue<input name="venue" required maxlength="120" placeholder="Venue name as on your sign"></label>
+      <label class="full">Address<input name="address" required maxlength="200" placeholder="Street address"></label>
+      <label class="full">Event or deal<input name="title" required maxlength="140" placeholder="e.g. Jazz night, $5 drafts 5–7pm"></label>
+      <label>Type<select name="category">
+        <option value="music">Live music</option><option value="nightlife">Nightlife</option><option value="deal">Deal / happy hour</option>
+        <option value="food_drink">Food &amp; drink</option><option value="arts">Arts &amp; comedy</option><option value="community">Community</option><option value="sports">Sports</option>
+      </select></label>
+      <label>Starts (leave empty for a standing deal)<input name="start" type="datetime-local"></label>
+      <label class="full">Deal for Scout riders (optional)<input name="deal" maxlength="200" placeholder="e.g. Free entry before 11pm"></label>
+      <label class="full">Description (optional)<textarea name="description" rows="2" maxlength="400"></textarea></label>
+      <label>Link (optional)<input name="url" type="url" maxlength="300" placeholder="https://"></label>
+      <label>Your email<input name="contact_email" type="email" required maxlength="200"></label>
+      <div class="full"><button class="btn primary" type="submit">Submit for review</button><div class="msg" id="submit-msg" role="status"></div></div>
+    </form>
+  </section>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.0/dist/umd/supabase.js"></script>
+<script>
+  // Publishable key: safe in the browser. Row-level security allows only aggregate reads and pending submissions.
+  const db = supabase.createClient("https://ihxsdwpersowxxtgqcws.supabase.co", "sb_publishable_WGHco-ibd0wX9Jhe3x5vJQ_Rb5ys6UZ", { auth: { persistSession: false } });
+  const $ = (id) => document.getElementById(id);
+  const key = (city) => city.trim().toLowerCase();
+  const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+
+  async function loadVenueNames() {
+    const { data } = await db.from("upcoming_events").select("venue").eq("city", key($("city").value)).limit(500);
+    const names = [...new Set((data ?? []).map((r) => r.venue))].sort();
+    $("venues").innerHTML = names.map((n) => `<option value="${esc(n)}">`).join("");
+  }
+  $("city").addEventListener("change", loadVenueNames);
+  loadVenueNames();
+
+  $("lookup").addEventListener("submit", async (ev) => {
+    ev.preventDefault();
+    const venue = $("venue").value.trim(), city = $("city").value;
+    $("result").innerHTML = `<p class="empty">Loading…</p>`;
+    const [stats, spots] = await Promise.all([
+      db.rpc("venue_stats", { p_venue: venue, p_city: city, p_days: 7 }),
+      db.rpc("venue_spots", { p_venue: venue, p_city: city }),
+    ]);
+    if (stats.error || spots.error) { $("result").innerHTML = `<p class="msg err">Couldn't load stats. Try again in a moment.</p>`; return; }
+    const by = Object.fromEntries((stats.data ?? []).map((r) => [r.kind, r]));
+    const people = Math.max(0, ...(stats.data ?? []).map((r) => r.people));
+    const n = (k) => (by[k]?.total ?? 0).toLocaleString();
+    const fmt = (s) => s ? new Date(s).toLocaleString(undefined, { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "Ongoing";
+    $("result").innerHTML = `
+      <div class="stats">
+        <div class="stat"><b>${n("view")}</b><span>Spot views</span></div>
+        <div class="stat"><b>${n("ride")}</b><span>Ride taps</span></div>
+        <div class="stat"><b>${n("unlock")}</b><span>Deals unlocked</span></div>
+        <div class="stat"><b>${people.toLocaleString()}</b><span>People reached</span></div>
+      </div>
+      ${(spots.data ?? []).length ? `<ul class="spots">${spots.data.map((s) => `<li><span>${esc(s.title)}${s.partner ? '<span class="tag">Yelo partner</span>' : ""}</span><small>${esc(fmt(s.start))}</small></li>`).join("")}</ul>`
+        : `<p class="empty">${esc(venue)} has no spots on the map right now. List one below.</p>`}`;
+  });
+
+  $("submit").addEventListener("submit", async (ev) => {
+    ev.preventDefault();
+    const f = new FormData(ev.target), btn = ev.target.querySelector("button");
+    const val = (k) => (f.get(k) || "").toString().trim() || null;
+    btn.disabled = true; $("submit-msg").className = "msg"; $("submit-msg").textContent = "Sending…";
+    const { error } = await db.from("submissions").insert({
+      city: key(val("city")), venue: val("venue"), address: val("address"), title: val("title"),
+      category: val("category"), start: val("start") ? new Date(val("start")).toISOString() : null,
+      deal: val("deal"), description: val("description"), url: val("url"), contact_email: val("contact_email"),
+    });
+    btn.disabled = false;
+    if (error) { $("submit-msg").className = "msg err"; $("submit-msg").textContent = "That didn't go through. Check the fields and try again."; return; }
+    ev.target.reset();
+    $("submit-msg").className = "msg ok"; $("submit-msg").textContent = "Thanks. We'll review it and email you when it's live.";
+  });
+</script>
+</body>
+</html>
