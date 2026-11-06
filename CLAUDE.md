@@ -7,8 +7,19 @@ night on a quiet weeknight, and fills the room with its riders.
 
 ## What's here
 - `app/` Expo SDK 58 React Native app. Map of spots (cluster pins, filters incl. Tonight), synced card
-  carousel, detail sheet (Ride with fare estimate, Unlock deal), Rooms page (venue leads). No Expo Router;
-  single screen in `App.tsx` + `src/`.
+  carousel, detail sheet (Ride with fare estimate, Unlock deal), Rooms page (venue leads). No Expo Router.
+  `App.tsx` only loads fonts and providers. In `app/src/`:
+  - `screens/` ScoutScreen (composes the map screen), RoomsScreen
+  - `components/` SearchHeader, SpotPins, SpotCarousel, SpotSheet (draggable sheet), BottomStates, Toast, Tap
+    (every tappable surface; spring press + button role)
+  - `hooks/` useSpots, useLeads, useMyLocation (never prompts on launch), useToast
+  - `lib/` pure logic: types, time (6am night boundary), filters/sort, cluster, fare, ride, cities
+    (canonical city names; keep in sync with `supabase/functions/_shared/cities.ts`)
+  - `data/` api.ts picks Supabase or the local server; supabase.ts
+  - `map/` ScoutMap per platform: iOS Apple Maps (react-native-maps), Android MapLibre + OpenFreeMap
+    (no key; react-native-maps is excluded from Android autolinking). Never import a map library elsewhere.
+  - Motion: react-native-reanimated + gesture-handler. Layout constants in `layout.ts`, safe-area insets
+    for anything near the screen edges.
 - `supabase/functions/_shared/` the agents, runtime-agnostic (deps injected via `deps.ts`):
   `discover.ts` (Exa deep search with outputSchema -> geocode via Nominatim -> dedupe),
   `leads.ts` (Rooms), `clean.ts` (venue/title cleanup, cross-run dedupe), `partners.ts` (Yelo partners).

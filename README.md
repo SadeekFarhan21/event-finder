@@ -60,21 +60,20 @@ Deploy:
 Run Scout for your city *before* the meeting so the map opens full. Recurring deals (happy hours)
 stay on the map; dated events drop off ~6 hours after they start.
 
-## Run it on your Android phone
-1. Install **Expo Go** from the Play Store. Phone and Mac on the same Wi-Fi.
-2. Server:
+## Run it
+- **Android phone:** install the APK from https://scout-download.vercel.app. Expo Go can't run this app
+  on Android (the map is MapLibre, a native module Expo Go doesn't include); for development use a dev
+  build (`npx expo run:android` or an EAS development build).
+- **iPhone / iOS Simulator:** Expo Go works (Apple Maps is built in): `cd app && npx expo start`.
+- With `app/.env.local` pointing at Supabase, no local server is needed. Without it, run the local one:
    ```bash
    cd server && npm install
    cp .env.example .env   # paste your key from https://dashboard.exa.ai/api-keys
    npm start
    ```
-3. App (new terminal):
-   ```bash
-   cd app && npx expo start
-   ```
-   Scan the QR code with Expo Go. The app finds the server automatically via your Mac's LAN IP.
+   The app finds it automatically via your Mac's LAN IP.
 
-Without an Exa key the app still loads with NYC demo data; "Discover" lights up once the key is set.
+Without an Exa key the local server still serves NYC demo data; the Scout button lights up once the key is set.
 Try the agent from the terminal: `cd server && npm run discover -- "Austin, TX"`.
 
 ## Next steps (maps onto Yelo's other ideas)
