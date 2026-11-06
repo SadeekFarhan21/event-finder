@@ -18,7 +18,7 @@
   *,*::before,*::after { box-sizing: border-box }
   body { margin: 0; background: var(--bg); color: var(--ink); font: 400 15px/1.55 var(--body); }
   .wrap { max-width: 860px; margin: 0 auto; padding: 32px 16px 64px; }
-  :focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; border-radius: 6px; }
+  :focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; border-radius: 8px; }
   h1 { font: 400 40px/1.05 var(--display); margin: 0; }
   .note { color: var(--ink-3); font-size: 15px; margin: 8px 0 0; max-width: 65ch; }
   .keyrow { display: flex; gap: 8px; margin-top: 24px; flex-wrap: wrap; align-items: end; }
@@ -29,7 +29,7 @@
   button:hover { background: var(--fill); }
   /* Yellow only for the decision itself; "Open queue" stays outlined. */
   button.approve { background: var(--yellow); border-color: var(--yellow); color: var(--on-yellow); }
-  button.approve:hover { background: #F2D43C; }
+  button.approve:hover { background: var(--yellow-hover); }
   button.reject { border-color: var(--line); color: var(--ink-2); }
   button:disabled { opacity: .5; cursor: default; }
   h2 { font: 400 28px/1.1 var(--display); margin: 32px 0 12px; }
@@ -50,8 +50,8 @@
      Links and focus rings use ink instead of a second color. */
   :root, :root:not([data-theme="light"]), :root[data-theme] {
     --bg: #0C0C0A; --surface: #151513; --fill: #1D1C19; --line: #282723;
-    --ink: #F2F0E9; --ink-2: #C2BEB2; --ink-3: #8E8A7F; --placeholder: #6B675E;
-    --yellow: #FFE14A; --on-yellow: #14130F; --blue: #F2F0E9; --red: #FF7A6B;
+    --ink: #F2F0E9; --ink-2: #C2BEB2; --ink-3: #8E8A7F; --placeholder: #8E8A7F;
+    --yellow: #FFE14A; --on-yellow: #14130F; --yellow-hover: #F5D63E; --blue: #F2F0E9; --red: #FF7A6B;
     color-scheme: dark;
   }
 </style>
