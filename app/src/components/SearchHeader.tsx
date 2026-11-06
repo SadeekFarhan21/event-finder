@@ -78,26 +78,28 @@ export function SearchHeader({ city, onCityChange, onSubmitCity, onScout, scouti
             </Tap>
           ))}
         </ScrollView>
-        {open && (
-          <Animated.View entering={FadeIn.duration(160)} exiting={FadeOut.duration(120)} style={[s.menu, { top: insets.top + HEADER_GAP + 52 }]}>
-            {CITIES.map((c) => (
-              <Tap key={c} pressedScale={0.99} style={s.menuRow} onPress={() => pickCity(c)} accessibilityState={{ selected: c === city }}>
-                <Text style={[s.menuText, c === city && { color: C.ink }]}>{c.split(",")[0]}</Text>
-                {c === city && <Feather name="check" size={18} color={C.ink} />}
-              </Tap>
-            ))}
-            {scoutable && (
-              <Tap pressedScale={0.99} style={[s.menuRow, s.menuDivider]} disabled={scouting}
-                onPress={() => { setOpen(false); onScout(); }} accessibilityLabel={`Search the web again for ${name}`}>
-                <Feather name="refresh-cw" size={16} color={C.ink3} />
-                <Text style={[s.menuAction, { flex: 1 }]}>{scouting ? "Searching…" : `Look for new spots in ${name}`}</Text>
-                <Text style={s.menuHint}>~2 min</Text>
-              </Tap>
-            )}
-          </Animated.View>
-        )}
 
       </View>
+      {/* A sibling of the header, not a child: drawn outside the header's bounds, the rows got broken
+          accessibility bounds on Android and TalkBack couldn't reach them. */}
+      {open && (
+        <Animated.View entering={FadeIn.duration(160)} exiting={FadeOut.duration(120)} style={[s.menu, { top: insets.top + HEADER_GAP + 52 }]}>
+          {CITIES.map((c) => (
+            <Tap key={c} pressedScale={0.99} style={s.menuRow} onPress={() => pickCity(c)} accessibilityState={{ selected: c === city }}>
+              <Text style={[s.menuText, c === city && { color: C.ink }]}>{c.split(",")[0]}</Text>
+              {c === city && <Feather name="check" size={18} color={C.ink} />}
+            </Tap>
+          ))}
+          {scoutable && (
+            <Tap pressedScale={0.99} style={[s.menuRow, s.menuDivider]} disabled={scouting}
+              onPress={() => { setOpen(false); onScout(); }} accessibilityLabel={`Search the web again for ${name}`}>
+              <Feather name="refresh-cw" size={16} color={C.ink3} />
+              <Text style={[s.menuAction, { flex: 1 }]}>{scouting ? "Searching…" : `Look for new spots in ${name}`}</Text>
+              <Text style={s.menuHint}>~2 min</Text>
+            </Tap>
+          )}
+        </Animated.View>
+      )}
     </>
   );
 }
@@ -112,8 +114,8 @@ const s = StyleSheet.create({
   iconBtn: { height: 36, paddingHorizontal: 14, borderRadius: R.pill, alignItems: "center", justifyContent: "center",
     backgroundColor: "rgba(21,21,19,0.75)", borderWidth: StyleSheet.hairlineWidth, borderColor: C.d4 },
   roomsText: { fontFamily: F.medium, fontSize: T.small, color: C.ink2 },
-  menu: { position: "absolute", left: 16, right: 16, zIndex: 10, backgroundColor: C.surface, borderRadius: R.md, paddingVertical: 4,
-    borderWidth: StyleSheet.hairlineWidth, borderColor: C.d4, ...shadow },
+  menu: { position: "absolute", left: 16, right: 16, zIndex: 22, backgroundColor: C.surface, borderRadius: R.md, paddingVertical: 4,
+    borderWidth: StyleSheet.hairlineWidth, borderColor: C.d4, ...shadow, elevation: 22 },
   menuRow: { flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 16, minHeight: 48 },
   menuDivider: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: C.hairline },
   menuText: { fontFamily: F.display, fontSize: 24, lineHeight: 30, color: C.ink2, flex: 1 },
