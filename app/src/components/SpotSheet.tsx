@@ -218,9 +218,7 @@ export function SpotSheet({ spot, city, me, unlocked, canAskLocation, onAskLocat
                     <Tap style={[s.crewBtn, s.crewBtnMain]} onPress={() => onCrewStatus(crew.code, "in")}>
                       <Text style={s.crewBtnMainText}>I'm back in</Text>
                     </Tap>
-                  ) : meInCrew?.status === "on_way" ? (
-                    <Text style={s.crewNote}>You're on the way</Text>
-                  ) : (
+                  ) : meInCrew?.status === "on_way" ? null : (
                     <Tap style={[s.crewBtn, s.crewBtnMain]} onPress={() => { Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); onCrewStatus(crew.code, "on_way"); }}>
                       <Text style={s.crewBtnMainText}>I'm on my way</Text>
                     </Tap>
