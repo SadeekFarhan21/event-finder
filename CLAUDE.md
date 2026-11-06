@@ -24,9 +24,11 @@ night on a quiet weeknight, and fills the room with its riders.
   `discover.ts` (Exa deep search with outputSchema -> geocode via Nominatim -> dedupe),
   `leads.ts` (Rooms), `clean.ts` (venue/title cleanup, cross-run dedupe), `partners.ts` (Yelo partners).
 - `supabase/functions/scout/` Edge Function (POST {task: events|rooms, city}). Replies 202, works in
-  background, 135s budget (free plan wall clock is 150s). Auth: SCOUT_KEY, else 1 run/city/hour.
+  background, 135s budget (free plan wall clock is 150s). Auth: SCOUT_KEY, else 1 run/city/hour and
+  6 public runs/hour overall. City input is canonicalized (`_shared/cities.ts`). Upserts are unique by id.
 - `supabase/migrations/` schema (events, rooms, geocache, scout_runs; RLS public read only) + pg_cron
-  (NYC/LA spots daily 14:00/14:15 UTC, rooms Mondays).
+  (NYC/LA spots daily 14:00/14:15 UTC, rooms Mondays, `prune_events` daily 13:45 UTC). `events.image`
+  holds the source page's photo when Exa has a real one (often null).
 - `server/` optional local Node dev server using the same `_shared` agents (file-based geocache).
 
 ## Live infrastructure
