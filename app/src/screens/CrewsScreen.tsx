@@ -62,9 +62,26 @@ export function CrewsScreen({ visible, crews, photos, linkCode, onJoin, onStatus
       {live.length > 0 && (
         <View style={s.eyebrowRow}><View style={s.liveDot} /><Text style={s.eyebrow}>{live.length} heading out tonight</Text></View>
       )}
-      <Text style={s.sub}>Start one from any spot with Heading out. Friends join from your link, and everyone sees who's coming and who's on the way.</Text>
+      <Text style={s.sub}>Friends join from your link, and everyone sees who's coming and who's on the way.</Text>
 
-      {/* Join a friend's crew */}
+      <View style={s.sectionRow}>
+        <Text style={s.section} numberOfLines={1}>Active tonight</Text>
+        {live.length > 0 && <View style={s.countPill}><Text style={s.countText}>{live.length}</Text></View>}
+      </View>
+    </View>
+  );
+
+  // Your crews come first; starting or joining one is the rarer case, below them.
+  const footer = (
+    <View style={{ gap: 12 }}>
+    <Tap pressedScale={0.99} onPress={onClose} style={s.start} accessibilityLabel="Start a crew: pick a spot on the map">
+      <View style={{ flex: 1 }}>
+        <Text style={s.startTitle}>Start one from any spot</Text>
+        <Text style={s.startSub}>Pick a spot on the map, tap Go with friends, and send the link.</Text>
+      </View>
+      <View style={s.startBtn}><Feather name="plus" size={24} color={C.ink} /></View>
+    </Tap>
+      {/* Join a friend's crew from a pasted link */}
       <View style={s.joinBox}>
         <View style={s.joinHead}>
           <Text style={s.joinTitle}>Got a link from a friend?</Text>
@@ -79,9 +96,9 @@ export function CrewsScreen({ visible, crews, photos, linkCode, onJoin, onStatus
             placeholderTextColor={C.placeholder} style={s.input} maxLength={30} autoCapitalize="words" accessibilityLabel="Your first name" />
         </Field>
         {error && <Text style={s.error}>{error}</Text>}
-        {joined !== null && !error && <Text style={s.success}>{joined ? `You're in. The crew for ${joined} is below.` : "You're in. Your crew is below."}</Text>}
+        {joined !== null && !error && <Text style={s.success}>{joined ? `You're in. The crew for ${joined} is at the top.` : "You're in. Your crew is at the top."}</Text>}
         <Tap style={[s.joinBtn, !ready && s.joinBtnOff]} disabled={!ready || busy} onPress={join}>
-          {busy ? <ActivityIndicator color={C.onAccent} size="small" /> : (
+          {busy ? <ActivityIndicator color={C.bg} size="small" /> : (
             <>
               <Text style={[s.joinText, !ready && { color: C.ink3 }]}>Join crew</Text>
             </>
@@ -89,21 +106,7 @@ export function CrewsScreen({ visible, crews, photos, linkCode, onJoin, onStatus
         </Tap>
       </View>
 
-      <View style={s.sectionRow}>
-        <Text style={s.section} numberOfLines={1}>Active tonight</Text>
-        {live.length > 0 && <View style={s.countPill}><Text style={s.countText}>{live.length}</Text></View>}
-      </View>
     </View>
-  );
-
-  const footer = (
-    <Tap pressedScale={0.99} onPress={onClose} style={s.start} accessibilityLabel="Start a crew: pick a spot on the map">
-      <View style={{ flex: 1 }}>
-        <Text style={s.startTitle}>Start one from any spot</Text>
-        <Text style={s.startSub}>Pick a spot on the map, tap Heading out, and send the link.</Text>
-      </View>
-      <View style={s.startBtn}><Feather name="plus" size={24} color={C.ink} /></View>
-    </Tap>
   );
 
   return (
@@ -202,19 +205,19 @@ const s = StyleSheet.create({
   title: { fontFamily: F.display, fontSize: T.display, lineHeight: 46, color: C.ink, marginTop: 4 },
   titleItalic: { fontFamily: F.displayItalic },
   sub: { fontFamily: F.regular, fontSize: T.small, lineHeight: 21, color: C.ink2, marginTop: 8 },
-  joinBox: { marginTop: 20, padding: 16, borderRadius: R.lg, backgroundColor: C.surface, gap: 12, borderWidth: StyleSheet.hairlineWidth, borderColor: C.d4 },
+  joinBox: { padding: 16, borderRadius: R.lg, backgroundColor: C.surface, gap: 12, borderWidth: StyleSheet.hairlineWidth, borderColor: C.d4 },
   joinHead: { flexDirection: "row", alignItems: "center", gap: 10 },
   iconTile: { width: 30, height: 30, borderRadius: 10, alignItems: "center", justifyContent: "center", backgroundColor: ACCENT_TINT },
   joinTitle: { fontFamily: F.semibold, fontSize: T.small, color: C.ink },
-  fieldLabel: { fontFamily: F.semibold, fontSize: T.meta, color: C.ink3, letterSpacing: 1, textTransform: "uppercase" },
+  fieldLabel: { fontFamily: F.medium, fontSize: T.small, color: C.ink2 },
   fieldBox: { flexDirection: "row", alignItems: "center", gap: 10, height: 48, paddingHorizontal: 12, borderRadius: R.md, backgroundColor: C.bg,
     borderWidth: StyleSheet.hairlineWidth, borderColor: C.d4 },
   input: { flex: 1, fontFamily: F.regular, fontSize: T.body, color: C.ink, paddingVertical: 0 },
   success: { fontFamily: F.medium, fontSize: T.small, color: C.ink },
   error: { fontFamily: F.medium, fontSize: T.small, color: C.red },
-  joinBtn: { height: 50, borderRadius: R.pill, backgroundColor: C.accent, flexDirection: "row", gap: 8, alignItems: "center", justifyContent: "center", marginTop: 4 },
+  joinBtn: { height: 48, borderRadius: R.pill, backgroundColor: C.ink, flexDirection: "row", gap: 8, alignItems: "center", justifyContent: "center", marginTop: 4 },
   joinBtnOff: { backgroundColor: C.fill },
-  joinText: { fontFamily: F.semibold, fontSize: T.body, color: C.onAccent },
+  joinText: { fontFamily: F.semibold, fontSize: T.body, color: C.bg },
   sectionRow: { flexDirection: "row", alignItems: "center", gap: 8, marginTop: 28 },
   section: { flexShrink: 1, fontFamily: F.display, fontSize: T.title, color: C.ink },
   countPill: { minWidth: 24, height: 24, paddingHorizontal: 8, borderRadius: 12, alignItems: "center", justifyContent: "center", backgroundColor: C.d3 },

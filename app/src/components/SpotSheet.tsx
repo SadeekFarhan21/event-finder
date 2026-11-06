@@ -297,7 +297,7 @@ export function SpotSheet({ spot, city, me, unlocked, canAskLocation, onAskLocat
 
         {/* The one place for actions */}
         <View pointerEvents="box-none" style={[s.dock, { paddingBottom: Math.max(insets.bottom, 12) + 12 }]}>
-          <LinearGradient pointerEvents="none" colors={["rgba(12,12,10,0)", "rgba(12,12,10,0.94)", C.bg]} locations={[0, 0.35, 1]}
+          <LinearGradient pointerEvents="none" colors={["rgba(12,12,10,0)", "rgba(12,12,10,0.94)", C.bg, C.bg]} locations={[0, 0.2, 0.4, 1]}
             style={StyleSheet.absoluteFill} />
           <Tap style={[s.btn, s.btnPrimary]} onPress={ride}>
             <Text style={s.btnPrimaryText}>{fare ? `Ride with Yelo  ·  ~$${fare.yelo}` : "Ride with Yelo"}</Text>
