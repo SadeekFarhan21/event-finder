@@ -10,7 +10,7 @@ import Animated, {
 import { whenLabel } from "../lib/time";
 import type { Spot } from "../lib/types";
 import { CARD_GAP, CARD_INSET, CARD_STEP, CARD_W, CAROUSEL_BOTTOM } from "../layout";
-import { CATEGORY, color as C, font as F, radius as R, shadow } from "../theme";
+import { CATEGORY, color as C, font as F, radius as R, shadow, text as T } from "../theme";
 import { Tap } from "./Tap";
 
 export type CarouselRef = { scrollTo: (index: number, animated?: boolean) => void };
@@ -83,11 +83,11 @@ const s = StyleSheet.create({
   thumb: { width: 64, height: 64, borderRadius: 14, backgroundColor: C.fill },
   body: { flex: 1, minWidth: 0 },
   top: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8 },
-  meta: { flex: 1, fontFamily: F.medium, fontSize: 12, color: C.ink3 },
-  title: { fontFamily: F.display, fontSize: 28, lineHeight: 32, color: C.ink, marginTop: 4 },
-  sub: { fontFamily: F.regular, fontSize: 14, color: C.ink2, marginTop: 2 },
+  meta: { flex: 1, fontFamily: F.medium, fontSize: T.meta, color: C.ink3 },
+  title: { fontFamily: F.display, fontSize: T.title, lineHeight: 32, color: C.ink, marginTop: 4 },
+  sub: { fontFamily: F.regular, fontSize: T.small, color: C.ink2, marginTop: 2 },
   partner: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: R.pill, backgroundColor: C.ink },
-  partnerText: { fontFamily: F.semibold, fontSize: 11, color: C.yellow },
+  partnerText: { fontFamily: F.semibold, fontSize: T.meta, color: C.yellow },
   deal: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: R.pill, backgroundColor: C.yellow },
-  dealText: { fontFamily: F.semibold, fontSize: 11, color: C.ink },
+  dealText: { fontFamily: F.semibold, fontSize: T.meta, color: C.ink },
 });

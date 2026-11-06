@@ -8,7 +8,7 @@ import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { runLeads } from "../data/api";
 import type { Lead } from "../lib/types";
-import { color as C, font as F, radius as R, shadow } from "../theme";
+import { color as C, font as F, radius as R, text as T } from "../theme";
 
 export function RoomsScreen({ visible, city, leads, setLeads, canSearch, onClose }: {
   visible: boolean; city: string; leads: Lead[]; setLeads: (l: Lead[]) => void; canSearch: boolean; onClose: () => void;
@@ -98,25 +98,25 @@ export function RoomsScreen({ visible, city, leads, setLeads, canSearch, onClose
 const s = StyleSheet.create({
   root: { flex: 1, backgroundColor: C.bg },
   head: { paddingHorizontal: 4, paddingTop: 16, paddingBottom: 8 },
-  close: { alignSelf: "flex-start", width: 36, height: 36, borderRadius: 18, backgroundColor: C.surface, alignItems: "center", justifyContent: "center", marginBottom: 14, ...shadow },
-  eyebrow: { fontFamily: F.medium, fontSize: 12, color: C.ink3 },
-  title: { fontFamily: F.display, fontSize: 44, lineHeight: 46, color: C.ink, marginTop: 6 },
+  close: { alignSelf: "flex-start", width: 36, height: 36, borderRadius: 18, backgroundColor: C.surface, alignItems: "center", justifyContent: "center", marginBottom: 14, borderWidth: 1, borderColor: C.hairline },
+  eyebrow: { fontFamily: F.medium, fontSize: T.meta, color: C.ink3 },
+  title: { fontFamily: F.display, fontSize: T.display, lineHeight: 44, color: C.ink, marginTop: 6 },
   titleAccent: { fontFamily: "InstrumentSerif_400Regular_Italic", color: C.blue },
-  sub: { fontFamily: F.regular, fontSize: 15, lineHeight: 22, color: C.ink2, marginTop: 10 },
+  sub: { fontFamily: F.regular, fontSize: T.body, lineHeight: 22, color: C.ink2, marginTop: 10 },
   findBtn: { alignSelf: "flex-start", height: 44, paddingHorizontal: 20, borderRadius: R.pill, backgroundColor: C.ink, justifyContent: "center", marginTop: 16 },
-  findText: { fontFamily: F.semibold, fontSize: 15, color: "#fff" },
-  hint: { fontFamily: F.regular, fontSize: 13, color: C.ink3, marginTop: 8 },
-  empty: { fontFamily: F.regular, fontSize: 15, color: C.ink3, textAlign: "center", marginTop: 40 },
-  card: { backgroundColor: C.surface, borderRadius: R.lg, padding: 18, ...shadow },
-  meta: { fontFamily: F.medium, fontSize: 12, color: C.ink3 },
-  name: { fontFamily: F.display, fontSize: 28, lineHeight: 32, color: C.ink, marginTop: 4 },
-  fit: { fontFamily: F.regular, fontSize: 14, lineHeight: 20, color: C.ink2, marginTop: 4 },
+  findText: { fontFamily: F.semibold, fontSize: T.body, color: "#fff" },
+  hint: { fontFamily: F.regular, fontSize: T.small, color: C.ink3, marginTop: 8 },
+  empty: { fontFamily: F.regular, fontSize: T.body, color: C.ink3, textAlign: "center", marginTop: 40 },
+  card: { backgroundColor: C.surface, borderRadius: R.lg, padding: 18, borderWidth: 1, borderColor: C.hairline },
+  meta: { fontFamily: F.medium, fontSize: T.meta, color: C.ink3 },
+  name: { fontFamily: F.display, fontSize: T.title, lineHeight: 32, color: C.ink, marginTop: 4 },
+  fit: { fontFamily: F.regular, fontSize: T.small, lineHeight: 20, color: C.ink2, marginTop: 4 },
   footer: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 14 },
   tags: { flexDirection: "row", gap: 6, flexShrink: 1 },
   cap: { flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 10, paddingVertical: 5, borderRadius: R.pill, backgroundColor: C.fill },
-  capText: { fontFamily: F.medium, fontSize: 12, color: C.ink2 },
+  capText: { fontFamily: F.medium, fontSize: T.meta, color: C.ink2 },
   night: { flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 10, paddingVertical: 5, borderRadius: R.pill, backgroundColor: C.yellow },
-  nightText: { fontFamily: F.semibold, fontSize: 12, color: C.ink },
+  nightText: { fontFamily: F.semibold, fontSize: T.meta, color: C.ink },
   contact: { flexDirection: "row", alignItems: "center", gap: 4, paddingVertical: 4 },
-  contactText: { fontFamily: F.semibold, fontSize: 14, color: C.ink },
+  contactText: { fontFamily: F.semibold, fontSize: T.small, color: C.ink },
 });

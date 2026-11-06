@@ -4,7 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { ScoutMarker } from "../map/ScoutMap";
 import type { Cluster } from "../lib/cluster";
 import type { Spot } from "../lib/types";
-import { CATEGORY, color as C, font as F, radius as R, shadow } from "../theme";
+import { CATEGORY, color as C, font as F, radius as R, shadow, text as T } from "../theme";
 
 type Props = {
   clusters: Cluster[];
@@ -56,7 +56,7 @@ const s = StyleSheet.create({
   pinPartner: { borderColor: C.yellow, borderWidth: 3 },
   pinActive: { width: 42, height: 42, borderRadius: 21, backgroundColor: C.yellow, borderWidth: 3, borderColor: "#fff", alignItems: "center", justifyContent: "center", ...shadow, shadowOpacity: 0.25 },
   label: { marginTop: 4, paddingHorizontal: 9, paddingVertical: 4, borderRadius: R.pill, backgroundColor: C.surface, maxWidth: 180, ...shadow },
-  labelText: { fontFamily: F.semibold, fontSize: 12, color: C.ink },
+  labelText: { fontFamily: F.semibold, fontSize: T.meta, color: C.ink },
   cluster: { paddingHorizontal: 8, backgroundColor: C.surface, borderWidth: 1.5, borderColor: C.ink, alignItems: "center", justifyContent: "center", ...shadow },
-  clusterText: { fontFamily: F.semibold, fontSize: 13, color: C.ink },
+  clusterText: { fontFamily: F.semibold, fontSize: T.small, color: C.ink },
 });

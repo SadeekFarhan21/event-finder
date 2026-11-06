@@ -34,14 +34,20 @@ export const font = {
   bold: "Inter_700Bold",
 };
 
-export const radius = { sm: 10, md: 16, lg: 22, pill: 999 };
+export const radius = { sm: 8, md: 12, lg: 16, sheet: 20, pill: 999 };
 
+// Five sizes, nothing in between: meta (eyebrows, counts), small (buttons, secondary text),
+// body (reading text, inputs), title (card names), display (sheet and screen titles).
+export const text = { meta: 12, small: 14, body: 16, title: 28, display: 40 };
+
+// Only for things floating over the map (header, pills, carousel cards): short and crisp, not a
+// soft glow. Surfaces on the page background use a hairline border instead.
 export const shadow = {
   shadowColor: "#1B1A14",
-  shadowOpacity: 0.08,
-  shadowRadius: 16,
-  shadowOffset: { width: 0, height: 6 },
-  elevation: 4,
+  shadowOpacity: 0.12,
+  shadowRadius: 6,
+  shadowOffset: { width: 0, height: 2 },
+  elevation: 3,
 };
 
 type IconName = ComponentProps<typeof Ionicons>["name"];

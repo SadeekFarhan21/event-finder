@@ -27,7 +27,7 @@ import { Tap } from "../components/Tap";
 import { RoomsScreen } from "./RoomsScreen";
 import { CrewsScreen } from "./CrewsScreen";
 import { CARD_H, CARD_INSET, CAROUSEL_BOTTOM } from "../layout";
-import { color as C, font as F, radius as R, shadow } from "../theme";
+import { color as C, font as F, radius as R, shadow, text as T } from "../theme";
 
 const START: Region = { latitude: 40.728, longitude: -73.99, latitudeDelta: 0.09, longitudeDelta: 0.09 };
 const FIT_PADDING = { top: 200, right: 40, bottom: 220, left: 40 };
@@ -172,12 +172,12 @@ export function ScoutScreen() {
         <>
           <Animated.View entering={FadeIn.delay(150)} style={s.roomsWrap}>
             {crewsApi.available && (
-              <Tap style={[s.rooms, liveCrews.length > 0 && s.crewsOn]} onPress={() => { Haptics.selectionAsync(); setCrewsOpen(true); }}>
+              <Tap hitSlop={4} style={[s.rooms, liveCrews.length > 0 && s.crewsOn]} onPress={() => { Haptics.selectionAsync(); setCrewsOpen(true); }}>
                 <Ionicons name="people-outline" size={14} color={C.ink} />
                 <Text style={s.roomsText}>Crews{liveCrews.length ? `  ·  ${liveCrews.length}` : ""}</Text>
               </Tap>
             )}
-            <Tap style={s.rooms} onPress={() => { Haptics.selectionAsync(); setRoomsOpen(true); }}>
+            <Tap hitSlop={4} style={s.rooms} onPress={() => { Haptics.selectionAsync(); setRoomsOpen(true); }}>
               <Ionicons name="business-outline" size={14} color={C.ink} />
               <Text style={s.roomsText}>Rooms for Yelo nights{leads.length ? `  ·  ${leads.length}` : ""}</Text>
             </Tap>
@@ -214,6 +214,6 @@ const s = StyleSheet.create({
   root: { flex: 1, backgroundColor: C.bg },
   roomsWrap: { position: "absolute", left: CARD_INSET, bottom: CAROUSEL_BOTTOM + CARD_H, flexDirection: "row", gap: 8 },
   crewsOn: { backgroundColor: C.yellow },
-  rooms: { flexDirection: "row", alignItems: "center", gap: 6, height: 34, paddingHorizontal: 14, borderRadius: R.pill, backgroundColor: C.surface, ...shadow },
-  roomsText: { fontFamily: F.semibold, fontSize: 13, color: C.ink },
+  rooms: { flexDirection: "row", alignItems: "center", gap: 6, height: 40, paddingHorizontal: 14, borderRadius: R.pill, backgroundColor: C.surface, ...shadow },
+  roomsText: { fontFamily: F.semibold, fontSize: T.small, color: C.ink },
 });

@@ -7,7 +7,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 import { FILTERS, filterLabel, type Filter } from "../lib/filters";
-import { color as C, font as F, radius as R, shadow } from "../theme";
+import { color as C, font as F, radius as R, shadow, text as T } from "../theme";
 import { HEADER_GAP, HEADER_H } from "../layout";
 import { Tap } from "./Tap";
 
@@ -91,17 +91,17 @@ const s = StyleSheet.create({
   row: { flexDirection: "row", gap: 8, paddingHorizontal: 16 },
   search: { flex: 1, flexDirection: "row", alignItems: "center", gap: 8, height: 48, paddingHorizontal: 16, borderRadius: R.pill,
     borderWidth: StyleSheet.hairlineWidth, borderColor: "rgba(26,24,20,0.08)", ...shadow },
-  input: { flex: 1, fontFamily: F.medium, fontSize: 15, color: C.ink },
+  input: { flex: 1, fontFamily: F.medium, fontSize: T.body, color: C.ink },
   scout: { height: 48, paddingHorizontal: 20, borderRadius: R.pill, backgroundColor: C.ink, alignItems: "center", justifyContent: "center", ...shadow },
-  scoutText: { fontFamily: F.semibold, fontSize: 15, color: "#fff" },
+  scoutText: { fontFamily: F.semibold, fontSize: T.body, color: "#fff" },
   suggest: { marginHorizontal: 16, marginTop: 8, backgroundColor: C.surface, borderRadius: R.md, paddingVertical: 6, ...shadow },
   suggestRow: { flexDirection: "row", alignItems: "center", gap: 10, paddingHorizontal: 16, paddingVertical: 12 },
-  suggestText: { flex: 1, fontFamily: F.medium, fontSize: 15, color: C.ink },
-  suggestHint: { fontFamily: F.regular, fontSize: 12, color: C.ink3 },
+  suggestText: { flex: 1, fontFamily: F.medium, fontSize: T.body, color: C.ink },
+  suggestHint: { fontFamily: F.regular, fontSize: T.meta, color: C.ink3 },
   chips: { gap: 6, paddingHorizontal: 16, paddingTop: 10, paddingBottom: 6 },
   chip: { height: 32, paddingHorizontal: 13, justifyContent: "center", borderRadius: R.pill, backgroundColor: C.surface,
     borderWidth: StyleSheet.hairlineWidth, borderColor: C.hairline },
   chipOn: { backgroundColor: C.ink, borderColor: C.ink },
-  chipText: { fontFamily: F.medium, fontSize: 13, color: C.ink },
+  chipText: { fontFamily: F.medium, fontSize: T.small, color: C.ink },
   chipTextOn: { color: "#fff" },
 });

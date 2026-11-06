@@ -4,7 +4,7 @@ import { ActivityIndicator, StyleSheet, Text, TextInput, View } from "react-nati
 import * as Haptics from "expo-haptics";
 import { savedName } from "../data/crews";
 import type { Spot } from "../lib/types";
-import { color as C, font as F, radius as R } from "../theme";
+import { color as C, font as F, radius as R, text as T } from "../theme";
 import { Tap } from "./Tap";
 
 type Option = { label: string; at: Date };
@@ -66,7 +66,7 @@ export function StartCrew({ spot, onStart, onCancel }: {
       <View style={s.row}>
         <Tap style={s.cancel} onPress={onCancel}><Text style={s.cancelText}>Cancel</Text></Tap>
         <Tap style={[s.start, !name.trim() && { opacity: 0.4 }]} disabled={!name.trim() || busy} onPress={go}>
-          {busy ? <ActivityIndicator color={C.ink} size="small" /> : <Text style={s.startText}>Start crew & invite</Text>}
+          {busy ? <ActivityIndicator color={C.surface} size="small" /> : <Text style={s.startText}>Start crew & invite</Text>}
         </Tap>
       </View>
     </View>
@@ -75,17 +75,17 @@ export function StartCrew({ spot, onStart, onCancel }: {
 
 const s = StyleSheet.create({
   box: { padding: 16, borderRadius: R.lg, backgroundColor: C.fill, gap: 8 },
-  label: { fontFamily: F.medium, fontSize: 12, color: C.ink3, marginTop: 2 },
+  label: { fontFamily: F.medium, fontSize: T.meta, color: C.ink3, marginTop: 2 },
   chips: { flexDirection: "row", flexWrap: "wrap", gap: 6 },
-  chip: { height: 34, paddingHorizontal: 14, borderRadius: R.pill, justifyContent: "center", backgroundColor: C.surface, borderWidth: 1, borderColor: C.hairline },
+  chip: { height: 44, paddingHorizontal: 14, borderRadius: R.pill, justifyContent: "center", backgroundColor: C.surface, borderWidth: 1, borderColor: C.hairline },
   chipOn: { backgroundColor: C.ink, borderColor: C.ink },
-  chipText: { fontFamily: F.semibold, fontSize: 13, color: C.ink },
+  chipText: { fontFamily: F.semibold, fontSize: T.small, color: C.ink },
   input: { height: 44, borderRadius: 12, paddingHorizontal: 14, backgroundColor: C.surface, borderWidth: 1, borderColor: C.hairline,
-    fontFamily: F.regular, fontSize: 15, color: C.ink },
-  error: { fontFamily: F.medium, fontSize: 13, color: C.red },
+    fontFamily: F.regular, fontSize: T.body, color: C.ink },
+  error: { fontFamily: F.medium, fontSize: T.small, color: C.red },
   row: { flexDirection: "row", gap: 8, marginTop: 4 },
   cancel: { height: 44, paddingHorizontal: 16, justifyContent: "center" },
-  cancelText: { fontFamily: F.semibold, fontSize: 14, color: C.ink3 },
-  start: { flex: 1, height: 44, borderRadius: R.pill, backgroundColor: C.yellow, alignItems: "center", justifyContent: "center" },
-  startText: { fontFamily: F.semibold, fontSize: 14, color: C.ink },
+  cancelText: { fontFamily: F.semibold, fontSize: T.small, color: C.ink3 },
+  start: { flex: 1, height: 44, borderRadius: R.pill, backgroundColor: C.ink, alignItems: "center", justifyContent: "center" },
+  startText: { fontFamily: F.semibold, fontSize: T.small, color: C.surface },
 });
