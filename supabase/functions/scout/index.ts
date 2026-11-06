@@ -62,7 +62,7 @@ Deno.serve(async (req) => {
   const started = Date.now();
   const work = (task === "events" ? runEvents(city, started) : runRooms(city))
     .then((r) => db.from("scout_runs").update({ ...r, ms: Date.now() - started }).eq("id", run!.id))
-    .catch((err) => db.from("scout_runs").update({ error: String(err), ms: Date.now() - started }).eq("id", run!.id));
+    .catch((err) => db.from("scout_runs").update({ error: describe(err), ms: Date.now() - started }).eq("id", run!.id));
   // Keep the worker alive after replying (Supabase's EdgeRuntime); elsewhere just finish first.
   const runtime = (globalThis as { EdgeRuntime?: { waitUntil(p: Promise<unknown>): void } }).EdgeRuntime;
   if (runtime) runtime.waitUntil(work);
@@ -77,7 +77,10 @@ async function runEvents(city: string, started: number) {
   // Merge with what's stored: same venue + same night (or same standing deal) is one spot.
   const { data: existing } = await db.from("events").select("*").eq("city", cityKey(city));
   const before = (existing ?? []).map(fromRow);
-  const merged = dedupeEvents([...before, ...found]).map((e) => ({ ...e, city: cityKey(city), partner: isPartner(e.venue) }));
+  const merged = uniqueBy(
+    dedupeEvents([...before, ...found]).map((e) => ({ ...e, city: cityKey(city), partner: isPartner(e.venue) })),
+    (e) => e.id,
+  );
 
   const { error } = await db.from("events").upsert(merged.map(toRow));
   if (error) throw error;
@@ -91,7 +94,7 @@ async function runEvents(city: string, started: number) {
 
 async function runRooms(city: string) {
   const found = await findLeads(city, { exa, log: console.log });
-  const { error } = await db.from("rooms").upsert(found.map((l) => roomRow(l, city)));
+  const { error } = await db.from("rooms").upsert(uniqueBy(found, (l) => l.id).map((l) => roomRow(l, city)));
   if (error) throw error;
   return { added: found.length, total: found.length };
 }
@@ -99,7 +102,7 @@ async function runRooms(city: string) {
 // camelCase (agent) <-> snake_case (Postgres)
 const toRow = (e: YeloEvent) => ({
   id: e.id, city: e.city, title: e.title, venue: e.venue, address: e.address, start: e.start, category: e.category,
-  price: e.price, deal: e.deal, description: e.description, url: e.url, lat: e.lat, lng: e.lng,
+  price: e.price, deal: e.deal, description: e.description, url: e.url, image: e.image ?? null, lat: e.lat, lng: e.lng,
   confidence: e.confidence, partner: !!e.partner, source: e.source, discovered_at: e.discoveredAt,
 });
 const fromRow = (r: Record<string, any>): YeloEvent => ({ ...r, discoveredAt: r.discovered_at } as YeloEvent);
@@ -107,3 +110,16 @@ const roomRow = (l: Lead, city: string) => ({
   id: l.id, city: cityKey(city), venue: l.venue, area: l.area, address: l.address, kind: l.kind, capacity: l.capacity,
   fit: l.fit, quiet_night: l.quietNight, contact: l.contact, url: l.url, confidence: l.confidence, found_at: l.foundAt,
 });
+
+// One row per primary key: Postgres rejects an upsert batch that touches the same row twice,
+// and two listings can slug to the same id (same venue, title and start).
+function uniqueBy<T>(rows: T[], key: (r: T) => string) {
+  return [...new Map(rows.map((r) => [key(r), r])).values()];
+}
+
+// Supabase errors are plain objects; String() turns them into "[object Object]".
+function describe(err: unknown) {
+  if (err instanceof Error) return err.message;
+  const e = err as { message?: string; details?: string; code?: string };
+  return [e?.code, e?.message, e?.details].filter(Boolean).join(" · ") || JSON.stringify(err);
+}

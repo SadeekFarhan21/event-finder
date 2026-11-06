@@ -16,6 +16,7 @@ export type YeloEvent = {
   deal: string | null;
   description: string;
   url: string | null;
+  image?: string | null; // preview image of the source page
   lat: number;
   lng: number;
   city: string;
@@ -102,11 +103,15 @@ export async function discover(city: string, { exa, geo, log = () => {}, deadlin
       const events: RawEvent[] = Array.isArray(parsed?.events) ? parsed.events : [];
       // Grounding is per field, e.g. "events[3].title" -> confidence + citations.
       const grounding = res.output?.grounding ?? [];
+      // Preview image per page Exa read, so each event can borrow its source page's photo.
+      const imageOf = new Map((res.results ?? []).filter((r) => r.image && !NOT_A_PHOTO.test(r.image)).map((r) => [r.url, r.image!]));
       return events.map((e, i): RawEvent & { confidence: YeloEvent["confidence"] } => {
         const g = grounding.filter((x) => x.field.startsWith(`events[${i}]`));
         const rank = { low: 0, medium: 1, high: 2 } as const;
         const confidence = g.length ? g.reduce((m, x) => (rank[x.confidence] < rank[m] ? x.confidence : m), "high" as YeloEvent["confidence"]) : "medium";
-        return { ...e, url: e.url || g.flatMap((x) => x.citations)[0]?.url || "", confidence };
+        const urls = [e.url, ...g.flatMap((x) => x.citations.map((c) => c.url))].filter(Boolean) as string[];
+        const image = urls.map((u) => imageOf.get(u)).find(Boolean) ?? "";
+        return { ...e, url: e.url || urls[0] || "", image, confidence };
       });
     }),
   );
@@ -152,6 +157,7 @@ export async function discover(city: string, { exa, geo, log = () => {}, deadlin
       deal: e.deal || null,
       description: e.description ?? "",
       url: e.url || null,
+      image: e.image || null,
       lat: pt.lat,
       lng: pt.lng,
       city,
@@ -160,9 +166,17 @@ export async function discover(city: string, { exa, geo, log = () => {}, deadlin
       discoveredAt: now.toISOString(),
     });
   }
-  log(`placed ${out.length} events on the map`);
+  // A listings article ("50 things to do this weekend") hands its one banner to every event it
+  // mentions. The same photo on many cards looks broken, so keep only images unique-ish to a spot.
+  const uses = new Map<string, number>();
+  for (const e of out) if (e.image) uses.set(e.image, (uses.get(e.image) ?? 0) + 1);
+  for (const e of out) if (e.image && uses.get(e.image)! > 2) e.image = null;
+  log(`placed ${out.length} events on the map, ${out.filter((e) => e.image).length} with photos`);
   return out;
 }
+
+// Site chrome, not a photo of the place: logos, icons, avatars, placeholders.
+const NOT_A_PHOTO = /logo|favicon|icon|avatar|placeholder|default[-_]?(image|og)|\.svg(\?|$)/i;
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
