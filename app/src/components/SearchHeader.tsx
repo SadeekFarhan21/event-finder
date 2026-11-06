@@ -56,7 +56,7 @@ export function SearchHeader({ city, onCityChange, onSubmitCity, onScout, scouti
           <Pressable style={{ flex: 1 }} onPress={() => setOpen(false)} accessibilityLabel="Close city menu" />
         </Animated.View>
       )}
-      <View style={[s.top, { paddingTop: insets.top + HEADER_GAP }]}>
+      <View style={[s.top, { paddingTop: insets.top + HEADER_GAP }, open && { zIndex: 21, elevation: 21 }]}>
         <View style={s.row}>
           <Tap pressedScale={0.98} onPress={() => setOpen((o) => !o)} style={s.cityBtn} hitSlop={8}
             accessibilityLabel={`City: ${name}. Change city`} accessibilityState={{ expanded: open }}>
@@ -104,7 +104,7 @@ export function SearchHeader({ city, onCityChange, onSubmitCity, onScout, scouti
 
 const s = StyleSheet.create({
   fade: { position: "absolute", top: 0, left: 0, right: 0 },
-  backdrop: { position: "absolute", top: 0, right: 0, bottom: 0, left: 0, backgroundColor: "rgba(0,0,0,0.45)" },
+  backdrop: { position: "absolute", top: 0, right: 0, bottom: 0, left: 0, backgroundColor: "rgba(0,0,0,0.45)", zIndex: 20, elevation: 20 },
   top: { position: "absolute", top: 0, left: 0, right: 0 },
   row: { flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 20, height: 48 },
   cityBtn: { flex: 1, flexDirection: "row", alignItems: "center", gap: 6 },
