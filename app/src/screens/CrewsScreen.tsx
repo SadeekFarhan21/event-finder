@@ -42,7 +42,7 @@ export function CrewsScreen({ visible, crews, photos, linkCode, onJoin, onStatus
     try {
       const c = await onJoin(code, name.trim());
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      setJoined(crews.find((x) => x.code === c)?.venue ?? "the crew");
+      setJoined(crews.find((x) => x.code === c)?.venue ?? "");
       setCode("");
     } catch (e) {
       setError((e as Error).message || "Couldn't join that crew");
@@ -81,7 +81,7 @@ export function CrewsScreen({ visible, crews, photos, linkCode, onJoin, onStatus
             placeholderTextColor={C.placeholder} style={s.input} maxLength={30} autoCapitalize="words" accessibilityLabel="Your first name" />
         </Field>
         {error && <Text style={s.error}>{error}</Text>}
-        {joined && !error && <Text style={s.success}>You're in. The crew for {joined} is below.</Text>}
+        {joined !== null && !error && <Text style={s.success}>{joined ? `You're in. The crew for ${joined} is below.` : "You're in. Your crew is below."}</Text>}
         <Tap style={[s.joinBtn, !ready && s.joinBtnOff]} disabled={!ready || busy} onPress={join}>
           {busy ? <ActivityIndicator color={C.onAccent} size="small" /> : (
             <>
@@ -93,7 +93,7 @@ export function CrewsScreen({ visible, crews, photos, linkCode, onJoin, onStatus
       </View>
 
       <View style={s.sectionRow}>
-        <Text style={s.section}>Active tonight</Text>
+        <Text style={s.section} numberOfLines={1}>Active tonight</Text>
         {live.length > 0 && <View style={s.countPill}><Text style={s.countText}>{live.length}</Text></View>}
       </View>
     </View>
@@ -158,7 +158,7 @@ function CrewTile({ crew, photo, onStatus, onRide, onOpen }: {
         <Text style={s.venue} numberOfLines={1}>{crew.venue}</Text>
         <View style={s.addrRow}>
           <Ionicons name="location-outline" size={13} color={C.ink3} />
-          <Text style={s.addr} numberOfLines={1}>{crew.title}  ·  {crew.address.split(",")[0]}</Text>
+          <Text style={s.addr} numberOfLines={1}>{crew.address.split(",")[0]}  ·  {crew.title}</Text>
         </View>
       </Tap>
 
@@ -222,7 +222,7 @@ const s = StyleSheet.create({
   joinBtnOff: { backgroundColor: C.fill },
   joinText: { fontFamily: F.semibold, fontSize: T.body, color: C.onAccent },
   sectionRow: { flexDirection: "row", alignItems: "center", gap: 8, marginTop: 28 },
-  section: { fontFamily: F.display, fontSize: T.title, lineHeight: 32, color: C.ink },
+  section: { flexShrink: 1, fontFamily: F.display, fontSize: T.title, color: C.ink },
   countPill: { minWidth: 24, height: 24, paddingHorizontal: 8, borderRadius: 12, alignItems: "center", justifyContent: "center", backgroundColor: C.accent },
   countText: { fontFamily: F.semibold, fontSize: T.meta, color: C.onAccent },
   empty: { fontFamily: F.regular, fontSize: T.body, color: C.ink3, marginTop: 4 },
