@@ -6,7 +6,7 @@ import { ActivityIndicator, FlatList, Modal, Platform, Share, StyleSheet, Text, 
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
-import { Ionicons } from "@expo/vector-icons";
+import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { crewInvite, leaveLabel, savedName, type Crew, type CrewStatus } from "../data/crews";
 import { Tap } from "../components/Tap";
@@ -55,7 +55,7 @@ export function CrewsScreen({ visible, crews, photos, linkCode, onJoin, onStatus
     <View style={s.head}>
       <View style={s.topRow}>
         <Tap onPress={onClose} hitSlop={12} style={s.close} accessibilityLabel="Close crews">
-          <Ionicons name="chevron-down" size={20} color={C.ink} />
+          <Feather name="chevron-down" size={20} color={C.ink} />
         </Tap>
       </View>
       <Text style={s.title}>Your <Text style={s.titleItalic}>crews.</Text></Text>
@@ -67,15 +67,14 @@ export function CrewsScreen({ visible, crews, photos, linkCode, onJoin, onStatus
       {/* Join a friend's crew */}
       <View style={s.joinBox}>
         <View style={s.joinHead}>
-          <View style={s.iconTile}><Ionicons name="link" size={15} color={C.ink2} /></View>
           <Text style={s.joinTitle}>Got a link from a friend?</Text>
         </View>
-        <Field icon="pricetag-outline" label="Crew link or code">
+        <Field label="Crew link or code">
           <TextInput selectionColor={C.selection} cursorColor={C.accent} value={code} onChangeText={(v) => { setCode(v); setJoined(null); }}
             placeholder="Paste the link they sent" placeholderTextColor={C.placeholder} style={s.input}
             autoCapitalize="none" autoCorrect={false} accessibilityLabel="Crew link or code" />
         </Field>
-        <Field icon="person-circle-outline" label="Your first name">
+        <Field label="Your first name">
           <TextInput selectionColor={C.selection} cursorColor={C.accent} value={name} onChangeText={setName} placeholder="First name"
             placeholderTextColor={C.placeholder} style={s.input} maxLength={30} autoCapitalize="words" accessibilityLabel="Your first name" />
         </Field>
@@ -85,7 +84,6 @@ export function CrewsScreen({ visible, crews, photos, linkCode, onJoin, onStatus
           {busy ? <ActivityIndicator color={C.onAccent} size="small" /> : (
             <>
               <Text style={[s.joinText, !ready && { color: C.ink3 }]}>Join crew</Text>
-              <Ionicons name="arrow-forward" size={16} color={ready ? C.onAccent : C.ink3} />
             </>
           )}
         </Tap>
@@ -104,7 +102,7 @@ export function CrewsScreen({ visible, crews, photos, linkCode, onJoin, onStatus
         <Text style={s.startTitle}>Start one from any spot</Text>
         <Text style={s.startSub}>Pick a spot on the map, tap Heading out, and send the link.</Text>
       </View>
-      <View style={s.startBtn}><Ionicons name="add" size={24} color={C.ink} /></View>
+      <View style={s.startBtn}><Feather name="plus" size={24} color={C.ink} /></View>
     </Tap>
   );
 
@@ -123,12 +121,11 @@ export function CrewsScreen({ visible, crews, photos, linkCode, onJoin, onStatus
   );
 }
 
-function Field({ icon, label, children }: { icon: React.ComponentProps<typeof Ionicons>["name"]; label: string; children: React.ReactNode }) {
+function Field({ label, children }: { icon?: string; label: string; children: React.ReactNode }) {
   return (
     <View style={{ gap: 6 }}>
       <Text style={s.fieldLabel}>{label}</Text>
       <View style={s.fieldBox}>
-        <Ionicons name={icon} size={17} color={C.ink3} />
         {children}
       </View>
     </View>
@@ -149,13 +146,13 @@ function CrewTile({ crew, photo, onStatus, onRide, onOpen }: {
       <Tap pressedScale={0.99} onPress={() => onOpen(crew)} accessibilityLabel={`Open ${crew.venue}`}>
         <View style={s.strip}>
           {photo ? <Image source={photo} style={StyleSheet.absoluteFill} contentFit="cover" transition={200} />
-            : <View style={s.stripEmpty}><Ionicons name="people" size={40} color={C.d3} /></View>}
+            : null}
           <LinearGradient pointerEvents="none" colors={["rgba(21,21,19,0)", C.surface]} style={StyleSheet.absoluteFill} />
           <View style={s.stripChip}><View style={s.dot} /><Text style={s.stripChipText}>{leaveLabel(crew.leaveAt)}</Text></View>
         </View>
         <Text style={s.venue} numberOfLines={1}>{crew.venue}</Text>
         <View style={s.addrRow}>
-          <Ionicons name="location-outline" size={13} color={C.ink3} />
+          <Feather name="map-pin" size={13} color={C.ink3} />
           <Text style={s.addr} numberOfLines={1}>{crew.address.split(",")[0]}  ·  {crew.title}</Text>
         </View>
       </Tap>
@@ -174,7 +171,7 @@ function CrewTile({ crew, photo, onStatus, onRide, onOpen }: {
           <Text style={s.peopleSub}>{onWay ? `${onWay} on the way` : "Nobody's left yet"}</Text>
         </View>
         <Tap style={s.round} accessibilityLabel="Invite to crew" onPress={() => Share.share({ message: crewInvite(crew) }).catch(() => {})}>
-          <Ionicons name="person-add-outline" size={16} color={C.ink} />
+          <Feather name="user-plus" size={16} color={C.ink} />
         </Tap>
       </View>
 
@@ -187,7 +184,6 @@ function CrewTile({ crew, photo, onStatus, onRide, onOpen }: {
           if (me?.status !== "on_way") onStatus(crew.code, "on_way");
           onRide(crew);
         }}>
-          <Ionicons name="car" size={16} color={C.onAccent} />
           <Text style={s.btnPrimaryText}>{me?.status === "on_way" ? "Open ride" : "I'm on my way"}</Text>
         </Tap>
       </View>

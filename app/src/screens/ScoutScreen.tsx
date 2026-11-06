@@ -5,7 +5,7 @@ import { StatusBar } from "expo-status-bar";
 import { LinearGradient } from "expo-linear-gradient";
 import { Dimensions } from "react-native";
 import * as Haptics from "expo-haptics";
-import { Ionicons } from "@expo/vector-icons";
+import { Feather } from "@expo/vector-icons";
 import Animated, { FadeIn } from "react-native-reanimated";
 import { ScoutMap, type Region, type ScoutMapRef } from "../map/ScoutMap";
 import { clusterEvents, coreOf } from "../lib/cluster";
@@ -210,7 +210,6 @@ export function ScoutScreen() {
           <Animated.View entering={FadeIn.delay(150)} style={s.roomsWrap}>
             {crewsApi.available && (
               <Tap hitSlop={4} style={[s.rooms, liveCrews.length > 0 && s.crewsOn]} onPress={() => { Haptics.selectionAsync(); setCrewsOpen(true); }}>
-                <Ionicons name="people-outline" size={14} color={liveCrews.length > 0 ? C.surface : C.ink} />
                 <Text style={[s.roomsText, liveCrews.length > 0 && s.crewsOnText]}>Crews{liveCrews.length ? `  ·  ${liveCrews.length}` : ""}</Text>
               </Tap>
             )}

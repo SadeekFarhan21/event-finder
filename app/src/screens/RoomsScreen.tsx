@@ -4,7 +4,7 @@ import { useState } from "react";
 import { ActivityIndicator, FlatList, Linking, Modal, Platform, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Tap } from "../components/Tap";
-import { Ionicons } from "@expo/vector-icons";
+import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { runLeads } from "../data/api";
 import type { Lead } from "../lib/types";
@@ -43,7 +43,7 @@ export function RoomsScreen({ visible, city, leads, setLeads, canSearch, onClose
   const header = (
     <View style={s.head}>
       <Tap onPress={onClose} hitSlop={12} style={s.close} accessibilityLabel="Close rooms">
-        <Ionicons name="chevron-down" size={22} color={C.ink} />
+        <Feather name="chevron-down" size={22} color={C.ink} />
       </Tap>
       <Text style={s.title}>Rooms worth{"\n"}<Text style={s.titleAccent}>pitching.</Text></Text>
       <Text style={s.sub}>
@@ -80,8 +80,7 @@ export function RoomsScreen({ visible, city, leads, setLeads, canSearch, onClose
               {(l.contact || l.url) && (
                 <Tap onPress={() => contact(l)} style={s.go} hitSlop={8}
                   accessibilityLabel={`${l.contact?.includes("@") ? "Email" : "Open the website of"} ${l.venue}`}>
-                  <Ionicons name={l.contact?.includes("@") ? "mail-outline" : "arrow-up-outline"} size={17} color={C.ink}
-                    style={l.contact?.includes("@") ? undefined : { transform: [{ rotate: "45deg" }] }} />
+                  <Feather name={l.contact?.includes("@") ? "mail" : "arrow-up-right"} size={17} color={C.ink} />
                 </Tap>
               )}
             </View>

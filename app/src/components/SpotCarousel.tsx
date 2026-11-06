@@ -4,7 +4,7 @@ import { useImperativeHandle, type Ref } from "react";
 import { StyleSheet, Text, View, type NativeScrollEvent, type NativeSyntheticEvent } from "react-native";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
-import { Ionicons } from "@expo/vector-icons";
+import { Feather } from "@expo/vector-icons";
 import Animated, {
   Extrapolation, FadeInDown, interpolate, useAnimatedRef, useAnimatedScrollHandler, useAnimatedStyle, useSharedValue,
   type SharedValue,
@@ -91,7 +91,6 @@ function Card({ spot: e, going, index, x, onPress, onRide }: {
             </View>
             <View style={s.bandSide}>
               {e.partner && <View style={s.partner}><View style={s.partnerMark} /><Text style={s.partnerText}>Yelo partner</Text></View>}
-              <Ionicons name={CATEGORY[e.category].icon} size={22} color={C.ink3} style={{ marginTop: "auto" }} />
             </View>
           </LinearGradient>
         )}
@@ -107,20 +106,18 @@ function Card({ spot: e, going, index, x, onPress, onRide }: {
                   <View style={s.faces}>
                     {Array.from({ length: Math.min(going, 3) }, (_, i) => (
                       <View key={i} style={[s.face, { marginLeft: i ? -8 : 0, zIndex: 3 - i }]}>
-                        <Ionicons name="person" size={11} color={C.ink3} />
                       </View>
                     ))}
                   </View>
                   <Text style={s.goingText}>{going} going</Text>
                 </>
               ) : e.deal ? (
-                <View style={s.deal}><Ionicons name="pricetag-outline" size={12} color={C.ink2} /><Text style={s.dealText} numberOfLines={1}>Deal</Text></View>
+                <View style={s.deal}><Text style={s.dealText} numberOfLines={1}>Deal</Text></View>
               ) : (
                 <Text style={s.goingText}>Be the first to go</Text>
               )}
             </View>
             <Tap onPress={onRide} style={s.ride} accessibilityLabel={`Ride to ${e.venue}`} hitSlop={6}>
-              <Ionicons name="car" size={15} color={C.onAccent} />
               <Text style={s.rideText}>Ride</Text>
             </Tap>
           </View>

@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { ActivityIndicator, BackHandler, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import { Ionicons } from "@expo/vector-icons";
+import { Feather } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 import { FILTERS, filterLabel, type Filter } from "../lib/filters";
@@ -62,10 +62,10 @@ export function SearchHeader({ city, onCityChange, onSubmitCity, onScout, scouti
             accessibilityLabel={`City: ${name}. Change city`} accessibilityState={{ expanded: open }}>
             <Text style={s.city} numberOfLines={1}>{name}</Text>
             {scouting ? <ActivityIndicator color={C.ink3} size="small" />
-              : <Ionicons name={open ? "chevron-up" : "chevron-down"} size={18} color={C.ink3} style={{ marginTop: 6 }} />}
+              : <Feather name={open ? "chevron-up" : "chevron-down"} size={18} color={C.ink3} style={{ marginTop: 6 }} />}
           </Tap>
           <Tap onPress={onRooms} style={s.iconBtn} accessibilityLabel="Rooms for Yelo nights (partner team)">
-            <Ionicons name="business-outline" size={18} color={C.ink2} />
+            <Text style={s.roomsText}>Rooms</Text>
           </Tap>
         </View>
 
@@ -83,14 +83,14 @@ export function SearchHeader({ city, onCityChange, onSubmitCity, onScout, scouti
             {CITIES.map((c) => (
               <Tap key={c} pressedScale={0.99} style={s.menuRow} onPress={() => pickCity(c)} accessibilityState={{ selected: c === city }}>
                 <Text style={[s.menuText, c === city && { color: C.ink }]}>{c.split(",")[0]}</Text>
-                {c === city && <Ionicons name="checkmark" size={18} color={C.ink} />}
+                {c === city && <Feather name="check" size={18} color={C.ink} />}
               </Tap>
             ))}
             {scoutable && (
               <Tap pressedScale={0.99} style={[s.menuRow, s.menuDivider]} disabled={scouting}
                 onPress={() => { setOpen(false); onScout(); }} accessibilityLabel={`Search the web again for ${name}`}>
-                <Ionicons name="refresh" size={16} color={C.ink3} />
-                <Text style={[s.menuText, { flex: 1 }]}>{scouting ? "Searching…" : `Look for new spots in ${name}`}</Text>
+                <Feather name="refresh-cw" size={16} color={C.ink3} />
+                <Text style={[s.menuAction, { flex: 1 }]}>{scouting ? "Searching…" : `Look for new spots in ${name}`}</Text>
                 <Text style={s.menuHint}>~2 min</Text>
               </Tap>
             )}
@@ -109,13 +109,15 @@ const s = StyleSheet.create({
   row: { flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 20, height: 48 },
   cityBtn: { flex: 1, flexDirection: "row", alignItems: "center", gap: 6 },
   city: { flexShrink: 1, fontFamily: F.display, fontSize: 36, lineHeight: 44, color: C.ink },
-  iconBtn: { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center",
+  iconBtn: { height: 36, paddingHorizontal: 14, borderRadius: R.pill, alignItems: "center", justifyContent: "center",
     backgroundColor: "rgba(21,21,19,0.75)", borderWidth: StyleSheet.hairlineWidth, borderColor: C.d4 },
+  roomsText: { fontFamily: F.medium, fontSize: T.small, color: C.ink2 },
   menu: { position: "absolute", left: 16, right: 16, zIndex: 10, backgroundColor: C.surface, borderRadius: R.md, paddingVertical: 4,
     borderWidth: StyleSheet.hairlineWidth, borderColor: C.d4, ...shadow },
   menuRow: { flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 16, minHeight: 48 },
   menuDivider: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: C.hairline },
-  menuText: { fontFamily: F.medium, fontSize: T.body, color: C.ink2, flex: 1 },
+  menuText: { fontFamily: F.display, fontSize: 24, lineHeight: 30, color: C.ink2, flex: 1 },
+  menuAction: { fontFamily: F.medium, fontSize: T.small, color: C.ink3 },
   menuHint: { fontFamily: F.regular, fontSize: T.meta, color: C.ink3 },
   chips: { gap: 6, paddingHorizontal: 16, paddingTop: 12, paddingBottom: 8 },
   chip: { height: 32, paddingHorizontal: 12, justifyContent: "center", borderRadius: R.pill, backgroundColor: "rgba(21,21,19,0.75)",

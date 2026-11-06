@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, KeyboardAvoidingView, Modal, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
-import { Ionicons } from "@expo/vector-icons";
+import { Feather } from "@expo/vector-icons";
 import { savedName } from "../data/crews";
 import { clock, isRecurring, whenLabel } from "../lib/time";
 import type { Spot } from "../lib/types";
@@ -89,7 +89,7 @@ export function HeadingOutSheet({ spot, visible, onStart, onClose }: {
                   accessibilityLabel={`${o.title}, ${o.detail}`}>
                   <Text style={[s.optionTitle, on && s.optionTitleOn]} numberOfLines={1}>{o.title}</Text>
                   <Text style={[s.optionTime, on && s.optionTimeOn]} numberOfLines={1}>{o.detail}</Text>
-                  <View style={s.check}>{on && <Ionicons name="checkmark" size={18} color={C.ink} />}</View>
+                  <View style={s.check}>{on && <Feather name="check" size={18} color={C.ink} />}</View>
                 </Tap>
               );
             })}
@@ -104,7 +104,6 @@ export function HeadingOutSheet({ spot, visible, onStart, onClose }: {
           <Tap style={[s.cta, !name.trim() && s.ctaOff]} disabled={!name.trim() || busy} onPress={start}>
             {busy ? <ActivityIndicator color={C.onAccent} /> : (
               <>
-                <Ionicons name="paper-plane" size={16} color={name.trim() ? C.onAccent : C.ink3} />
                 <Text style={[s.ctaText, !name.trim() && { color: C.ink3 }]}>Start crew and send link</Text>
               </>
             )}

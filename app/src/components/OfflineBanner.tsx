@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { StyleSheet, Text } from "react-native";
 import Animated, { FadeInUp, FadeOutUp } from "react-native-reanimated";
-import { Ionicons } from "@expo/vector-icons";
+import { Feather } from "@expo/vector-icons";
 import { isOffline, onNetworkChange } from "../lib/net";
 import { HEADER_GAP, HEADER_H } from "../layout";
 import { color as C, font as F, radius as R, shadow, text as T } from "../theme";
@@ -15,7 +15,7 @@ export function OfflineBanner({ top }: { top: number }) {
   return (
     <Animated.View entering={FadeInUp} exiting={FadeOutUp} style={[s.banner, { top: top + HEADER_GAP + HEADER_H + 8 }]}
       accessibilityRole="alert" accessibilityLiveRegion="polite">
-      <Ionicons name="cloud-offline-outline" size={16} color={C.ink2} />
+      <Feather name="wifi-off" size={16} color={C.ink2} />
       <Text style={s.text}>No connection. Showing what loaded last.</Text>
     </Animated.View>
   );

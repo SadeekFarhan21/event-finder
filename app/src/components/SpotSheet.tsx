@@ -7,7 +7,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
-import { Ionicons } from "@expo/vector-icons";
+import { Feather } from "@expo/vector-icons";
 import { Gesture, GestureDetector, ScrollView } from "react-native-gesture-handler";
 import Animated, { FadeIn, interpolate, useAnimatedStyle, useSharedValue, withSpring, withTiming } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
@@ -146,9 +146,9 @@ export function SpotSheet({ spot, city, me, unlocked, canAskLocation, onAskLocat
               )}
               <View style={s.grabber} />
               <View style={s.heroTop}>
-                <Tap style={s.glass} onPress={close} accessibilityLabel="Close"><Ionicons name="chevron-down" size={18} color={C.ink} /></Tap>
+                <Tap style={s.glass} onPress={close} accessibilityLabel="Close"><Feather name="chevron-down" size={18} color={C.ink} /></Tap>
                 <Tap style={s.glass} onPress={share} accessibilityLabel={crew ? "Invite friends to your crew" : "Send this spot to a friend"}>
-                  <Ionicons name="share-outline" size={17} color={C.ink} />
+                  <Feather name="share" size={17} color={C.ink} />
                 </Tap>
               </View>
             </View>
@@ -183,7 +183,7 @@ export function SpotSheet({ spot, city, me, unlocked, canAskLocation, onAskLocat
                     </View>
                   ))}
                 </View>
-              ) : <Ionicons name="person-outline" size={18} color={C.ink2} />}
+              ) : null}
               <Text style={[s.rowText, !going && { color: C.ink2, fontFamily: F.medium }]} numberOfLines={1}>
                 {going ? `${going} going` : "No one going yet"}{isGoing && going > 1 ? ", including you" : ""}
               </Text>
@@ -193,34 +193,50 @@ export function SpotSheet({ spot, city, me, unlocked, canAskLocation, onAskLocat
                   if (isGoing) { Haptics.selectionAsync(); onUnGo?.(e); return; }
                   Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); onGo(e);
                 }}>
-                {isGoing && <Ionicons name="checkmark" size={14} color={C.ink} />}
+                {isGoing && <Feather name="check" size={14} color={C.ink} />}
                 <Text style={[s.pillText, isGoing && { color: C.ink }]}>{isGoing ? "Going" : "I'm going"}</Text>
               </Tap>
             </View>
 
             {crew ? (
               <Animated.View entering={FadeIn} style={s.crew}>
-                <View style={{ flex: 1 }}>
-                  <Text style={s.crewTitle} numberOfLines={1}>{leaveLabel(crew.leaveAt)}</Text>
-                  <Text style={s.crewSub} numberOfLines={1}>
-                    Your crew  ·  {people.length} coming{crew.members.some((m) => m.status === "on_way") ? `  ·  ${crew.members.filter((m) => m.status === "on_way").length} on the way` : ""}
-                  </Text>
+                <View style={s.crewHead}>
+                  <Text style={s.crewLabel}>Your crew</Text>
+                  <Text style={s.crewTime}>{leaveLabel(crew.leaveAt)}</Text>
                 </View>
-                {meInCrew?.status === "out" ? (
-                  <Tap onPress={() => onCrewStatus(crew.code, "in")} hitSlop={10}><Text style={s.link}>I'm back in</Text></Tap>
-                ) : meInCrew?.status === "on_way" ? (
-                  <Tap onPress={() => onCrewStatus(crew.code, "out")} hitSlop={10}><Text style={s.linkQuiet}>Can't make it</Text></Tap>
-                ) : (
-                  <Tap onPress={() => { Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); onCrewStatus(crew.code, "on_way"); }} hitSlop={10}>
-                    <Text style={s.link}>I'm on my way</Text>
-                  </Tap>
-                )}
+                <View style={s.crewMembers}>
+                  {crew.members.filter((m) => m.status !== "out").map((m, i) => (
+                    <View key={i} style={s.member}>
+                      <View style={[s.memberDot, m.status === "on_way" && s.memberDotOn]} />
+                      <Text style={s.memberName} numberOfLines={1}>{m.me ? "You" : m.name}</Text>
+                      <Text style={s.memberState}>{m.status === "on_way" ? "on the way" : "coming"}</Text>
+                    </View>
+                  ))}
+                </View>
+                <View style={s.crewActions}>
+                  {meInCrew?.status === "out" ? (
+                    <Tap style={[s.crewBtn, s.crewBtnMain]} onPress={() => onCrewStatus(crew.code, "in")}>
+                      <Text style={s.crewBtnMainText}>I'm back in</Text>
+                    </Tap>
+                  ) : meInCrew?.status === "on_way" ? (
+                    <Text style={s.crewNote}>You're on the way</Text>
+                  ) : (
+                    <Tap style={[s.crewBtn, s.crewBtnMain]} onPress={() => { Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); onCrewStatus(crew.code, "on_way"); }}>
+                      <Text style={s.crewBtnMainText}>I'm on my way</Text>
+                    </Tap>
+                  )}
+                  {meInCrew?.status !== "out" && (
+                    <Tap style={s.crewBtn} onPress={() => onCrewStatus(crew.code, "out")}>
+                      <Text style={s.crewBtnText}>Can't make it</Text>
+                    </Tap>
+                  )}
+                </View>
               </Animated.View>
             ) : canCrew ? (
               <Tap style={s.friends} onPress={() => { Haptics.selectionAsync(); setComposing(true); }}>
-                <Ionicons name="people-outline" size={18} color={C.ink2} />
+                <Feather name="users" size={18} color={C.ink2} />
                 <Text style={s.friendsText}>Go with friends</Text>
-                <Ionicons name="chevron-forward" size={16} color={C.ink3} />
+                <Feather name="chevron-right" size={16} color={C.ink3} />
               </Tap>
             ) : null}
 
@@ -228,7 +244,7 @@ export function SpotSheet({ spot, city, me, unlocked, canAskLocation, onAskLocat
 
             {/* Where */}
             <View style={s.row}>
-              <Ionicons name="location-outline" size={18} color={C.ink2} />
+              <Feather name="map-pin" size={18} color={C.ink2} />
               <View style={{ flex: 1 }}>
                 {/* "Building 92, Brooklyn Navy Yard": don't repeat the venue name as the street. */}
                 {addr.street.toLowerCase() === e.venue.toLowerCase() && addr.rest ? (
@@ -242,13 +258,13 @@ export function SpotSheet({ spot, city, me, unlocked, canAskLocation, onAskLocat
               </View>
               <Tap onPress={() => Linking.openURL(config.directionsUrl(`${e.venue}, ${e.address}`))} style={s.round} hitSlop={4}
                 accessibilityRole="link" accessibilityLabel={`Directions to ${e.venue}`}>
-                <Ionicons name="navigate-outline" size={17} color={C.ink} />
+                <Feather name="navigation" size={17} color={C.ink} />
               </Tap>
             </View>
             {/* The ride, read like a receipt line: what on the left, the price on the right */}
             {fare ? (
               <View style={[s.row, s.rowNext]}>
-                <Ionicons name="car-outline" size={18} color={C.ink2} />
+                <Feather name="clock" size={18} color={C.ink2} />
                 <View style={{ flex: 1 }}>
                   <Text style={s.rowText} numberOfLines={1}>About {fare.minutes} min by car</Text>
                   <Text style={s.rowSub} numberOfLines={1}>Estimate. About ${fare.typical} on other apps</Text>
@@ -257,7 +273,7 @@ export function SpotSheet({ spot, city, me, unlocked, canAskLocation, onAskLocat
               </View>
             ) : canAskLocation ? (
               <View style={[s.row, s.rowNext]}>
-                <Ionicons name="car-outline" size={18} color={C.ink2} />
+                <Feather name="clock" size={18} color={C.ink2} />
                 <View style={{ flex: 1 }}>
                   <Text style={s.rowText} numberOfLines={1}>Ride price</Text>
                   <Text style={s.rowSub} numberOfLines={1}>Uses your location once</Text>
@@ -284,12 +300,10 @@ export function SpotSheet({ spot, city, me, unlocked, canAskLocation, onAskLocat
           <LinearGradient pointerEvents="none" colors={["rgba(12,12,10,0)", "rgba(12,12,10,0.94)", C.bg]} locations={[0, 0.35, 1]}
             style={StyleSheet.absoluteFill} />
           <Tap style={[s.btn, s.btnPrimary]} onPress={ride}>
-            <Ionicons name="car" size={18} color={C.onAccent} />
             <Text style={s.btnPrimaryText}>{fare ? `Ride with Yelo  ·  ~$${fare.yelo}` : "Ride with Yelo"}</Text>
           </Tap>
           {e.deal && !unlocked && (
             <Tap style={[s.btn, s.btnQuiet]} onPress={unlock}>
-              <Ionicons name="gift-outline" size={16} color={C.ink2} />
               <Text style={s.btnQuietText}>Deal</Text>
             </Tap>
           )}
@@ -347,10 +361,22 @@ const s = StyleSheet.create({
   pillText: { fontFamily: F.semibold, fontSize: T.small, color: C.ink2 },
   friends: { flexDirection: "row", alignItems: "center", gap: 12, minHeight: 48, marginTop: 8 },
   friendsText: { flex: 1, fontFamily: F.semibold, fontSize: T.small, color: C.ink },
-  crew: { flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 16, paddingVertical: 12, marginTop: 16, borderRadius: R.md,
-    backgroundColor: C.surface, borderWidth: StyleSheet.hairlineWidth, borderColor: C.d4 },
-  crewTitle: { fontFamily: F.semibold, fontSize: T.small, color: C.ink },
-  crewSub: { fontFamily: F.regular, fontSize: T.meta, color: C.ink3, marginTop: 2 },
+  crew: { marginTop: 16, padding: 16, borderRadius: R.md, backgroundColor: C.surface, borderWidth: StyleSheet.hairlineWidth, borderColor: C.d4, gap: 12 },
+  crewHead: { flexDirection: "row", alignItems: "baseline", justifyContent: "space-between" },
+  crewLabel: { fontFamily: F.medium, fontSize: T.small, color: C.ink3 },
+  crewTime: { fontFamily: F.display, fontSize: 22, color: C.ink },
+  crewMembers: { gap: 8 },
+  member: { flexDirection: "row", alignItems: "center", gap: 10 },
+  memberDot: { width: 8, height: 8, borderRadius: 4, borderWidth: 1.5, borderColor: C.ink3 },
+  memberDotOn: { backgroundColor: C.ink, borderColor: C.ink },
+  memberName: { flex: 1, fontFamily: F.medium, fontSize: T.small, color: C.ink },
+  memberState: { fontFamily: F.regular, fontSize: T.meta, color: C.ink3 },
+  crewActions: { flexDirection: "row", gap: 8, alignItems: "center" },
+  crewBtn: { flex: 1, height: 44, borderRadius: R.pill, alignItems: "center", justifyContent: "center", borderWidth: StyleSheet.hairlineWidth, borderColor: C.d4 },
+  crewBtnMain: { backgroundColor: C.ink, borderColor: C.ink },
+  crewBtnMainText: { fontFamily: F.semibold, fontSize: T.small, color: C.bg },
+  crewBtnText: { fontFamily: F.semibold, fontSize: T.small, color: C.ink2 },
+  crewNote: { flex: 1, fontFamily: F.medium, fontSize: T.small, color: C.ink2 },
   link: { fontFamily: F.semibold, fontSize: T.small, color: C.ink, textDecorationLine: "underline" },
   linkQuiet: { fontFamily: F.semibold, fontSize: T.small, color: C.ink3 },
   rowNext: { marginTop: 16 },
