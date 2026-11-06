@@ -5,8 +5,9 @@ import { useImperativeHandle, useRef } from "react";
 import { StyleSheet } from "react-native";
 import { Camera, Map, Marker, UserLocation, type CameraRef } from "@maplibre/maplibre-react-native";
 import type { Region, ScoutMapProps, ScoutMarkerProps } from "./types";
+import { config } from "../config";
 
-const STYLE = "https://tiles.openfreemap.org/styles/positron";
+const STYLE = config.mapStyleUrl;
 
 // react-native-maps regions use deltas; MapLibre uses zoom. Close enough for an initial view.
 const zoomFor = (r: Region) => Math.log2(360 / Math.max(r.longitudeDelta, 0.0001));

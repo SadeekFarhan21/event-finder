@@ -23,6 +23,8 @@ import { SpotCarousel, type CarouselRef } from "../components/SpotCarousel";
 import { SpotSheet } from "../components/SpotSheet";
 import { EmptyCard, LoadingCard } from "../components/BottomStates";
 import { Toast } from "../components/Toast";
+import { OfflineBanner } from "../components/OfflineBanner";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Tap } from "../components/Tap";
 import { RoomsScreen } from "./RoomsScreen";
 import { CrewsScreen } from "./CrewsScreen";
@@ -41,6 +43,7 @@ export function ScoutScreen() {
   const { toast, show } = useToast();
   const { counts: going, mine: myGoing, go } = useGoing(spots, mapCity);
   const crewsApi = useCrews();
+  const insets = useSafeAreaInsets();
   const [crewsOpen, setCrewsOpen] = useState(false);
   const [linkCode, setLinkCode] = useState<string | null>(null);
 
@@ -162,6 +165,7 @@ export function ScoutScreen() {
       <SearchHeader city={cityInput} onCityChange={setCityInput} onSubmitCity={open}
         onScout={runScout} scouting={scouting} scoutable={scoutable} filter={filter} onFilter={pickFilter} />
 
+      <OfflineBanner top={insets.top} />
       <Toast text={toast.text} visible={toast.visible} />
 
       {loading && !spots.length ? <LoadingCard /> : !shown.length && !scouting ? (

@@ -1,16 +1,16 @@
 // Where spots and rooms come from: Supabase when configured (Yelo's stack, see supabase.ts),
 // otherwise the local dev server in /server.
-import Constants from "expo-constants";
 import type { Lead, Spot } from "../lib/types";
+import { config } from "../config";
+import { fetchWithTimeout } from "../lib/net";
 import { sbEvents, sbRooms, sbRun, supabase } from "./supabase";
 
-// In dev, the phone reaches the local server on the machine that serves the JS bundle.
-// hostUri looks like "192.168.1.20:8081"; swap the port for the server's.
-const host = Constants.expoConfig?.hostUri?.split(":")[0] ?? "localhost";
-export const API_URL = process.env.EXPO_PUBLIC_API_URL ?? `http://${host}:8787`;
+const fetchT = fetchWithTimeout(config.requestTimeoutMs);
 
+// Local dev server only (never in release builds; see config.ts).
 async function call<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${API_URL}${path}`, init);
+  if (!config.devApiUrl) throw new Error("Scout isn't connected to its server.");
+  const res = await fetchT(`${config.devApiUrl}${path}`, init);
   const body = await res.json();
   if (!res.ok) throw new Error(body.error ?? `HTTP ${res.status}`);
   return body as T;

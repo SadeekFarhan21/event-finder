@@ -18,6 +18,7 @@ import { canonicalCity, cityKey } from "../_shared/cities.ts";
 import type { ExaLike, GeoCache } from "../_shared/deps.ts";
 import type { Database } from "../_shared/database.types.ts";
 import { describeIssues, errorBody, ScoutRequest, SERVED_CITIES } from "../_shared/requests.ts";
+import { agentLogger, log } from "../_shared/log.ts";
 
 type EventRow = Database["public"]["Tables"]["events"]["Row"];
 
@@ -53,7 +54,10 @@ Deno.serve(async (req) => {
 
   const raw = await req.json().catch(() => null);
   const parsed = ScoutRequest.safeParse({ task: "events", ...(raw ?? {}) });
-  if (!parsed.success) return json(400, errorBody("BAD_REQUEST", describeIssues(parsed.error)));
+  if (!parsed.success) {
+    log("request.rejected", { code: "BAD_REQUEST", reason: describeIssues(parsed.error) }, "warn");
+    return json(400, errorBody("BAD_REQUEST", describeIssues(parsed.error)));
+  }
   const body = parsed.data;
   const { task } = body;
 
@@ -66,6 +70,7 @@ Deno.serve(async (req) => {
   const city = canonicalCity(body.city);
   // Public runs only for the cities Yelo serves: arbitrary text never reaches the search prompt.
   if (!trusted && !(SERVED_CITIES as readonly string[]).includes(city)) {
+    log("request.rejected", { code: "CITY_NOT_SERVED", task, city }, "warn");
     return json(403, errorBody("CITY_NOT_SERVED", `Scout covers ${SERVED_CITIES.map((c) => c.split(",")[0]).join(" and ")} for now.`));
   }
 
@@ -84,9 +89,18 @@ Deno.serve(async (req) => {
   // Claim the slot now so double-taps don't start two runs.
   const { data: run } = await db.from("scout_runs").insert({ kind: task, city: cityKey(city), focus: focus ?? null }).select("id").single();
   const started = Date.now();
-  const work = (task === "events" ? runEvents(city, started, focus) : runRooms(city))
-    .then((r) => db.from("scout_runs").update({ ...r, ms: Date.now() - started }).eq("id", run!.id))
-    .catch((err) => db.from("scout_runs").update({ error: describe(err), ms: Date.now() - started }).eq("id", run!.id));
+  const runId = run!.id;
+  log("run.start", { runId, task, city, focus, trusted });
+  const say = agentLogger(runId, task);
+  const work = (task === "events" ? runEvents(city, started, say, focus) : runRooms(city, say))
+    .then((r) => {
+      log("run.done", { runId, task, city, focus, ms: Date.now() - started, added: r.added, total: r.total });
+      return db.from("scout_runs").update({ ...r, ms: Date.now() - started }).eq("id", runId);
+    })
+    .catch((err) => {
+      log("run.failed", { runId, task, city, focus, ms: Date.now() - started, error: describe(err) }, "error");
+      return db.from("scout_runs").update({ error: describe(err), ms: Date.now() - started }).eq("id", runId);
+    });
   // Keep the worker alive after replying (Supabase's EdgeRuntime); elsewhere just finish first.
   const runtime = (globalThis as { EdgeRuntime?: { waitUntil(p: Promise<unknown>): void } }).EdgeRuntime;
   if (runtime) runtime.waitUntil(work);
@@ -95,8 +109,8 @@ Deno.serve(async (req) => {
   return json(202, { ok: true, runId: run!.id, message: `Scouting ${city}. Results land in a minute or two.` });
 });
 
-async function runEvents(city: string, started: number, focus?: number) {
-  const found = await discover(city, { exa, geo, log: console.log, deadline: started + BUDGET_MS }, focus);
+async function runEvents(city: string, started: number, say: (m: string) => void, focus?: number) {
+  const found = await discover(city, { exa, geo, log: say, deadline: started + BUDGET_MS }, focus);
 
   // Merge with what's stored: same venue + same night (or same standing deal) is one spot.
   const { data: existing } = await db.from("events").select("*").eq("city", cityKey(city));
@@ -158,8 +172,8 @@ async function review(auth: string | null, body: Extract<ScoutRequest, { task: "
   return json(400, errorBody("BAD_REQUEST", "approve and reject need an id."));
 }
 
-async function runRooms(city: string) {
-  const found = await findLeads(city, { exa, log: console.log });
+async function runRooms(city: string, say: (m: string) => void) {
+  const found = await findLeads(city, { exa, log: say });
   const { error } = await db.from("rooms").upsert(uniqueBy(found, (l) => l.id).map((l) => roomRow(l, city)));
   if (error) throw error;
   return { added: found.length, total: found.length };

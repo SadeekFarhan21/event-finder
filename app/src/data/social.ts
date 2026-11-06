@@ -6,7 +6,9 @@ import { whenLabel } from "../lib/time";
 import { supabase } from "./supabase";
 
 const MINE_KEY = "scout.going";
-export const SITE = "https://scout-download.vercel.app";
+import { config } from "../config";
+
+export const SITE = config.siteUrl;
 
 export async function goingCounts(ids: string[]): Promise<Record<string, number>> {
   if (!supabase || !ids.length) return {};
