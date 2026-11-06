@@ -105,7 +105,8 @@ export function SpotSheet({ spot, city, me, unlocked, canAskLocation, onAskLocat
     if (r?.action === Share.sharedAction) track(e, "share", city);
   };
   const unlock = () => { Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); track(e, "unlock", city); onUnlock(e); };
-  const facts = [whenLabel(e), e.price, fare && `${fare.miles < 0.95 ? fare.miles.toFixed(1) : Math.round(fare.miles)} mi away`].filter(Boolean).join("   ·   ");
+  // Each fact stays whole when the line wraps ("3 mi away" never splits).
+  const facts = [whenLabel(e), e.price, fare && `${fare.miles < 0.95 ? fare.miles.toFixed(1) : Math.round(fare.miles)} mi away`].filter(Boolean) as string[];
   const eyebrow = [(e.category === "deal" ? "Deal" : CATEGORY[e.category].label), addr.area].filter(Boolean).join("  ·  ");
   const source = e.source === "venue" ? "Listed by the venue" : e.confidence === "low" ? "Unconfirmed listing, check before you go" : "Found on the web";
 
@@ -134,8 +135,8 @@ export function SpotSheet({ spot, city, me, unlocked, canAskLocation, onAskLocat
               {e.image ? (
                 <View style={{ height: HERO_H }}>
                   <Image source={e.image} style={StyleSheet.absoluteFill} contentFit="cover" transition={250} />
-                  <LinearGradient pointerEvents="none" colors={["rgba(12,12,10,0.5)", "rgba(12,12,10,0)", "rgba(12,12,10,0.35)", C.bg]}
-                    locations={[0, 0.3, 0.6, 1]} style={StyleSheet.absoluteFill} />
+                  <LinearGradient pointerEvents="none" colors={["rgba(12,12,10,0.5)", "rgba(12,12,10,0)", "rgba(12,12,10,0.6)", "rgba(12,12,10,0.92)", C.bg]}
+                    locations={[0, 0.25, 0.55, 0.8, 1]} style={StyleSheet.absoluteFill} />
                   <View style={s.heroText}>{titleBlock}</View>
                 </View>
               ) : (
@@ -152,7 +153,14 @@ export function SpotSheet({ spot, city, me, unlocked, canAskLocation, onAskLocat
           </GestureDetector>
 
           <View style={s.content}>
-            <Text style={s.facts}>{facts}</Text>
+            <View style={s.factsRow}>
+              {facts.map((f, i) => (
+                <View key={i} style={s.fact}>
+                  {i > 0 && <View style={s.factDot} />}
+                  <Text style={s.facts} numberOfLines={1}>{f}</Text>
+                </View>
+              ))}
+            </View>
 
             <Text style={s.bill} numberOfLines={2}>{e.title}</Text>
             {!!e.description && (
@@ -287,7 +295,10 @@ const s = StyleSheet.create({
   partnerText: { fontFamily: F.semibold, fontSize: 11, color: C.onAccent, letterSpacing: 0.2 },
   title: { fontFamily: F.display, fontSize: 48, lineHeight: 52, color: C.ink, marginBottom: 6 },
   content: { paddingHorizontal: 20, paddingTop: 12 },
-  facts: { fontFamily: F.medium, fontSize: T.small, color: C.ink2 },
+  factsRow: { flexDirection: "row", flexWrap: "wrap", rowGap: 4 },
+  fact: { flexDirection: "row", alignItems: "center", maxWidth: "100%" },
+  factDot: { width: 3, height: 3, borderRadius: 2, backgroundColor: C.ink3, marginHorizontal: 10 },
+  facts: { flexShrink: 1, fontFamily: F.medium, fontSize: T.small, color: C.ink2 },
   bill: { fontFamily: F.semibold, fontSize: T.body, lineHeight: 23, color: C.ink, marginTop: 20 },
   desc: { fontFamily: F.regular, fontSize: T.small, lineHeight: 21, color: C.ink3, marginTop: 6 },
   rule: { height: StyleSheet.hairlineWidth, backgroundColor: C.hairline, marginVertical: 20 },
