@@ -2,7 +2,10 @@
 // unlike Google Maps, which react-native-maps uses on Android and which crashes a release
 // build without one.
 import { useImperativeHandle, useRef } from "react";
-import { StyleSheet } from "react-native";
+import { Linking, StyleSheet, Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { HEADER_GAP, HEADER_H } from "../layout";
+import { color as C, font as F } from "../theme";
 import { Camera, Map, Marker, UserLocation, type CameraRef } from "@maplibre/maplibre-react-native";
 import type { Region, ScoutMapProps, ScoutMarkerProps } from "./types";
 import { config } from "../config";
@@ -24,8 +27,11 @@ export function ScoutMap({ ref, initialRegion, showsUserLocation, onRegionChange
     flyTo: (point, zoom) => camera.current?.easeTo({ center: [point.longitude, point.latitude], zoom, duration: 500 }),
   }), []);
 
+  const insets = useSafeAreaInsets();
+  // MapLibre's own attribution button is a bright blue "i"; credit OpenStreetMap in the palette instead.
   return (
-    <Map style={StyleSheet.absoluteFill} mapStyle={STYLE} logo={false} compass={false} attributionPosition={{ top: 112, right: 8 }}
+    <View style={StyleSheet.absoluteFill}>
+    <Map style={StyleSheet.absoluteFill} mapStyle={STYLE} logo={false} compass={false} attribution={false}
       onPress={() => onPress?.()}
       onRegionDidChange={(ev) => {
         const [west, south, east, north] = ev.nativeEvent.bounds;
@@ -40,6 +46,9 @@ export function ScoutMap({ ref, initialRegion, showsUserLocation, onRegionChange
       {showsUserLocation && <UserLocation />}
       {children}
     </Map>
+    <Text style={[s.credit, { top: insets.top + HEADER_GAP + HEADER_H + 6 }]} onPress={() => Linking.openURL("https://www.openstreetmap.org/copyright")}
+      accessibilityRole="link">© OpenStreetMap · OpenFreeMap</Text>
+    </View>
   );
 }
 
@@ -54,3 +63,7 @@ export function ScoutMarker({ coordinate, onPress, anchor, zIndex, children }: S
 
 // MapLibre takes named anchors; the app only uses "centered" and "pin above its label".
 const toAnchor = (a?: { x: number; y: number }) => (!a || a.y >= 0.5 ? "center" : "top");
+
+const s = StyleSheet.create({
+  credit: { position: "absolute", right: 16, fontFamily: F.regular, fontSize: 10, color: C.ink3, opacity: 0.7 },
+});
