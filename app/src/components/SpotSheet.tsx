@@ -106,16 +106,16 @@ export function SpotSheet({ spot, city, me, unlocked, canAskLocation, onAskLocat
   };
   const unlock = () => { Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); track(e, "unlock", city); onUnlock(e); };
   const facts = [whenLabel(e), e.price, fare && `${fare.miles < 0.95 ? fare.miles.toFixed(1) : Math.round(fare.miles)} mi away`].filter(Boolean).join("   ·   ");
-  const eyebrow = [(e.category === "deal" ? "Deal" : CATEGORY[e.category].label), addr.area].filter(Boolean).join("  ·  ").toUpperCase();
+  const eyebrow = [(e.category === "deal" ? "Deal" : CATEGORY[e.category].label), addr.area].filter(Boolean).join("  ·  ");
   const source = e.source === "venue" ? "Listed by the venue" : e.confidence === "low" ? "Unconfirmed listing, check before you go" : "Found on the web";
 
   const titleBlock = (
     <>
+      <Text style={s.title} numberOfLines={2} adjustsFontSizeToFit minimumFontScale={0.8}>{e.venue}</Text>
       <View style={s.eyebrowRow}>
         <Text style={s.eyebrow} numberOfLines={1}>{eyebrow}</Text>
         {e.partner && <View style={s.partner}><Text style={s.partnerText}>Yelo partner</Text></View>}
       </View>
-      <Text style={s.title} numberOfLines={2} adjustsFontSizeToFit minimumFontScale={0.8}>{e.venue}</Text>
     </>
   );
 
@@ -282,10 +282,10 @@ const s = StyleSheet.create({
   heroText: { position: "absolute", left: 20, right: 20, bottom: 4 },
   plainHead: { paddingTop: 76, paddingHorizontal: 20 },
   eyebrowRow: { flexDirection: "row", alignItems: "center", gap: 8 },
-  eyebrow: { flexShrink: 1, fontFamily: F.semibold, fontSize: T.meta, color: C.ink2, letterSpacing: 1.6 },
+  eyebrow: { flexShrink: 1, fontFamily: F.medium, fontSize: T.small, color: C.ink2 },
   partner: { height: 22, paddingHorizontal: 8, borderRadius: R.pill, justifyContent: "center", backgroundColor: C.accent },
   partnerText: { fontFamily: F.semibold, fontSize: 11, color: C.onAccent, letterSpacing: 0.2 },
-  title: { fontFamily: F.display, fontSize: 48, lineHeight: 52, color: C.ink, marginTop: 4 },
+  title: { fontFamily: F.display, fontSize: 48, lineHeight: 52, color: C.ink, marginBottom: 6 },
   content: { paddingHorizontal: 20, paddingTop: 12 },
   facts: { fontFamily: F.medium, fontSize: T.small, color: C.ink2 },
   bill: { fontFamily: F.semibold, fontSize: T.body, lineHeight: 23, color: C.ink, marginTop: 20 },
@@ -307,13 +307,13 @@ const s = StyleSheet.create({
     backgroundColor: C.surface, borderWidth: StyleSheet.hairlineWidth, borderColor: C.d4 },
   friendsText: { flex: 1, fontFamily: F.semibold, fontSize: T.small, color: C.ink },
   crew: { flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 16, paddingVertical: 12, marginTop: 16, borderRadius: R.md,
-    backgroundColor: C.surface, borderLeftWidth: 2, borderLeftColor: C.accent },
+    backgroundColor: "rgba(255,225,74,0.07)", borderWidth: StyleSheet.hairlineWidth, borderColor: "rgba(255,225,74,0.28)" },
   crewTitle: { fontFamily: F.semibold, fontSize: T.small, color: C.ink },
   crewSub: { fontFamily: F.regular, fontSize: T.meta, color: C.ink3, marginTop: 2 },
   link: { fontFamily: F.semibold, fontSize: T.small, color: C.accent },
   linkQuiet: { fontFamily: F.semibold, fontSize: T.small, color: C.ink3 },
   fareNote: { fontFamily: F.regular, fontSize: T.meta, color: C.ink3, marginTop: 12, marginLeft: 30 },
-  deal: { marginTop: 20, paddingVertical: 12, paddingHorizontal: 16, borderRadius: R.md, backgroundColor: C.surface, borderLeftWidth: 2, borderLeftColor: C.accent },
+  deal: { marginTop: 20, paddingVertical: 12, paddingHorizontal: 16, borderRadius: R.md, backgroundColor: "rgba(255,225,74,0.07)", borderWidth: StyleSheet.hairlineWidth, borderColor: "rgba(255,225,74,0.28)" },
   dealLabel: { fontFamily: F.semibold, fontSize: 11, color: C.ink3, letterSpacing: 1.2 },
   dealText: { fontFamily: F.semibold, fontSize: T.body, lineHeight: 23, color: C.ink, marginTop: 4 },
   source: { fontFamily: F.regular, fontSize: T.meta, color: C.ink3, marginTop: 24 },

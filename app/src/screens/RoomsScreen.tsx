@@ -45,10 +45,9 @@ export function RoomsScreen({ visible, city, leads, setLeads, canSearch, onClose
       <Tap onPress={onClose} hitSlop={12} style={s.close} accessibilityLabel="Close rooms">
         <Ionicons name="chevron-down" size={22} color={C.ink} />
       </Tap>
-      <Text style={s.eyebrow}>For Yelo's partner team · {city.split(",")[0]}</Text>
       <Text style={s.title}>Rooms worth{"\n"}<Text style={s.titleAccent}>pitching.</Text></Text>
       <Text style={s.sub}>
-        Independent venues that could host a Yelo night: the vibe, the size, and a night that likely runs quiet.
+        Independent rooms in {city.split(",")[0]} that could host a Yelo night, for the partner team.
       </Text>
       <Tap onPress={find} disabled={busy || !canSearch} style={[s.findBtn, !canSearch && { opacity: 0.4 }]}
         accessibilityState={{ busy, disabled: busy || !canSearch }}>
@@ -66,12 +65,11 @@ export function RoomsScreen({ visible, city, leads, setLeads, canSearch, onClose
           contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: Math.max(insets.bottom, 16) + 32 }}
           ListEmptyComponent={busy ? undefined : <Text style={s.empty}>No rooms yet. Tap Find rooms to search this city.</Text>}
           ItemSeparatorComponent={() => <View style={s.rule} />}
-          renderItem={({ item: l, index }) => (
+          renderItem={({ item: l }) => (
             <View style={s.item}>
-              <Text style={s.index}>{String(index + 1).padStart(2, "0")}</Text>
               <View style={{ flex: 1, minWidth: 0 }}>
-                <Text style={s.meta} numberOfLines={1}>{[l.area, l.kind].filter(Boolean).join("  ·  ").toUpperCase()}</Text>
                 <Text style={s.name} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75}>{l.venue}</Text>
+                <Text style={s.meta} numberOfLines={1}>{[l.area, l.kind].filter(Boolean).join("  ·  ")}</Text>
                 <Text style={s.fit} numberOfLines={2}>{l.fit}</Text>
                 {(l.quietNight || l.capacity) && (
                   <Text style={s.facts} numberOfLines={1}>
@@ -97,7 +95,6 @@ const s = StyleSheet.create({
   root: { flex: 1, backgroundColor: C.bg },
   head: { paddingTop: 16, paddingBottom: 8 },
   close: { alignSelf: "flex-start", width: 36, height: 36, borderRadius: 18, backgroundColor: C.surface, alignItems: "center", justifyContent: "center", marginBottom: 16, borderWidth: 1, borderColor: C.hairline },
-  eyebrow: { fontFamily: F.medium, fontSize: T.meta, color: C.ink3 },
   title: { fontFamily: F.display, fontSize: T.display, lineHeight: 44, color: C.ink, marginTop: 8 },
   titleAccent: { fontFamily: F.displayItalic },
   sub: { fontFamily: F.regular, fontSize: T.body, lineHeight: 22, color: C.ink2, marginTop: 12 },
@@ -106,8 +103,8 @@ const s = StyleSheet.create({
   hint: { fontFamily: F.regular, fontSize: T.small, color: C.ink3, marginTop: 8 },
   empty: { fontFamily: F.regular, fontSize: T.body, color: C.ink3, marginTop: 40 },
   card: { backgroundColor: C.surface, borderRadius: R.lg, padding: 16, borderWidth: 1, borderColor: C.hairline },
-  meta: { fontFamily: F.semibold, fontSize: 11, color: C.ink3, letterSpacing: 1.4 },
-  name: { fontFamily: F.display, fontSize: T.title, lineHeight: 32, color: C.ink, marginTop: 4 },
+  meta: { fontFamily: F.medium, fontSize: T.small, color: C.ink2, marginTop: 2 },
+  name: { fontFamily: F.display, fontSize: T.title, lineHeight: 32, color: C.ink },
   fit: { fontFamily: F.regular, fontSize: T.small, lineHeight: 20, color: C.ink3, marginTop: 6 },
   footer: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 8 },
   tags: { flexDirection: "row", gap: 8, flexShrink: 1 },
@@ -119,7 +116,6 @@ const s = StyleSheet.create({
   contactText: { fontFamily: F.semibold, fontSize: T.small, color: C.ink },
   rule: { height: StyleSheet.hairlineWidth, backgroundColor: C.hairline },
   item: { flexDirection: "row", alignItems: "flex-start", gap: 16, paddingVertical: 20 },
-  index: { fontFamily: F.display, fontSize: T.body, color: C.ink3, marginTop: 2, width: 22 },
   facts: { fontFamily: F.medium, fontSize: T.meta, color: C.ink2, marginTop: 10 },
-  go: { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center", borderWidth: StyleSheet.hairlineWidth, borderColor: C.d4, marginTop: 18 },
+  go: { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center", borderWidth: StyleSheet.hairlineWidth, borderColor: C.d4, marginTop: 2 },
 });

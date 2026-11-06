@@ -58,11 +58,10 @@ export function CrewsScreen({ visible, crews, photos, linkCode, onJoin, onStatus
           <Ionicons name="chevron-down" size={20} color={C.ink} />
         </Tap>
       </View>
-      <View style={s.eyebrowRow}>
-        {live.length > 0 && <View style={s.liveDot} />}
-        <Text style={s.eyebrow}>{live.length ? `${live.length} heading out tonight` : "Tonight"}</Text>
-      </View>
       <Text style={s.title}>Your <Text style={s.titleItalic}>crews.</Text></Text>
+      {live.length > 0 && (
+        <View style={s.eyebrowRow}><View style={s.liveDot} /><Text style={s.eyebrow}>{live.length} heading out tonight</Text></View>
+      )}
       <Text style={s.sub}>Start one from any spot with Heading out. Friends join from your link, and everyone sees who's coming and who's on the way.</Text>
 
       {/* Join a friend's crew */}
@@ -102,7 +101,6 @@ export function CrewsScreen({ visible, crews, photos, linkCode, onJoin, onStatus
   const footer = (
     <Tap pressedScale={0.99} onPress={onClose} style={s.start} accessibilityLabel="Start a crew: pick a spot on the map">
       <View style={{ flex: 1 }}>
-        <Text style={s.startEyebrow}>New crew</Text>
         <Text style={s.startTitle}>Start one from any spot</Text>
         <Text style={s.startSub}>Pick a spot on the map, tap Heading out, and send the link.</Text>
       </View>
@@ -202,9 +200,9 @@ const s = StyleSheet.create({
   head: { paddingTop: 12, paddingBottom: 4 },
   topRow: { flexDirection: "row", marginBottom: 16 },
   close: { width: 40, height: 40, borderRadius: 20, backgroundColor: C.surface, alignItems: "center", justifyContent: "center", borderWidth: StyleSheet.hairlineWidth, borderColor: C.d4 },
-  eyebrowRow: { flexDirection: "row", alignItems: "center", gap: 8 },
+  eyebrowRow: { flexDirection: "row", alignItems: "center", gap: 8, marginTop: 4 },
   liveDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: C.accent },
-  eyebrow: { fontFamily: F.semibold, fontSize: T.meta, color: C.ink3, letterSpacing: 1.4, textTransform: "uppercase" },
+  eyebrow: { fontFamily: F.medium, fontSize: T.small, color: C.ink2 },
   title: { fontFamily: F.display, fontSize: T.display, lineHeight: 46, color: C.ink, marginTop: 4 },
   titleItalic: { fontFamily: F.displayItalic },
   sub: { fontFamily: F.regular, fontSize: T.small, lineHeight: 21, color: C.ink2, marginTop: 8 },
@@ -236,9 +234,9 @@ const s = StyleSheet.create({
   venue: { fontFamily: F.display, fontSize: T.title, lineHeight: 32, color: C.ink, marginTop: 8, paddingHorizontal: 4 },
   addrRow: { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 4 },
   addr: { flex: 1, fontFamily: F.regular, fontSize: T.small, color: C.ink3 },
-  people: { flexDirection: "row", alignItems: "center", gap: 12, padding: 8, borderRadius: R.md, backgroundColor: C.bg },
+  people: { flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 4 },
   faces: { flexDirection: "row" },
-  face: { minWidth: 32, height: 32, paddingHorizontal: 2, borderRadius: 16, alignItems: "center", justifyContent: "center", backgroundColor: C.d3, borderWidth: 2, borderColor: C.bg },
+  face: { minWidth: 32, height: 32, paddingHorizontal: 2, borderRadius: 16, alignItems: "center", justifyContent: "center", backgroundColor: C.d3, borderWidth: 2, borderColor: C.surface },
   faceOnWay: { backgroundColor: C.accent },
   faceText: { fontFamily: F.semibold, fontSize: 10, color: C.ink },
   peopleTitle: { fontFamily: F.semibold, fontSize: T.small, color: C.ink },
@@ -253,7 +251,7 @@ const s = StyleSheet.create({
   start: { flexDirection: "row", alignItems: "center", gap: 16, padding: 16, marginTop: 8, borderRadius: R.lg, backgroundColor: C.surface,
     borderWidth: StyleSheet.hairlineWidth, borderColor: C.d4 },
   startEyebrow: { fontFamily: F.semibold, fontSize: T.meta, color: C.accent, letterSpacing: 1.2, textTransform: "uppercase" },
-  startTitle: { fontFamily: F.semibold, fontSize: T.body, color: C.ink, marginTop: 4 },
+  startTitle: { fontFamily: F.semibold, fontSize: T.body, color: C.ink },
   startSub: { fontFamily: F.regular, fontSize: T.meta, lineHeight: 17, color: C.ink3, marginTop: 2 },
   startBtn: { width: 48, height: 48, borderRadius: 24, alignItems: "center", justifyContent: "center", backgroundColor: C.accent },
 });
