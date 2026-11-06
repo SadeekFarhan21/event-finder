@@ -147,12 +147,16 @@ function CrewTile({ crew, photo, onStatus, onRide, onOpen }: {
   return (
     <View style={[s.tile, out && { opacity: 0.6 }]}>
       <Tap pressedScale={0.99} onPress={() => onOpen(crew)} accessibilityLabel={`Open ${crew.venue}`}>
-        <View style={s.strip}>
-          {photo ? <Image source={photo} style={StyleSheet.absoluteFill} contentFit="cover" transition={200} />
-            : null}
-          <LinearGradient pointerEvents="none" colors={["rgba(21,21,19,0)", C.surface]} style={StyleSheet.absoluteFill} />
-          <View style={s.stripChip}><View style={s.dot} /><Text style={s.stripChipText}>{leaveLabel(crew.leaveAt)}</Text></View>
-        </View>
+        {/* No photo (common for scraped spots): no empty block, just the leave time above the name. */}
+        {photo ? (
+          <View style={s.strip}>
+            <Image source={photo} style={StyleSheet.absoluteFill} contentFit="cover" transition={200} />
+            <LinearGradient pointerEvents="none" colors={["rgba(21,21,19,0)", C.surface]} style={StyleSheet.absoluteFill} />
+            <View style={s.stripChip}><View style={s.dot} /><Text style={s.stripChipText}>{leaveLabel(crew.leaveAt)}</Text></View>
+          </View>
+        ) : (
+          <View style={[s.stripChip, s.chipInline]}><View style={s.dot} /><Text style={s.stripChipText}>{leaveLabel(crew.leaveAt)}</Text></View>
+        )}
         <Text style={s.venue} numberOfLines={1}>{crew.venue}</Text>
         <View style={s.addrRow}>
           <Feather name="map-pin" size={13} color={C.ink3} />
@@ -228,6 +232,7 @@ const s = StyleSheet.create({
   stripEmpty: { position: "absolute", top: 0, right: 0, bottom: 0, left: 0, alignItems: "flex-end", justifyContent: "center", paddingRight: 20 },
   stripChip: { position: "absolute", top: 8, left: 8, flexDirection: "row", alignItems: "center", gap: 6, height: 26, paddingHorizontal: 10, borderRadius: R.pill,
     backgroundColor: "rgba(12,12,10,0.75)", borderWidth: StyleSheet.hairlineWidth, borderColor: "rgba(255,255,255,0.14)" },
+  chipInline: { position: "relative", top: 0, left: 0, alignSelf: "flex-start", marginTop: 4, marginLeft: 4 },
   dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: C.ink },
   stripChipText: { fontFamily: F.semibold, fontSize: T.meta, color: C.ink },
   venue: { fontFamily: F.display, fontSize: T.title, lineHeight: 32, color: C.ink, marginTop: 8, paddingHorizontal: 4 },
