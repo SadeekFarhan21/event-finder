@@ -18,7 +18,6 @@ import {
   type NativeScrollEvent,
   type NativeSyntheticEvent,
 } from "react-native";
-import MapView, { Marker, type Region } from "react-native-maps";
 import { StatusBar } from "expo-status-bar";
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
@@ -28,7 +27,7 @@ import { Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold } f
 import { API_URL, getEvents, getHealth, isRecurring, runDiscovery, whenLabel, type Category, type YeloEvent } from "./src/api";
 import { clusterEvents, coreOf } from "./src/cluster";
 import { CATEGORY, color as C, font as F, radius as R, shadow } from "./src/theme";
-import { ANDROID_MAP_STYLE } from "./src/mapStyle";
+import { ScoutMap, ScoutMarker, type Region, type ScoutMapRef } from "./src/map/ScoutMap";
 import { Rooms, useLeads } from "./src/Rooms";
 import { estimateFare, useMyLocation, type Point } from "./src/fare";
 
@@ -64,7 +63,7 @@ export default function App() {
 }
 
 function Scout() {
-  const map = useRef<MapView>(null);
+  const map = useRef<ScoutMapRef>(null);
   const list = useRef<FlatList<YeloEvent>>(null);
   const [city, setCity] = useState("New York, NY");
   const [events, setEvents] = useState<YeloEvent[]>([]);
@@ -95,9 +94,9 @@ function Scout() {
   const fit = useCallback((items: YeloEvent[]) => {
     const core = coreOf(items);
     if (!core.length) return;
-    map.current?.fitToCoordinates(
+    map.current?.fitTo(
       core.map((e) => ({ latitude: e.lat, longitude: e.lng })),
-      { edgePadding: { top: 200, right: 40, bottom: 220, left: 40 }, animated: true },
+      { top: 200, right: 40, bottom: 220, left: 40 },
     );
   }, []);
 
@@ -144,7 +143,7 @@ function Scout() {
 
   const focus = useCallback((e: YeloEvent, opts: { scroll?: boolean } = {}) => {
     setActive(e);
-    map.current?.animateCamera({ center: { latitude: e.lat - 0.0025, longitude: e.lng }, zoom: 15 }, { duration: 500 });
+    map.current?.flyTo({ latitude: e.lat - 0.0025, longitude: e.lng }, 15);
     if (opts.scroll) {
       const i = shown.findIndex((x) => x.id === e.id);
       if (i >= 0) list.current?.scrollToOffset({ offset: i * (CARD_W + GAP), animated: true });
@@ -180,33 +179,30 @@ function Scout() {
   return (
     <View style={s.root}>
       <StatusBar style="dark" />
-      <MapView ref={map} style={StyleSheet.absoluteFill} initialRegion={START} userInterfaceStyle="light"
-        mapType={Platform.OS === "ios" ? "mutedStandard" : "standard"} customMapStyle={ANDROID_MAP_STYLE}
-        showsPointsOfInterests={false} showsCompass={false} toolbarEnabled={false} showsUserLocation={!!me}
-        onRegionChangeComplete={setRegion} onPress={() => setActive(null)}>
+      <ScoutMap ref={map} initialRegion={START} showsUserLocation={!!me}
+        onRegionChange={setRegion} onPress={() => setActive(null)}>
         {clusters.map((c) =>
           c.events.length === 1 ? (
-            <Marker key={c.events[0].id} coordinate={{ latitude: c.lat, longitude: c.lng }} tracksViewChanges={false}
-              onPress={(ev) => { ev.stopPropagation(); focus(c.events[0], { scroll: true }); }}>
+            <ScoutMarker key={c.events[0].id} coordinate={{ latitude: c.lat, longitude: c.lng }}
+              onPress={() => focus(c.events[0], { scroll: true })}>
               <View style={[s.pin, c.events[0].partner && s.pinPartner]}><Ionicons name={CATEGORY[c.events[0].category].icon} size={14} color="#fff" /></View>
-            </Marker>
+            </ScoutMarker>
           ) : (
-            <Marker key={c.key} coordinate={{ latitude: c.lat, longitude: c.lng }} tracksViewChanges={false}
-              onPress={(ev) => { ev.stopPropagation(); fit(c.events); }}>
+            <ScoutMarker key={c.key} coordinate={{ latitude: c.lat, longitude: c.lng }} onPress={() => fit(c.events)}>
               <View style={s.cluster}><Text style={s.clusterText}>{c.events.length}</Text></View>
-            </Marker>
+            </ScoutMarker>
           ),
         )}
         {active && (
-          <Marker key={`active-${active.id}`} coordinate={{ latitude: active.lat, longitude: active.lng }} zIndex={999}
-            anchor={{ x: 0.5, y: 0.3 }} onPress={(ev) => { ev.stopPropagation(); setDetail(active); }}>
+          <ScoutMarker key={`active-${active.id}`} coordinate={{ latitude: active.lat, longitude: active.lng }} zIndex={999}
+            anchor={{ x: 0.5, y: 0.3 }} live onPress={() => setDetail(active)}>
             <View style={{ alignItems: "center" }}>
               <View style={s.pinActive}><Ionicons name={CATEGORY[active.category].icon} size={20} color={C.ink} /></View>
               <View style={s.pinLabel}><Text style={s.pinLabelText} numberOfLines={1}>{active.venue}</Text></View>
             </View>
-          </Marker>
+          </ScoutMarker>
         )}
-      </MapView>
+      </ScoutMap>
 
       {/* Header over a soft fade so map labels don't fight the search bar */}
       <LinearGradient pointerEvents="none" colors={["rgba(250,248,242,0.98)", "rgba(250,248,242,0.8)", "rgba(250,248,242,0)"]}
