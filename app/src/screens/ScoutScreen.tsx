@@ -13,6 +13,7 @@ import type { Spot } from "../lib/types";
 import { useSpots } from "../hooks/useSpots";
 import { useLeads } from "../hooks/useLeads";
 import { useMyLocation } from "../hooks/useMyLocation";
+import { useGoing } from "../hooks/useGoing";
 import { useToast } from "../hooks/useToast";
 import { SearchHeader } from "../components/SearchHeader";
 import { SpotPins } from "../components/SpotPins";
@@ -35,6 +36,7 @@ export function ScoutScreen() {
   const [leads, setLeads] = useLeads(mapCity);
   const { me, canAsk: canAskLocation, ask: askLocation } = useMyLocation();
   const { toast, show } = useToast();
+  const { counts: going, mine: myGoing, go } = useGoing(spots, mapCity);
 
   const [cityInput, setCityInput] = useState("New York, NY");
   const [filter, setFilter] = useState<Filter>("all");
@@ -155,7 +157,7 @@ export function ScoutScreen() {
               <Text style={s.roomsText}>Rooms for Yelo nights{leads.length ? `  ·  ${leads.length}` : ""}</Text>
             </Tap>
           </Animated.View>
-          <SpotCarousel ref={carousel} spots={shown} activeId={active?.id ?? null}
+          <SpotCarousel ref={carousel} spots={shown} going={going} activeId={active?.id ?? null}
             onSettle={(e) => { Haptics.selectionAsync(); focus(e); }}
             onPress={(e) => (active?.id === e.id ? setDetail(e) : focus(e, true))} />
         </>
@@ -165,7 +167,8 @@ export function ScoutScreen() {
         onClose={() => setRoomsOpen(false)} />
 
       <SpotSheet spot={detail} city={mapCity ?? cityInput} me={me} canAskLocation={canAskLocation} onAskLocation={askLocation} unlocked={!!detail && unlocked.has(detail.id)}
-        onUnlock={(e) => setUnlocked((u) => new Set(u).add(e.id))} onClose={() => setDetail(null)} />
+        onUnlock={(e) => setUnlocked((u) => new Set(u).add(e.id))}
+        going={detail ? going[detail.id] ?? 0 : 0} isGoing={!!detail && myGoing.has(detail.id)} onGo={go} onClose={() => setDetail(null)} />
     </View>
   );
 }

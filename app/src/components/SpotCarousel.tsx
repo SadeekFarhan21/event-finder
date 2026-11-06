@@ -18,12 +18,13 @@ export type CarouselRef = { scrollTo: (index: number, animated?: boolean) => voi
 type Props = {
   ref?: Ref<CarouselRef>;
   spots: Spot[];
+  going: Record<string, number>; // spot id -> people going
   activeId: string | null;
   onSettle: (spot: Spot) => void; // a swipe came to rest on this card
   onPress: (spot: Spot, index: number) => void;
 };
 
-export function SpotCarousel({ ref, spots, activeId, onSettle, onPress }: Props) {
+export function SpotCarousel({ ref, spots, going, activeId, onSettle, onPress }: Props) {
   const list = useAnimatedRef<Animated.FlatList<Spot>>();
   const x = useSharedValue(0);
   const onScroll = useAnimatedScrollHandler((e) => { x.value = e.contentOffset.x; });
@@ -44,12 +45,12 @@ export function SpotCarousel({ ref, spots, activeId, onSettle, onPress }: Props)
         snapToInterval={CARD_STEP} decelerationRate="fast" disableIntervalMomentum
         contentContainerStyle={{ gap: CARD_GAP, paddingHorizontal: CARD_INSET }}
         onScroll={onScroll} scrollEventThrottle={16} onMomentumScrollEnd={onEnd}
-        renderItem={({ item, index }) => <Card spot={item} index={index} x={x} onPress={() => onPress(item, index)} />} />
+        renderItem={({ item, index }) => <Card spot={item} going={going[item.id] ?? 0} index={index} x={x} onPress={() => onPress(item, index)} />} />
     </Animated.View>
   );
 }
 
-function Card({ spot: e, index, x, onPress }: { spot: Spot; index: number; x: SharedValue<number>; onPress: () => void }) {
+function Card({ spot: e, going, index, x, onPress }: { spot: Spot; going: number; index: number; x: SharedValue<number>; onPress: () => void }) {
   const style = useAnimatedStyle(() => {
     const d = (x.value - index * CARD_STEP) / CARD_STEP; // 0 = centered, ±1 = one card away
     return {
@@ -68,7 +69,7 @@ function Card({ spot: e, index, x, onPress }: { spot: Spot; index: number; x: Sh
               : e.deal ? <View style={s.deal}><Text style={s.dealText}>Deal</Text></View> : null}
           </View>
           <Text style={s.title} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.72}>{e.venue}</Text>
-          <Text style={s.sub} numberOfLines={1}>{e.deal ?? e.title}</Text>
+          <Text style={s.sub} numberOfLines={1}>{going ? `${going} going  ·  ` : ""}{e.deal ?? e.title}</Text>
         </View>
       </Tap>
     </Animated.View>

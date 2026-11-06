@@ -1,7 +1,7 @@
 // Spot details, modeled on Yelo's spot card: venue, when/where/price, Ride and Unlock.
 // A real bottom sheet: springs up, drags down to dismiss, backdrop fades with the drag.
 import { useEffect, useState, type ComponentProps } from "react";
-import { BackHandler, Dimensions, Linking, Pressable, StyleSheet, Text, View } from "react-native";
+import { BackHandler, Dimensions, Linking, Pressable, Share, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Image } from "expo-image";
 import * as Haptics from "expo-haptics";
@@ -12,6 +12,7 @@ import { scheduleOnRN } from "react-native-worklets";
 import { estimateFare, type Point } from "../lib/fare";
 import { openRide } from "../lib/ride";
 import { track } from "../data/activity";
+import { inviteMessage } from "../data/social";
 import { whenLabel } from "../lib/time";
 import type { Spot } from "../lib/types";
 import { CATEGORY, color as C, font as F, radius as R } from "../theme";
@@ -25,9 +26,10 @@ type Props = {
   spot: Spot | null; city: string; me: Point | null; unlocked: boolean;
   canAskLocation: boolean; onAskLocation: () => void; // ask for location here, where the ride price explains why
   onUnlock: (spot: Spot) => void; onClose: () => void;
+  going: number; isGoing: boolean; onGo: (spot: Spot) => void; // "I'm going" + live count
 };
 
-export function SpotSheet({ spot, city, me, unlocked, canAskLocation, onAskLocation, onUnlock, onClose }: Props) {
+export function SpotSheet({ spot, city, me, unlocked, canAskLocation, onAskLocation, onUnlock, onClose, going, isGoing, onGo }: Props) {
   const y = useSharedValue(OFFSCREEN);
   const [shown, setShown] = useState<Spot | null>(null); // stays mounted while sliding out
 
@@ -111,6 +113,27 @@ export function SpotSheet({ spot, city, me, unlocked, canAskLocation, onAskLocat
             )}
           </View>
 
+          {/* Turn one person's plan into a group: say you're going, then pull friends in. */}
+          <View style={s.social}>
+            <Text style={s.socialCount}>
+              {going ? `${going} going` : "Be the first to say you're going"}{isGoing ? "  ·  including you" : ""}
+            </Text>
+            <View style={s.socialBtns}>
+              <Tap style={[s.chip, isGoing && s.chipOn]} disabled={isGoing} accessibilityState={{ selected: isGoing }}
+                onPress={() => { Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); onGo(e); }}>
+                <Ionicons name={isGoing ? "checkmark" : "hand-right-outline"} size={16} color={isGoing ? C.surface : C.ink} />
+                <Text style={[s.chipText, isGoing && { color: C.surface }]}>{isGoing ? "You're going" : "I'm going"}</Text>
+              </Tap>
+              <Tap style={s.chip} onPress={async () => {
+                const r = await Share.share({ message: inviteMessage(e, isGoing) }).catch(() => null);
+                if (r?.action === Share.sharedAction) track(e, "share", city);
+              }}>
+                <Ionicons name="paper-plane-outline" size={16} color={C.ink} />
+                <Text style={s.chipText}>Invite friends</Text>
+              </Tap>
+            </View>
+          </View>
+
           {e.deal && unlocked && (
             <Animated.View entering={FadeInDown.springify().damping(16)} style={s.dealCard}>
               <Text style={s.dealLabel}>Your deal</Text>
@@ -175,6 +198,13 @@ const s = StyleSheet.create({
   row: { flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 12, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: C.hairline },
   rowText: { flex: 1, fontFamily: F.regular, fontSize: 15, color: C.ink },
   rowAction: { fontFamily: F.semibold, fontSize: 14, color: C.blue },
+  social: { marginTop: 18, gap: 10 },
+  socialCount: { fontFamily: F.medium, fontSize: 13, color: C.ink3 },
+  socialBtns: { flexDirection: "row", gap: 8 },
+  chip: { flex: 1, height: 42, borderRadius: R.pill, flexDirection: "row", gap: 6, alignItems: "center", justifyContent: "center",
+    borderWidth: 1, borderColor: C.hairline, backgroundColor: C.surface },
+  chipOn: { backgroundColor: C.ink, borderColor: C.ink },
+  chipText: { fontFamily: F.semibold, fontSize: 14, color: C.ink },
   dealCard: { marginTop: 18, padding: 16, borderRadius: R.md, backgroundColor: C.blue },
   dealLabel: { fontFamily: F.medium, fontSize: 12, color: "rgba(255,255,255,0.7)" },
   dealText: { fontFamily: F.semibold, fontSize: 17, lineHeight: 24, color: "#fff", marginTop: 4 },
