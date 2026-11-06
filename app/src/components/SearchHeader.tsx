@@ -69,7 +69,7 @@ export function SearchHeader({ city, onCityChange, onSubmitCity, onScout, scouti
             {CITIES.map((c) => (
               <Tap key={c} pressedScale={0.99} style={s.menuRow} onPress={() => pickCity(c)} accessibilityState={{ selected: c === city }}>
                 <Text style={[s.menuText, c === city && { color: C.ink }]}>{c.split(",")[0]}</Text>
-                {c === city && <Ionicons name="checkmark" size={18} color={C.accent} />}
+                {c === city && <Ionicons name="checkmark" size={18} color={C.ink} />}
               </Tap>
             ))}
             {scoutable && (

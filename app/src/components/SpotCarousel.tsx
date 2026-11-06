@@ -78,7 +78,7 @@ function Card({ spot: e, going, index, x, onPress, onRide }: {
             <LinearGradient pointerEvents="none" colors={["rgba(0,0,0,0.0)", "rgba(0,0,0,0.55)"]} style={s.shade} />
             <View style={s.chips}>
               <View style={s.when}><Text style={s.whenText} numberOfLines={1}>{whenLabel(e)}</Text></View>
-              {e.partner && <View style={s.partner}><Text style={s.partnerText}>Yelo partner</Text></View>}
+              {e.partner && <View style={s.partner}><View style={s.partnerMark} /><Text style={s.partnerText}>Yelo partner</Text></View>}
             </View>
           </View>
         ) : (
@@ -89,7 +89,7 @@ function Card({ spot: e, going, index, x, onPress, onRide }: {
               <Text style={s.bigDay} numberOfLines={1}>{bigDay(e)}</Text>
             </View>
             <View style={s.bandSide}>
-              {e.partner && <View style={s.partner}><Text style={s.partnerText}>Yelo partner</Text></View>}
+              {e.partner && <View style={s.partner}><View style={s.partnerMark} /><Text style={s.partnerText}>Yelo partner</Text></View>}
               <Ionicons name={CATEGORY[e.category].icon} size={22} color={C.ink3} style={{ marginTop: "auto" }} />
             </View>
           </LinearGradient>
@@ -142,8 +142,9 @@ const s = StyleSheet.create({
   chips: { position: "absolute", left: 12, right: 12, top: 12, flexDirection: "row", justifyContent: "space-between", gap: 8 },
   when: { paddingHorizontal: 12, height: 28, borderRadius: R.pill, justifyContent: "center", backgroundColor: "rgba(12,12,10,0.78)", flexShrink: 1 },
   whenText: { fontFamily: F.semibold, fontSize: T.meta, color: C.ink },
-  partner: { paddingHorizontal: 12, height: 28, borderRadius: R.pill, justifyContent: "center", backgroundColor: C.accent },
-  partnerText: { fontFamily: F.semibold, fontSize: T.meta, color: C.onAccent },
+  partnerMark: { width: 6, height: 6, borderRadius: 3, backgroundColor: C.accent },
+  partner: { flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 12, height: 28, borderRadius: R.pill, justifyContent: "center", backgroundColor: "rgba(21,21,19,0.82)", borderWidth: StyleSheet.hairlineWidth, borderColor: C.d4 },
+  partnerText: { fontFamily: F.semibold, fontSize: T.meta, color: C.ink },
   body: { paddingHorizontal: 16, paddingTop: 12, paddingBottom: 12 },
   title: { fontFamily: F.display, fontSize: T.title, lineHeight: 32, color: C.ink },
   sub: { fontFamily: F.regular, fontSize: T.small, color: C.ink2, marginTop: 2 },

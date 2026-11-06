@@ -115,7 +115,7 @@ export function SpotSheet({ spot, city, me, unlocked, canAskLocation, onAskLocat
       <Text style={s.title} numberOfLines={2} adjustsFontSizeToFit minimumFontScale={0.8}>{e.venue}</Text>
       <View style={s.eyebrowRow}>
         <Text style={s.eyebrow} numberOfLines={1}>{eyebrow}</Text>
-        {e.partner && <View style={s.partner}><Text style={s.partnerText}>Yelo partner</Text></View>}
+        {e.partner && <View style={s.partner}><View style={s.partnerMark} /><Text style={s.partnerText}>Yelo partner</Text></View>}
       </View>
     </>
   );
@@ -176,7 +176,7 @@ export function SpotSheet({ spot, city, me, unlocked, canAskLocation, onAskLocat
               <View style={s.faces}>
                 {people.length ? people.slice(0, 3).map((m, i) => (
                   <View key={i} style={[s.face, { marginLeft: i ? -10 : 0, zIndex: 3 - i }, m.status === "on_way" && s.faceOnWay]}>
-                    <Text style={[s.faceText, m.status === "on_way" && { color: C.onAccent }]}>{m.me ? "You" : initials(m.name)}</Text>
+                    <Text style={[s.faceText, m.status === "on_way" && { color: C.bg }]}>{m.me ? "You" : initials(m.name)}</Text>
                   </View>
                 )) : <View style={s.face}><Ionicons name="people" size={14} color={C.ink3} /></View>}
               </View>
@@ -185,7 +185,7 @@ export function SpotSheet({ spot, city, me, unlocked, canAskLocation, onAskLocat
               </Text>
               <Tap style={[s.pill, isGoing && s.pillOn]} disabled={isGoing} accessibilityState={{ selected: isGoing }}
                 onPress={() => { Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); onGo(e); }}>
-                {isGoing && <Ionicons name="checkmark" size={14} color={C.accent} />}
+                {isGoing && <Ionicons name="checkmark" size={14} color={C.ink} />}
                 <Text style={[s.pillText, isGoing && { color: C.ink }]}>{isGoing ? "Going" : "I'm going"}</Text>
               </Tap>
             </View>
@@ -259,7 +259,7 @@ export function SpotSheet({ spot, city, me, unlocked, canAskLocation, onAskLocat
           </Tap>
           {e.deal && !unlocked && (
             <Tap style={[s.btn, s.btnQuiet]} onPress={unlock}>
-              <Ionicons name="gift-outline" size={16} color={C.accent} />
+              <Ionicons name="gift-outline" size={16} color={C.ink2} />
               <Text style={s.btnQuietText}>Deal</Text>
             </Tap>
           )}
@@ -291,8 +291,9 @@ const s = StyleSheet.create({
   plainHead: { paddingTop: 76, paddingHorizontal: 20 },
   eyebrowRow: { flexDirection: "row", alignItems: "center", gap: 8 },
   eyebrow: { flexShrink: 1, fontFamily: F.medium, fontSize: T.small, color: C.ink2 },
-  partner: { height: 22, paddingHorizontal: 8, borderRadius: R.pill, justifyContent: "center", backgroundColor: C.accent },
-  partnerText: { fontFamily: F.semibold, fontSize: 11, color: C.onAccent, letterSpacing: 0.2 },
+  partnerMark: { width: 6, height: 6, borderRadius: 3, backgroundColor: C.accent },
+  partner: { flexDirection: "row", alignItems: "center", gap: 6, height: 22, paddingHorizontal: 8, borderRadius: R.pill, justifyContent: "center", backgroundColor: "rgba(21,21,19,0.82)", borderWidth: StyleSheet.hairlineWidth, borderColor: C.d4 },
+  partnerText: { fontFamily: F.semibold, fontSize: 11, color: C.ink, letterSpacing: 0.2 },
   title: { fontFamily: F.display, fontSize: 48, lineHeight: 52, color: C.ink, marginBottom: 6 },
   content: { paddingHorizontal: 20, paddingTop: 12 },
   factsRow: { flexDirection: "row", flexWrap: "wrap", rowGap: 4 },
@@ -308,7 +309,7 @@ const s = StyleSheet.create({
   faces: { flexDirection: "row" },
   face: { minWidth: 30, height: 30, paddingHorizontal: 2, borderRadius: 15, alignItems: "center", justifyContent: "center",
     backgroundColor: C.d3, borderWidth: 2, borderColor: C.bg },
-  faceOnWay: { backgroundColor: C.accent },
+  faceOnWay: { backgroundColor: C.ink },
   faceText: { fontFamily: F.semibold, fontSize: 10, color: C.ink },
   pill: { flexDirection: "row", alignItems: "center", gap: 4, height: 36, paddingHorizontal: 16, borderRadius: R.pill,
     borderWidth: 1, borderColor: C.d4 },
@@ -318,13 +319,13 @@ const s = StyleSheet.create({
     backgroundColor: C.surface, borderWidth: StyleSheet.hairlineWidth, borderColor: C.d4 },
   friendsText: { flex: 1, fontFamily: F.semibold, fontSize: T.small, color: C.ink },
   crew: { flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 16, paddingVertical: 12, marginTop: 16, borderRadius: R.md,
-    backgroundColor: "rgba(255,225,74,0.07)", borderWidth: StyleSheet.hairlineWidth, borderColor: "rgba(255,225,74,0.28)" },
+    backgroundColor: C.surface, borderWidth: StyleSheet.hairlineWidth, borderColor: C.d4 },
   crewTitle: { fontFamily: F.semibold, fontSize: T.small, color: C.ink },
   crewSub: { fontFamily: F.regular, fontSize: T.meta, color: C.ink3, marginTop: 2 },
-  link: { fontFamily: F.semibold, fontSize: T.small, color: C.accent },
+  link: { fontFamily: F.semibold, fontSize: T.small, color: C.ink, textDecorationLine: "underline" },
   linkQuiet: { fontFamily: F.semibold, fontSize: T.small, color: C.ink3 },
   fareNote: { fontFamily: F.regular, fontSize: T.meta, color: C.ink3, marginTop: 12, marginLeft: 30 },
-  deal: { marginTop: 20, paddingVertical: 12, paddingHorizontal: 16, borderRadius: R.md, backgroundColor: "rgba(255,225,74,0.07)", borderWidth: StyleSheet.hairlineWidth, borderColor: "rgba(255,225,74,0.28)" },
+  deal: { marginTop: 20, paddingVertical: 12, paddingHorizontal: 16, borderRadius: R.md, backgroundColor: C.surface, borderWidth: StyleSheet.hairlineWidth, borderColor: C.d4 },
   dealLabel: { fontFamily: F.semibold, fontSize: 11, color: C.ink3, letterSpacing: 1.2 },
   dealText: { fontFamily: F.semibold, fontSize: T.body, lineHeight: 23, color: C.ink, marginTop: 4 },
   source: { fontFamily: F.regular, fontSize: T.meta, color: C.ink3, marginTop: 24 },

@@ -53,7 +53,7 @@ const clusterSize = (n: number) => {
 
 const s = StyleSheet.create({
   pin: { width: 28, height: 28, borderRadius: 14, backgroundColor: C.ink, borderWidth: 2, borderColor: C.surface, alignItems: "center", justifyContent: "center", ...shadow },
-  pinPartner: { borderColor: C.accent, borderWidth: 3 },
+  pinPartner: { borderColor: C.ink, borderWidth: 3 },
   pinActive: { width: 42, height: 42, borderRadius: 21, backgroundColor: C.accent, borderWidth: 3, borderColor: C.bg, alignItems: "center", justifyContent: "center", ...shadow },
   label: { marginTop: 4, paddingHorizontal: 8, paddingVertical: 4, borderRadius: R.pill, backgroundColor: C.surface, maxWidth: 180, ...shadow },
   labelText: { fontFamily: F.semibold, fontSize: T.meta, color: C.ink },

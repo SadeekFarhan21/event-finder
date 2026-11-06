@@ -12,7 +12,7 @@ import { crewInvite, leaveLabel, savedName, type Crew, type CrewStatus } from ".
 import { Tap } from "../components/Tap";
 import { color as C, font as F, radius as R, text as T } from "../theme";
 
-const ACCENT_TINT = "rgba(255,225,74,0.10)";
+const ACCENT_TINT = C.d3;
 
 export function CrewsScreen({ visible, crews, photos, linkCode, onJoin, onStatus, onRide, onOpen, onClose }: {
   visible: boolean; crews: Crew[];
@@ -67,7 +67,7 @@ export function CrewsScreen({ visible, crews, photos, linkCode, onJoin, onStatus
       {/* Join a friend's crew */}
       <View style={s.joinBox}>
         <View style={s.joinHead}>
-          <View style={s.iconTile}><Ionicons name="link" size={15} color={C.accent} /></View>
+          <View style={s.iconTile}><Ionicons name="link" size={15} color={C.ink2} /></View>
           <Text style={s.joinTitle}>Got a link from a friend?</Text>
         </View>
         <Field icon="pricetag-outline" label="Crew link or code">
@@ -104,7 +104,7 @@ export function CrewsScreen({ visible, crews, photos, linkCode, onJoin, onStatus
         <Text style={s.startTitle}>Start one from any spot</Text>
         <Text style={s.startSub}>Pick a spot on the map, tap Heading out, and send the link.</Text>
       </View>
-      <View style={s.startBtn}><Ionicons name="add" size={24} color={C.onAccent} /></View>
+      <View style={s.startBtn}><Ionicons name="add" size={24} color={C.ink} /></View>
     </Tap>
   );
 
@@ -164,7 +164,7 @@ function CrewTile({ crew, photo, onStatus, onRide, onOpen }: {
         <View style={s.faces}>
           {coming.slice(0, 4).map((m, i) => (
             <View key={i} style={[s.face, { marginLeft: i ? -8 : 0, zIndex: 4 - i }, m.status === "on_way" && s.faceOnWay]}>
-              <Text style={[s.faceText, m.status === "on_way" && { color: C.onAccent }]}>{m.me ? "You" : m.name.slice(0, 2).toUpperCase()}</Text>
+              <Text style={[s.faceText, m.status === "on_way" && { color: C.bg }]}>{m.me ? "You" : m.name.slice(0, 2).toUpperCase()}</Text>
             </View>
           ))}
           {coming.length > 4 && <View style={[s.face, { marginLeft: -8 }]}><Text style={s.faceText}>+{coming.length - 4}</Text></View>}
@@ -201,7 +201,7 @@ const s = StyleSheet.create({
   topRow: { flexDirection: "row", marginBottom: 16 },
   close: { width: 40, height: 40, borderRadius: 20, backgroundColor: C.surface, alignItems: "center", justifyContent: "center", borderWidth: StyleSheet.hairlineWidth, borderColor: C.d4 },
   eyebrowRow: { flexDirection: "row", alignItems: "center", gap: 8, marginTop: 4 },
-  liveDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: C.accent },
+  liveDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: C.ink },
   eyebrow: { fontFamily: F.medium, fontSize: T.small, color: C.ink2 },
   title: { fontFamily: F.display, fontSize: T.display, lineHeight: 46, color: C.ink, marginTop: 4 },
   titleItalic: { fontFamily: F.displayItalic },
@@ -221,15 +221,15 @@ const s = StyleSheet.create({
   joinText: { fontFamily: F.semibold, fontSize: T.body, color: C.onAccent },
   sectionRow: { flexDirection: "row", alignItems: "center", gap: 8, marginTop: 28 },
   section: { flexShrink: 1, fontFamily: F.display, fontSize: T.title, color: C.ink },
-  countPill: { minWidth: 24, height: 24, paddingHorizontal: 8, borderRadius: 12, alignItems: "center", justifyContent: "center", backgroundColor: C.accent },
-  countText: { fontFamily: F.semibold, fontSize: T.meta, color: C.onAccent },
+  countPill: { minWidth: 24, height: 24, paddingHorizontal: 8, borderRadius: 12, alignItems: "center", justifyContent: "center", backgroundColor: C.d3 },
+  countText: { fontFamily: F.semibold, fontSize: T.meta, color: C.ink },
   empty: { fontFamily: F.regular, fontSize: T.body, color: C.ink3, marginTop: 4 },
   tile: { padding: 12, borderRadius: R.lg, backgroundColor: C.surface, borderWidth: StyleSheet.hairlineWidth, borderColor: C.d4, gap: 12 },
   strip: { height: 112, borderRadius: R.md, overflow: "hidden", backgroundColor: C.d2 },
   stripEmpty: { position: "absolute", top: 0, right: 0, bottom: 0, left: 0, alignItems: "flex-end", justifyContent: "center", paddingRight: 20 },
   stripChip: { position: "absolute", top: 8, left: 8, flexDirection: "row", alignItems: "center", gap: 6, height: 26, paddingHorizontal: 10, borderRadius: R.pill,
     backgroundColor: "rgba(12,12,10,0.75)", borderWidth: StyleSheet.hairlineWidth, borderColor: "rgba(255,255,255,0.14)" },
-  dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: C.accent },
+  dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: C.ink },
   stripChipText: { fontFamily: F.semibold, fontSize: T.meta, color: C.ink },
   venue: { fontFamily: F.display, fontSize: T.title, lineHeight: 32, color: C.ink, marginTop: 8, paddingHorizontal: 4 },
   addrRow: { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 4 },
@@ -237,7 +237,7 @@ const s = StyleSheet.create({
   people: { flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 4 },
   faces: { flexDirection: "row" },
   face: { minWidth: 32, height: 32, paddingHorizontal: 2, borderRadius: 16, alignItems: "center", justifyContent: "center", backgroundColor: C.d3, borderWidth: 2, borderColor: C.surface },
-  faceOnWay: { backgroundColor: C.accent },
+  faceOnWay: { backgroundColor: C.ink },
   faceText: { fontFamily: F.semibold, fontSize: 10, color: C.ink },
   peopleTitle: { fontFamily: F.semibold, fontSize: T.small, color: C.ink },
   peopleSub: { fontFamily: F.regular, fontSize: T.meta, color: C.ink3, marginTop: 1 },
@@ -250,8 +250,7 @@ const s = StyleSheet.create({
   btnQuietText: { fontFamily: F.semibold, fontSize: T.small, color: C.ink2 },
   start: { flexDirection: "row", alignItems: "center", gap: 16, padding: 16, marginTop: 8, borderRadius: R.lg, backgroundColor: C.surface,
     borderWidth: StyleSheet.hairlineWidth, borderColor: C.d4 },
-  startEyebrow: { fontFamily: F.semibold, fontSize: T.meta, color: C.accent, letterSpacing: 1.2, textTransform: "uppercase" },
   startTitle: { fontFamily: F.semibold, fontSize: T.body, color: C.ink },
   startSub: { fontFamily: F.regular, fontSize: T.meta, lineHeight: 17, color: C.ink3, marginTop: 2 },
-  startBtn: { width: 48, height: 48, borderRadius: 24, alignItems: "center", justifyContent: "center", backgroundColor: C.accent },
+  startBtn: { width: 48, height: 48, borderRadius: 24, alignItems: "center", justifyContent: "center", backgroundColor: C.d3 },
 });
