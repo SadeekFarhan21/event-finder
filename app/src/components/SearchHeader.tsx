@@ -1,6 +1,6 @@
 // Top of the map: the city as a title (with a city menu), the Rooms shortcut, and five filters.
-import { useState } from "react";
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useEffect, useState } from "react";
+import { ActivityIndicator, BackHandler, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -32,6 +32,13 @@ export function SearchHeader({ city, onCityChange, onSubmitCity, onScout, scouti
   const insets = useSafeAreaInsets();
   const name = city.split(",")[0];
 
+  // Android Back closes the menu first, instead of leaving the app.
+  useEffect(() => {
+    if (!open) return;
+    const sub = BackHandler.addEventListener("hardwareBackPress", () => { setOpen(false); return true; });
+    return () => sub.remove();
+  }, [open]);
+
   const pickCity = (c: string) => {
     onCityChange(c);
     setOpen(false);
@@ -43,6 +50,12 @@ export function SearchHeader({ city, onCityChange, onSubmitCity, onScout, scouti
       {/* Soft fade so map labels don't fight the controls */}
       <LinearGradient pointerEvents="none" colors={["rgba(12,12,10,0.96)", "rgba(12,12,10,0.7)", "rgba(12,12,10,0)"]}
         locations={[0, 0.55, 1]} style={[s.fade, { height: insets.top + HEADER_GAP + HEADER_H + 26 }]} />
+      {/* Tapping anywhere outside the open menu closes it (and doesn't reach the map). */}
+      {open && (
+        <Animated.View entering={FadeIn.duration(160)} exiting={FadeOut.duration(120)} style={s.backdrop}>
+          <Pressable style={{ flex: 1 }} onPress={() => setOpen(false)} accessibilityLabel="Close city menu" />
+        </Animated.View>
+      )}
       <View style={[s.top, { paddingTop: insets.top + HEADER_GAP }]}>
         <View style={s.row}>
           <Tap pressedScale={0.98} onPress={() => setOpen((o) => !o)} style={s.cityBtn} hitSlop={8}
@@ -91,6 +104,7 @@ export function SearchHeader({ city, onCityChange, onSubmitCity, onScout, scouti
 
 const s = StyleSheet.create({
   fade: { position: "absolute", top: 0, left: 0, right: 0 },
+  backdrop: { position: "absolute", top: 0, right: 0, bottom: 0, left: 0, backgroundColor: "rgba(0,0,0,0.45)" },
   top: { position: "absolute", top: 0, left: 0, right: 0 },
   row: { flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 20, height: 48 },
   cityBtn: { flex: 1, flexDirection: "row", alignItems: "center", gap: 6 },
