@@ -16,16 +16,16 @@
   }
   /* Type: 13 / 15 body sizes, 22 / 28 / 40 display. Spacing: 4/8/12/16/24/32/48. Hairline borders, no shadows. */
   *,*::before,*::after { box-sizing: border-box }
-  body { margin: 0; background: var(--bg); color: var(--ink); font: 400 15px/1.55 var(--body); }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 400 16px/1.55 var(--body); }
   .wrap { max-width: 860px; margin: 0 auto; padding: 32px 16px 64px; }
   :focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; border-radius: 8px; }
   h1 { font: 400 40px/1.05 var(--display); margin: 0; }
-  .note { color: var(--ink-3); font-size: 15px; margin: 8px 0 0; max-width: 65ch; }
+  .note { color: var(--ink-3); font-size: 16px; margin: 8px 0 0; max-width: 65ch; }
   .keyrow { display: flex; gap: 8px; margin-top: 24px; flex-wrap: wrap; align-items: end; }
-  .keyrow label { flex-basis: 100%; font-size: 13px; font-weight: 500; color: var(--ink-2); }
+  .keyrow label { flex-basis: 100%; font-size: 14px; font-weight: 500; color: var(--ink-2); }
   input, textarea { font: inherit; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; min-height: 44px; min-width: 0; }
   .keyrow input { flex: 0 1 360px; }
-  button { font: 600 15px var(--body); min-height: 44px; border: 1px solid var(--ink); border-radius: 999px; padding: 0 16px; cursor: pointer; background: var(--surface); color: var(--ink); }
+  button { font: 600 16px var(--body); min-height: 44px; border: 1px solid var(--ink); border-radius: 999px; padding: 0 16px; cursor: pointer; background: var(--surface); color: var(--ink); }
   button:hover { background: var(--fill); }
   /* Yellow only for the decision itself; "Open queue" stays outlined. */
   button.approve { background: var(--yellow); border-color: var(--yellow); color: var(--on-yellow); }
@@ -34,11 +34,11 @@
   button:disabled { opacity: .5; cursor: default; }
   h2 { font: 400 28px/1.1 var(--display); margin: 32px 0 12px; }
   .item { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px; margin-top: 8px; }
-  .meta { font-size: 13px; color: var(--ink-3); margin: 0; }
-  .venue { font: 400 22px/1.2 var(--display); margin: 4px 0 0; }
+  .meta { font-size: 14px; color: var(--ink-3); margin: 0; }
+  .venue { font: 400 28px/1.2 var(--display); margin: 4px 0 0; }
   .title { font-weight: 600; margin: 4px 0 0; }
   dl { display: grid; grid-template-columns: 80px minmax(0, 1fr); gap: 4px 12px; margin: 12px 0 0; }
-  dt { color: var(--ink-3); font-size: 13px; padding-top: 2px; } dd { margin: 0; overflow-wrap: anywhere; }
+  dt { color: var(--ink-3); font-size: 14px; padding-top: 2px; } dd { margin: 0; overflow-wrap: anywhere; }
   dd a { color: var(--blue); }
   .actions { display: flex; gap: 8px; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--line); flex-wrap: wrap; align-items: center; }
   .actions input { flex: 1 1 200px; }
