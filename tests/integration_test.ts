@@ -58,6 +58,12 @@ Deno.test({ name: "crews: start, join, status, read back (names only)", ignore, 
     // Ride activity for the venue sees the crew (counts only).
     const [m] = (await rpc("venue_movement", { p_venue: `ZZ CI Room ${run}`, p_city: "New York, NY" })).body;
     assertEquals([m.crews, m.people, m.on_way], [1, 2, 1]);
+    // "N going" counts the crew too (both members, once each).
+    const [g] = (await rpc("going_counts", { p_spot_ids: [`new-york-ny-zz-ci-${run}`] })).body;
+    assertEquals(Number(g.going), 2);
+    await rpc("set_crew_status", { p_code: code, p_device_id: device("friend"), p_status: "out" });
+    const [g2] = (await rpc("going_counts", { p_spot_ids: [`new-york-ny-zz-ci-${run}`] })).body;
+    assertEquals(Number(g2.going), 1); // bowing out leaves the count
   } finally {
     await cleanup("crews", `code=eq.${code}`);
   }
