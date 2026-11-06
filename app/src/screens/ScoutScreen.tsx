@@ -59,6 +59,7 @@ export function ScoutScreen() {
     return () => sub.remove();
   }, []);
   // Crews still on (anyone not out), for the pill count.
+  const spotPhotos = useMemo(() => Object.fromEntries(spots.map((e) => [e.id, e.image])), [spots]);
   const liveCrews = crewsApi.crews.filter((c) => c.members.some((m) => m.me && m.status !== "out"));
 
   const [cityInput, setCityInput] = useState("New York, NY");
@@ -194,7 +195,7 @@ export function ScoutScreen() {
         </>
       )}
 
-      <CrewsScreen visible={crewsOpen} crews={crewsApi.crews} linkCode={linkCode} onJoin={crewsApi.join} onStatus={crewsApi.status}
+      <CrewsScreen visible={crewsOpen} crews={crewsApi.crews} photos={spotPhotos} linkCode={linkCode} onJoin={crewsApi.join} onStatus={crewsApi.status}
         onRide={(c) => openRide(c)} onClose={() => setCrewsOpen(false)}
         onOpen={(c) => {
           const spot = spots.find((e) => e.id === c.spotId);
