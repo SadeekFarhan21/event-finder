@@ -153,7 +153,7 @@ function CrewTile({ crew, photo, onStatus, onRide, onOpen }: {
           {photo ? <Image source={photo} style={StyleSheet.absoluteFill} contentFit="cover" transition={200} />
             : <View style={s.stripEmpty}><Ionicons name="people" size={40} color={C.d3} /></View>}
           <LinearGradient pointerEvents="none" colors={["rgba(21,21,19,0)", C.surface]} style={StyleSheet.absoluteFill} />
-          <View style={s.stripChip}><View style={s.dot} /><Text style={s.stripChipText}>Leaving {leaveLabel(crew.leaveAt).toLowerCase()}</Text></View>
+          <View style={s.stripChip}><View style={s.dot} /><Text style={s.stripChipText}>{leaveLabel(crew.leaveAt)}</Text></View>
         </View>
         <Text style={s.venue} numberOfLines={1}>{crew.venue}</Text>
         <View style={s.addrRow}>

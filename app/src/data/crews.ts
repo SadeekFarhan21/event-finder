@@ -4,6 +4,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getDeviceId } from "./activity";
 import { SITE } from "./social";
 import { supabase } from "./supabase";
+import { clock } from "../lib/time";
 import type { Spot } from "../lib/types";
 
 export type CrewStatus = "in" | "on_way" | "out";
@@ -78,14 +79,17 @@ export async function loadCrews(): Promise<Crew[]> {
 }
 
 export const crewInvite = (c: { venue: string; title: string; leaveAt: string; code: string }) =>
-  `Heading to ${c.title} at ${c.venue}, leaving ${leaveLabel(c.leaveAt).toLowerCase()}. Join the crew: ${crewLink(c.code)}`;
+  `Heading to ${c.title} at ${c.venue}, leaving ${leavePhrase(c.leaveAt)}. Join the crew: ${crewLink(c.code)}`;
 
-export function leaveLabel(iso: string) {
+// When the crew leaves, for sentences: "now", "in 20 min", "at 9:30 PM", "Sat at 9:30 PM".
+export function leavePhrase(iso: string) {
   const d = new Date(iso);
   const mins = Math.round((d.getTime() - Date.now()) / 60000);
-  if (mins <= 0 && mins > -90) return "Now";
-  if (mins > 0 && mins < 60) return `In ${mins} min`;
-  const time = d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+  if (mins <= 0 && mins > -90) return "now";
+  if (mins > 0 && mins < 60) return `in ${mins} min`;
   const sameDay = new Date().toDateString() === d.toDateString();
-  return sameDay ? `At ${time}` : `${d.toLocaleDateString(undefined, { weekday: "short" })} ${time}`;
+  return `${sameDay ? "" : `${d.toLocaleDateString(undefined, { weekday: "short" })} `}at ${clock(d)}`;
 }
+
+// Same, as a label: "Leaving now", "Leaving at 9:30 PM", "Leaving Sat at 9:30 PM".
+export const leaveLabel = (iso: string) => `Leaving ${leavePhrase(iso)}`;

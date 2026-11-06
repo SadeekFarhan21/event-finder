@@ -30,3 +30,16 @@ export function whenLabel(e: WhenFields) {
   const day = days === 0 ? "Tonight" : days === 1 ? "Tomorrow" : d.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
   return `${day} · ${d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}`;
 }
+
+// "10 PM", "9:30 PM": whole hours without ":00", the way people say it.
+export const clock = (d: Date) => d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" }).replace(":00", "");
+
+// For sentences ("…at Nublu, tonight at 10 PM."): lowercase relative words, proper-case days.
+export function whenPhrase(e: WhenFields) {
+  if (isRecurring(e)) return /happy hour/i.test(`${e.title} ${e.deal ?? ""}`) ? "during happy hour" : "any night this week";
+  if (!e.start) return "this week";
+  const d = new Date(e.start);
+  const days = Math.round((nightDay(d.getTime()).getTime() - nightDay(Date.now()).getTime()) / 864e5);
+  const day = days === 0 ? "tonight" : days === 1 ? "tomorrow" : d.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
+  return `${day} at ${clock(d)}`;
+}
