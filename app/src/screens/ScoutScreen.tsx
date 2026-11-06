@@ -107,6 +107,19 @@ export function ScoutScreen() {
     }
   }, [shown]);
 
+  // Several nights at one venue share a coordinate, so zooming never splits them apart.
+  // If a cluster is really one place, select its first spot. The selected spot leaves the cluster,
+  // so tapping what's left selects the next one: repeated taps step through that venue's nights.
+  const openCluster = (list: Spot[]) => {
+    const lats = list.map((e) => e.lat), lngs = list.map((e) => e.lng);
+    const spreadKm = Math.hypot((Math.max(...lats) - Math.min(...lats)) * 111, (Math.max(...lngs) - Math.min(...lngs)) * 85);
+    if (spreadKm > 0.04) return fit(list);
+    const first = sortSpots(list)[0];
+    Haptics.selectionAsync();
+    focus(first, true);
+    if (list.length > 1) show(`${list.length} spots here · tap again for the next`);
+  };
+
   const pickFilter = (f: Filter) => {
     Haptics.selectionAsync();
     setFilter(f);
@@ -122,7 +135,7 @@ export function ScoutScreen() {
       <StatusBar style="dark" />
       <ScoutMap ref={map} initialRegion={START} showsUserLocation={!!me} onRegionChange={setRegion} onPress={() => setActive(null)}>
         <SpotPins clusters={clusters} active={active}
-          onSpot={(e) => focus(e, true)} onCluster={fit} onActive={setDetail} />
+          onSpot={(e) => focus(e, true)} onCluster={openCluster} onActive={setDetail} />
       </ScoutMap>
 
       <SearchHeader city={cityInput} onCityChange={setCityInput} onSubmitCity={open}
