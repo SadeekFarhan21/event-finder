@@ -28,8 +28,8 @@
   button { font: 600 15px var(--body); min-height: 44px; border: 1px solid var(--ink); border-radius: 999px; padding: 0 16px; cursor: pointer; background: var(--surface); color: var(--ink); }
   button:hover { background: var(--fill); }
   /* Yellow only for the decision itself; "Open queue" stays outlined. */
-  button.approve { background: var(--yellow); border-color: var(--yellow); }
-  button.approve:hover { background: #F5DC00; }
+  button.approve { background: var(--yellow); border-color: var(--yellow); color: var(--on-yellow); }
+  button.approve:hover { background: #F2D43C; }
   button.reject { border-color: var(--line); color: var(--ink-2); }
   button:disabled { opacity: .5; cursor: default; }
   h2 { font: 400 28px/1.1 var(--display); margin: 32px 0 12px; }
@@ -45,6 +45,15 @@
   .empty { color: var(--ink-3); margin: 0; }
   .err { color: var(--red); margin: 12px 0 0; }
   .err:empty { margin: 0; }
+
+  /* Night palette, same as the app: warm near-blacks, one accent (Yelo yellow), red for errors.
+     Links and focus rings use ink instead of a second color. */
+  :root, :root:not([data-theme="light"]), :root[data-theme] {
+    --bg: #0C0C0A; --surface: #151513; --fill: #1D1C19; --line: #282723;
+    --ink: #F2F0E9; --ink-2: #C2BEB2; --ink-3: #8E8A7F; --placeholder: #6B675E;
+    --yellow: #FFE14A; --on-yellow: #14130F; --blue: #F2F0E9; --red: #FF7A6B;
+    color-scheme: dark;
+  }
 </style>
 </head>
 <body>
