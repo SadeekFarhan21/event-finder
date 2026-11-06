@@ -2,8 +2,9 @@
 // previews. Most listings arrive without one, and the app's cards are photo-first.
 //
 // This fetches URLs that came from the web, so it's careful about where it goes: public https
-// hosts only (no IP literals, no localhost / internal names), a short timeout, and it reads at
-// most the first 256 KB of HTML.
+// hosts only (no IP literals, no localhost / internal names), every hostname resolved and every
+// address checked against private ranges, redirects followed by hand with the same checks on each
+// hop, a short timeout, and at most the first 256 KB of HTML read.
 
 export const NOT_A_PHOTO = /logo|favicon|icon|avatar|placeholder|default[-_]?(image|og)|sprite|blank|\.svg(\?|$)/i;
 // A site's one-size-fits-all link preview ("/brand/share/home.jpg", "fan-social.png"), not this place.
@@ -39,16 +40,57 @@ export function ogImageFrom(html: string, pageUrl: string): string | null {
   return null;
 }
 
-export async function findPagePhoto(pageUrl: string, timeoutMs = 4000): Promise<string | null> {
-  const u = isPublicHttps(pageUrl);
+// Addresses a fetch must never reach: loopback, private (RFC1918 / ULA), link-local (incl. the
+// cloud metadata service at 169.254.169.254), CGNAT, "this network", multicast and reserved.
+export function isPrivateAddress(ip: string): boolean {
+  const v4 = /^(\d+)\.(\d+)\.(\d+)\.(\d+)$/.exec(ip);
+  if (v4) {
+    const [a, b] = [Number(v4[1]), Number(v4[2])];
+    return a === 0 || a === 10 || a === 127 || (a === 169 && b === 254) || (a === 172 && b >= 16 && b <= 31) ||
+      (a === 192 && b === 168) || (a === 100 && b >= 64 && b <= 127) || a >= 224;
+  }
+  const v6 = ip.toLowerCase();
+  const mapped = /^::ffff:(\d+\.\d+\.\d+\.\d+)$/.exec(v6);
+  if (mapped) return isPrivateAddress(mapped[1]);
+  return v6 === "::" || v6 === "::1" || /^f[cd]/.test(v6) || /^fe[89ab]/.test(v6) || /^ff/.test(v6);
+}
+
+export type Resolver = (host: string) => Promise<string[]>;
+
+// Every A/AAAA record must be public. No records, or a lookup we can't do, fails closed.
+const denoResolver: Resolver = async (host) => {
+  const all = await Promise.all((["A", "AAAA"] as const).map((t) => Deno.resolveDns(host, t).catch(() => [] as string[])));
+  return all.flat();
+};
+
+export async function isSafeTarget(raw: string, resolve: Resolver = denoResolver): Promise<URL | null> {
+  const u = isPublicHttps(raw);
   if (!u) return null;
+  const addrs = await resolve(u.hostname).catch(() => []);
+  return addrs.length && addrs.every((a) => !isPrivateAddress(a)) ? u : null;
+}
+
+export async function findPagePhoto(pageUrl: string, timeoutMs = 4000, resolve: Resolver = denoResolver): Promise<string | null> {
+  const signal = AbortSignal.timeout(timeoutMs);
   try {
-    const res = await fetch(u, {
-      redirect: "follow",
-      signal: AbortSignal.timeout(timeoutMs),
-      headers: { "User-Agent": "scout-yelo-prototype/0.2 (+https://scout-download.vercel.app)", Accept: "text/html" },
-    });
-    if (!res.ok || !res.body || !isPublicHttps(res.url) || !/html/i.test(res.headers.get("content-type") ?? "")) return null;
+    // Follow redirects ourselves, re-checking every hop before requesting it, so a public page
+    // can't bounce the fetch to an internal address.
+    let url = pageUrl;
+    let res: Response | null = null;
+    for (let hop = 0; hop < 4; hop++) {
+      const target = await isSafeTarget(url, resolve);
+      if (!target) return null;
+      res = await fetch(target, {
+        redirect: "manual", signal,
+        headers: { "User-Agent": "scout-yelo-prototype/0.2 (+https://scout-download.vercel.app)", Accept: "text/html" },
+      });
+      const next = res.status >= 300 && res.status < 400 ? res.headers.get("location") : null;
+      if (!next) break;
+      await res.body?.cancel();
+      url = new URL(next, target).toString();
+      res = null;
+    }
+    if (!res || !res.ok || !res.body || !/html/i.test(res.headers.get("content-type") ?? "")) return null;
     // Read just the head of the page; the meta tags are near the top.
     const reader = res.body.getReader();
     const chunks: Uint8Array[] = [];
@@ -62,7 +104,7 @@ export async function findPagePhoto(pageUrl: string, timeoutMs = 4000): Promise<
     }
     reader.cancel().catch(() => {});
     const html = new TextDecoder().decode(new Uint8Array(chunks.flatMap((c) => [...c])));
-    return ogImageFrom(html, res.url);
+    return ogImageFrom(html, url);
   } catch {
     return null; // timeouts, TLS errors, bot walls: no photo, no problem
   }

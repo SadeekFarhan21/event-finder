@@ -4,7 +4,7 @@ import { cleanTitle, cleanVenue, dedupeEvents } from "../_shared/clean.ts";
 import { canonicalCity, cityKey } from "../_shared/cities.ts";
 import { validDate, type YeloEvent } from "../_shared/discover.ts";
 import { describeIssues, errorBody, ScoutRequest } from "../_shared/requests.ts";
-import { isPublicHttps, ogImageFrom } from "../_shared/photos.ts";
+import { isPrivateAddress, isPublicHttps, isSafeTarget, ogImageFrom } from "../_shared/photos.ts";
 
 const ev = (over: Partial<YeloEvent>): YeloEvent => ({
   id: "x", city: "new york, ny", title: "Jazz", venue: "Nublu", address: "151 Avenue C", start: "2026-11-07T00:00:00Z",
@@ -101,4 +101,15 @@ Deno.test("page photos: only public https hosts are fetched (no SSRF to internal
     "https://[::1]/", "https://db.internal/", "https://user:pw@example.com/", "https://example.com:8443/", "file:///etc/passwd", "javascript:alert(1)"]) {
     assertEquals(isPublicHttps(bad), null, bad);
   }
+});
+
+Deno.test("page photos: hostnames that resolve to private addresses are refused", async () => {
+  for (const ip of ["127.0.0.1", "10.1.2.3", "172.20.0.1", "192.168.1.1", "169.254.169.254", "100.64.0.1", "0.0.0.0",
+    "224.0.0.1", "::1", "fd00::1", "fe80::1", "::ffff:127.0.0.1"]) assert(isPrivateAddress(ip), ip);
+  for (const ip of ["8.8.8.8", "151.101.1.69", "172.32.0.1", "2606:4700::1111"]) assert(!isPrivateAddress(ip), ip);
+  const dns = (map: Record<string, string[]>) => (h: string) => Promise.resolve(map[h] ?? []);
+  assert(await isSafeTarget("https://venue.example.com/x", dns({ "venue.example.com": ["93.184.216.34"] })));
+  assertEquals(await isSafeTarget("https://127.0.0.1.nip.io/x", dns({ "127.0.0.1.nip.io": ["127.0.0.1"] })), null);
+  assertEquals(await isSafeTarget("https://mixed.example.com/", dns({ "mixed.example.com": ["93.184.216.34", "10.0.0.5"] })), null);
+  assertEquals(await isSafeTarget("https://nxdomain.example.com/", dns({})), null); // no records: fail closed
 });
