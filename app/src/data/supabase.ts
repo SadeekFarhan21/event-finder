@@ -2,7 +2,7 @@
 // EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY in .env.local to use it; otherwise the app
 // talks to the local dev server in /server.
 import { createClient } from "@supabase/supabase-js";
-import type { Lead, YeloEvent } from "./api";
+import type { Lead, Spot } from "../lib/types";
 
 const url = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const key = process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
@@ -13,10 +13,10 @@ export const supabase = url && key ? createClient(url, key, { auth: { persistSes
 const cityKey = (c: string) => c.trim().toLowerCase();
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-export async function sbEvents(city: string): Promise<YeloEvent[]> {
+export async function sbEvents(city: string): Promise<Spot[]> {
   const { data, error } = await supabase!.from("upcoming_events").select("*").eq("city", cityKey(city));
   if (error) throw new Error(error.message);
-  return (data ?? []) as YeloEvent[];
+  return (data ?? []) as Spot[];
 }
 
 export async function sbRooms(city: string): Promise<Lead[]> {

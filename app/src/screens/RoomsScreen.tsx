@@ -1,21 +1,14 @@
 // "Rooms": the partner-team view. Yelo's playbook is to take a venue's quiet night,
 // build an event there and fill it with riders, so this lists rooms worth pitching.
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { ActivityIndicator, FlatList, Linking, Modal, Pressable, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
-import { getLeads, runLeads, type Lead } from "./api";
-import { color as C, font as F, radius as R, shadow } from "./theme";
+import { runLeads } from "../data/api";
+import type { Lead } from "../lib/types";
+import { color as C, font as F, radius as R, shadow } from "../theme";
 
-export function useLeads(city: string) {
-  const [leads, setLeads] = useState<Lead[]>([]);
-  useEffect(() => {
-    getLeads(city).then((r) => setLeads(r.leads)).catch(() => setLeads([]));
-  }, [city]);
-  return [leads, setLeads] as const;
-}
-
-export function Rooms({ visible, city, leads, setLeads, canSearch, onClose }: {
+export function RoomsScreen({ visible, city, leads, setLeads, canSearch, onClose }: {
   visible: boolean; city: string; leads: Lead[]; setLeads: (l: Lead[]) => void; canSearch: boolean; onClose: () => void;
 }) {
   const [busy, setBusy] = useState(false);
@@ -26,8 +19,7 @@ export function Rooms({ visible, city, leads, setLeads, canSearch, onClose }: {
     setError(null);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     try {
-      const r = await runLeads(city);
-      setLeads(r.leads);
+      setLeads(await runLeads(city));
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } catch (e) {
       setError((e as Error).message);

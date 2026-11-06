@@ -1,6 +1,6 @@
 import type { ComponentProps } from "react";
 import type { Ionicons } from "@expo/vector-icons";
-import type { Category } from "./api";
+import type { Category } from "./lib/types";
 
 // One small system: a warm neutral ramp, Yelo yellow for the primary action and the
 // selected spot, Yelo blue only for deals. Everything else stays black/gray.

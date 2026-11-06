@@ -44,7 +44,8 @@
           "locationWhenInUsePermission": "Scout uses your location to show how far each spot is and what a ride there costs."
         }
       ],
-      "@maplibre/maplibre-react-native"
+      "@maplibre/maplibre-react-native",
+      "expo-image"
     ],
     "extra": {
       "eas": {
