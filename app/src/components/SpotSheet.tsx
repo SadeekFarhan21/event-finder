@@ -20,9 +20,13 @@ const SCREEN_H = Dimensions.get("window").height;
 const OFFSCREEN = SCREEN_H;
 const OPEN = { damping: 24, stiffness: 240, mass: 0.9 };
 
-type Props = { spot: Spot | null; me: Point | null; unlocked: boolean; onUnlock: (spot: Spot) => void; onClose: () => void };
+type Props = {
+  spot: Spot | null; me: Point | null; unlocked: boolean;
+  canAskLocation: boolean; onAskLocation: () => void; // ask for location here, where the ride price explains why
+  onUnlock: (spot: Spot) => void; onClose: () => void;
+};
 
-export function SpotSheet({ spot, me, unlocked, onUnlock, onClose }: Props) {
+export function SpotSheet({ spot, me, unlocked, canAskLocation, onAskLocation, onUnlock, onClose }: Props) {
   const y = useSharedValue(OFFSCREEN);
   const [shown, setShown] = useState<Spot | null>(null); // stays mounted while sliding out
 
@@ -90,6 +94,15 @@ export function SpotSheet({ spot, me, unlocked, onUnlock, onClose }: Props) {
             <Row icon="time-outline" text={whenLabel(e)} />
             <Row icon="location-outline" text={e.address} />
             {e.price && <Row icon="ticket-outline" text={e.price} />}
+            {!me && canAskLocation && (
+              <Tap pressedScale={0.99} onPress={onAskLocation} accessibilityLabel="Use my location to see the ride price">
+                <View style={s.row}>
+                  <Ionicons name="car-outline" size={17} color={C.ink2} />
+                  <Text style={s.rowText}>See ride price</Text>
+                  <Text style={s.rowAction}>Use my location</Text>
+                </View>
+              </Tap>
+            )}
             {fare && (
               <Row icon="car-outline"
                 text={`${fare.miles < 0.95 ? fare.miles.toFixed(1) : Math.round(fare.miles)} mi · about $${fare.yelo} with Yelo (Uber/Lyft ~$${fare.typical})`} />
@@ -159,6 +172,7 @@ const s = StyleSheet.create({
   rows: { marginTop: 18, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: C.hairline },
   row: { flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 12, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: C.hairline },
   rowText: { flex: 1, fontFamily: F.regular, fontSize: 15, color: C.ink },
+  rowAction: { fontFamily: F.semibold, fontSize: 14, color: C.blue },
   dealCard: { marginTop: 18, padding: 16, borderRadius: R.md, backgroundColor: C.blue },
   dealLabel: { fontFamily: F.medium, fontSize: 12, color: "rgba(255,255,255,0.7)" },
   dealText: { fontFamily: F.semibold, fontSize: 17, lineHeight: 24, color: "#fff", marginTop: 4 },

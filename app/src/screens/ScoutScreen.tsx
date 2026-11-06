@@ -33,7 +33,7 @@ export function ScoutScreen() {
   const carousel = useRef<CarouselRef>(null);
   const { city: mapCity, spots, loading, scouting, scoutable, load, scout } = useSpots();
   const [leads, setLeads] = useLeads(mapCity);
-  const me = useMyLocation();
+  const { me, canAsk: canAskLocation, ask: askLocation } = useMyLocation();
   const { toast, show } = useToast();
 
   const [cityInput, setCityInput] = useState("New York, NY");
@@ -144,7 +144,7 @@ export function ScoutScreen() {
       <RoomsScreen visible={roomsOpen} city={mapCity ?? cityInput} leads={leads} setLeads={setLeads} canSearch={scoutable}
         onClose={() => setRoomsOpen(false)} />
 
-      <SpotSheet spot={detail} me={me} unlocked={!!detail && unlocked.has(detail.id)}
+      <SpotSheet spot={detail} me={me} canAskLocation={canAskLocation} onAskLocation={askLocation} unlocked={!!detail && unlocked.has(detail.id)}
         onUnlock={(e) => setUnlocked((u) => new Set(u).add(e.id))} onClose={() => setDetail(null)} />
     </View>
   );
