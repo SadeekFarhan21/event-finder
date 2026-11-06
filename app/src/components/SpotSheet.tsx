@@ -157,7 +157,7 @@ function Row({ icon, text }: { icon: ComponentProps<typeof Ionicons>["name"]; te
 }
 
 const s = StyleSheet.create({
-  backdrop: { position: "absolute", top: 0, right: 0, bottom: 0, left: 0, backgroundColor: "rgba(17,17,17,0.28)" },
+  backdrop: { position: "absolute", top: 0, right: 0, bottom: 0, left: 0, backgroundColor: "rgba(26,24,20,0.28)" },
   sheet: { position: "absolute", left: 0, right: 0, bottom: 0, maxHeight: SCREEN_H * 0.88, backgroundColor: C.surface, borderTopLeftRadius: 30, borderTopRightRadius: 30,
     overflow: "hidden", shadowColor: "#000", shadowOpacity: 0.15, shadowRadius: 30, shadowOffset: { width: 0, height: -6 }, elevation: 20 },
   hero: { height: 190, backgroundColor: C.fill },

@@ -2,20 +2,27 @@ import type { ComponentProps } from "react";
 import type { Ionicons } from "@expo/vector-icons";
 import type { Category } from "./lib/types";
 
-// One small system: a warm neutral ramp, Yelo yellow for the primary action and the
-// selected spot, Yelo blue only for deals. Everything else stays black/gray.
+// Five colors, on purpose: a warm neutral ramp, Yelo yellow (the one primary: main actions and
+// the selected spot), Yelo blue (deals only), and red (errors only). Neutrals lean slightly toward
+// the yellow instead of pure gray. Text tokens are checked for WCAG AA (4.5:1) on white and n50.
+const neutral = {
+  n50: "#FBFAF6", n100: "#F4F2EA", n200: "#E8E5D9", n300: "#D5D1C3", n400: "#B4AFA0",
+  n500: "#8E897B", n600: "#6B665A", n700: "#4F4B42", n800: "#33302A", n900: "#1A1814",
+};
+
 export const color = {
-  bg: "#FAF8F2",
+  ...neutral,
+  bg: neutral.n50,
   surface: "#FFFFFF",
-  ink: "#111111",
-  ink2: "#5E5B53",
-  ink3: "#9A968C",
-  hairline: "#E8E4D8",
-  fill: "#F2EFE6",
+  fill: neutral.n100, // quiet buttons, image placeholders
+  hairline: neutral.n200, // dividers and borders
+  ink: neutral.n900, // 17.7:1
+  ink2: neutral.n700, // secondary text, 8.7:1
+  ink3: neutral.n600, // metadata, 5.7:1 (was #9A968C at 2.9:1, below AA)
+  placeholder: neutral.n500, // input placeholders and disabled only
   yellow: "#FFE600",
   blue: "#1F4FFF",
-  green: "#178A4C",
-  red: "#B42318", // errors only
+  red: "#B42318",
 };
 
 // Instrument Serif is the display face on joinyelo.com; Inter does the rest.

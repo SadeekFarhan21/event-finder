@@ -39,14 +39,14 @@ export function SearchHeader({ city, onCityChange, onSubmitCity, onScout, scouti
   return (
     <>
       {/* Soft fade so map labels don't fight the controls */}
-      <LinearGradient pointerEvents="none" colors={["rgba(250,248,242,0.98)", "rgba(250,248,242,0.75)", "rgba(250,248,242,0)"]}
+      <LinearGradient pointerEvents="none" colors={["rgba(251,250,246,0.98)", "rgba(251,250,246,0.75)", "rgba(251,250,246,0)"]}
         locations={[0, 0.55, 1]} style={[s.fade, { height: insets.top + HEADER_GAP + HEADER_H + 26 }]} />
       <View style={[s.top, { paddingTop: insets.top + HEADER_GAP }]}>
         <View style={s.row}>
           <Glass style={s.search}>
             <Ionicons name="location-outline" size={18} color={C.ink2} />
             <TextInput value={city} onChangeText={onCityChange} onSubmitEditing={() => onSubmitCity(city)} placeholder="Search a city"
-              placeholderTextColor={C.ink3} style={s.input} returnKeyType="search" selectTextOnFocus
+              placeholderTextColor={C.placeholder} style={s.input} returnKeyType="search" selectTextOnFocus
               onFocus={() => setEditing(true)} onBlur={() => setEditing(false)} />
           </Glass>
           <Tap onPress={onScout} disabled={scouting || !scoutable} style={[s.scout, !scoutable && { opacity: 0.4 }]}
@@ -90,7 +90,7 @@ const s = StyleSheet.create({
   top: { position: "absolute", top: 0, left: 0, right: 0 },
   row: { flexDirection: "row", gap: 8, paddingHorizontal: 16 },
   search: { flex: 1, flexDirection: "row", alignItems: "center", gap: 8, height: 48, paddingHorizontal: 16, borderRadius: R.pill,
-    borderWidth: StyleSheet.hairlineWidth, borderColor: "rgba(17,17,17,0.08)", ...shadow },
+    borderWidth: StyleSheet.hairlineWidth, borderColor: "rgba(26,24,20,0.08)", ...shadow },
   input: { flex: 1, fontFamily: F.medium, fontSize: 15, color: C.ink },
   scout: { height: 48, paddingHorizontal: 20, borderRadius: R.pill, backgroundColor: C.ink, alignItems: "center", justifyContent: "center", ...shadow },
   scoutText: { fontFamily: F.semibold, fontSize: 15, color: "#fff" },
