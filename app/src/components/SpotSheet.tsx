@@ -13,6 +13,9 @@ import { estimateFare, type Point } from "../lib/fare";
 import { openRide } from "../lib/ride";
 import { track } from "../data/activity";
 import { inviteMessage } from "../data/social";
+import { crewInvite, type Crew, type CrewStatus } from "../data/crews";
+import { CrewCard } from "./CrewCard";
+import { StartCrew } from "./StartCrew";
 import { whenLabel } from "../lib/time";
 import type { Spot } from "../lib/types";
 import { CATEGORY, color as C, font as F, radius as R } from "../theme";
@@ -27,15 +30,21 @@ type Props = {
   canAskLocation: boolean; onAskLocation: () => void; // ask for location here, where the ride price explains why
   onUnlock: (spot: Spot) => void; onClose: () => void;
   going: number; isGoing: boolean; onGo: (spot: Spot) => void; // "I'm going" + live count
+  crew?: Crew; canCrew: boolean; // my crew for this spot, if any
+  onStartCrew: (spot: Spot, leaveAt: Date, name: string) => Promise<string>;
+  onCrewStatus: (code: string, s: CrewStatus) => void;
 };
 
-export function SpotSheet({ spot, city, me, unlocked, canAskLocation, onAskLocation, onUnlock, onClose, going, isGoing, onGo }: Props) {
+export function SpotSheet({ spot, city, me, unlocked, canAskLocation, onAskLocation, onUnlock, onClose, going, isGoing, onGo,
+  crew, canCrew, onStartCrew, onCrewStatus }: Props) {
   const y = useSharedValue(OFFSCREEN);
   const [shown, setShown] = useState<Spot | null>(null); // stays mounted while sliding out
+  const [composing, setComposing] = useState(false); // the "Heading out" crew composer is open
 
   useEffect(() => {
     if (!spot) return;
     setShown(spot);
+    setComposing(false);
     track(spot, "view", city);
     y.value = OFFSCREEN;
     y.value = withSpring(0, OPEN);
@@ -124,14 +133,36 @@ export function SpotSheet({ spot, city, me, unlocked, canAskLocation, onAskLocat
                 <Ionicons name={isGoing ? "checkmark" : "hand-right-outline"} size={16} color={isGoing ? C.surface : C.ink} />
                 <Text style={[s.chipText, isGoing && { color: C.surface }]}>{isGoing ? "You're going" : "I'm going"}</Text>
               </Tap>
-              <Tap style={s.chip} onPress={async () => {
+              {canCrew && !crew && (
+                <Tap style={[s.chip, composing && s.chipOn]} onPress={() => { Haptics.selectionAsync(); setComposing((c) => !c); }}
+                  accessibilityState={{ expanded: composing }}>
+                  <Ionicons name="people-outline" size={16} color={composing ? C.surface : C.ink} />
+                  <Text style={[s.chipText, composing && { color: C.surface }]}>Heading out</Text>
+                </Tap>
+              )}
+              <Tap style={[s.chip, s.chipIcon]} accessibilityLabel="Send this spot to friends" onPress={async () => {
                 const r = await Share.share({ message: inviteMessage(e, isGoing) }).catch(() => null);
                 if (r?.action === Share.sharedAction) track(e, "share", city);
               }}>
                 <Ionicons name="paper-plane-outline" size={16} color={C.ink} />
-                <Text style={s.chipText}>Invite friends</Text>
               </Tap>
             </View>
+            {composing && !crew && (
+              <Animated.View entering={FadeInDown.springify().damping(18)}>
+                <StartCrew spot={e} onCancel={() => setComposing(false)} onStart={async (leaveAt, name) => {
+                  const code = await onStartCrew(e, leaveAt, name);
+                  setComposing(false);
+                  if (!isGoing) onGo(e);
+                  track(e, "share", city);
+                  Share.share({ message: crewInvite({ venue: e.venue, title: e.title, leaveAt: leaveAt.toISOString(), code }) }).catch(() => {});
+                }} />
+              </Animated.View>
+            )}
+            {crew && (
+              <Animated.View entering={FadeInDown.springify().damping(18)}>
+                <CrewCard crew={crew} onStatus={onCrewStatus} onRide={() => { track(e, "ride", city); openRide(e); }} />
+              </Animated.View>
+            )}
           </View>
 
           {e.deal && unlocked && (
@@ -204,6 +235,7 @@ const s = StyleSheet.create({
   chip: { flex: 1, height: 42, borderRadius: R.pill, flexDirection: "row", gap: 6, alignItems: "center", justifyContent: "center",
     borderWidth: 1, borderColor: C.hairline, backgroundColor: C.surface },
   chipOn: { backgroundColor: C.ink, borderColor: C.ink },
+  chipIcon: { flex: 0, width: 42 },
   chipText: { fontFamily: F.semibold, fontSize: 14, color: C.ink },
   dealCard: { marginTop: 18, padding: 16, borderRadius: R.md, backgroundColor: C.blue },
   dealLabel: { fontFamily: F.medium, fontSize: 12, color: "rgba(255,255,255,0.7)" },

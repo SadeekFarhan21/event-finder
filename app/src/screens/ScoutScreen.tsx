@@ -14,6 +14,8 @@ import { useSpots } from "../hooks/useSpots";
 import { useLeads } from "../hooks/useLeads";
 import { useMyLocation } from "../hooks/useMyLocation";
 import { useGoing } from "../hooks/useGoing";
+import { useCrews } from "../hooks/useCrews";
+import { openRide } from "../lib/ride";
 import { useToast } from "../hooks/useToast";
 import { SearchHeader } from "../components/SearchHeader";
 import { SpotPins } from "../components/SpotPins";
@@ -23,6 +25,7 @@ import { EmptyCard, LoadingCard } from "../components/BottomStates";
 import { Toast } from "../components/Toast";
 import { Tap } from "../components/Tap";
 import { RoomsScreen } from "./RoomsScreen";
+import { CrewsScreen } from "./CrewsScreen";
 import { CARD_H, CARD_INSET, CAROUSEL_BOTTOM } from "../layout";
 import { color as C, font as F, radius as R, shadow } from "../theme";
 
@@ -37,6 +40,10 @@ export function ScoutScreen() {
   const { me, canAsk: canAskLocation, ask: askLocation } = useMyLocation();
   const { toast, show } = useToast();
   const { counts: going, mine: myGoing, go } = useGoing(spots, mapCity);
+  const crewsApi = useCrews();
+  const [crewsOpen, setCrewsOpen] = useState(false);
+  // Crews still on (anyone not out), for the pill count.
+  const liveCrews = crewsApi.crews.filter((c) => c.members.some((m) => m.me && m.status !== "out"));
 
   const [cityInput, setCityInput] = useState("New York, NY");
   const [filter, setFilter] = useState<Filter>("all");
@@ -152,6 +159,12 @@ export function ScoutScreen() {
       ) : (
         <>
           <Animated.View entering={FadeIn.delay(150)} style={s.roomsWrap}>
+            {crewsApi.available && (
+              <Tap style={[s.rooms, liveCrews.length > 0 && s.crewsOn]} onPress={() => { Haptics.selectionAsync(); setCrewsOpen(true); }}>
+                <Ionicons name="people-outline" size={14} color={C.ink} />
+                <Text style={s.roomsText}>Crews{liveCrews.length ? `  ·  ${liveCrews.length}` : ""}</Text>
+              </Tap>
+            )}
             <Tap style={s.rooms} onPress={() => { Haptics.selectionAsync(); setRoomsOpen(true); }}>
               <Ionicons name="business-outline" size={14} color={C.ink} />
               <Text style={s.roomsText}>Rooms for Yelo nights{leads.length ? `  ·  ${leads.length}` : ""}</Text>
@@ -163,19 +176,32 @@ export function ScoutScreen() {
         </>
       )}
 
+      <CrewsScreen visible={crewsOpen} crews={crewsApi.crews} onJoin={crewsApi.join} onStatus={crewsApi.status}
+        onRide={(c) => openRide(c)} onClose={() => setCrewsOpen(false)}
+        onOpen={(c) => {
+          const spot = spots.find((e) => e.id === c.spotId);
+          setCrewsOpen(false);
+          if (!spot) { show(`${c.venue} is in another city's map`); return; }
+          focus(spot, true);
+          setTimeout(() => setDetail(spot), 350);
+        }} />
+
       <RoomsScreen visible={roomsOpen} city={mapCity ?? cityInput} leads={leads} setLeads={setLeads} canSearch={scoutable}
         onClose={() => setRoomsOpen(false)} />
 
       <SpotSheet spot={detail} city={mapCity ?? cityInput} me={me} canAskLocation={canAskLocation} onAskLocation={askLocation} unlocked={!!detail && unlocked.has(detail.id)}
         onUnlock={(e) => setUnlocked((u) => new Set(u).add(e.id))}
-        going={detail ? going[detail.id] ?? 0 : 0} isGoing={!!detail && myGoing.has(detail.id)} onGo={go} onClose={() => setDetail(null)} />
+        going={detail ? going[detail.id] ?? 0 : 0} isGoing={!!detail && myGoing.has(detail.id)} onGo={go}
+        crew={detail ? crewsApi.crews.find((c) => c.spotId === detail.id) : undefined} canCrew={crewsApi.available}
+        onStartCrew={(e, leaveAt, name) => crewsApi.start(e.id, leaveAt, name)} onCrewStatus={crewsApi.status} onClose={() => setDetail(null)} />
     </View>
   );
 }
 
 const s = StyleSheet.create({
   root: { flex: 1, backgroundColor: C.bg },
-  roomsWrap: { position: "absolute", left: CARD_INSET, bottom: CAROUSEL_BOTTOM + CARD_H },
+  roomsWrap: { position: "absolute", left: CARD_INSET, bottom: CAROUSEL_BOTTOM + CARD_H, flexDirection: "row", gap: 8 },
+  crewsOn: { backgroundColor: C.yellow },
   rooms: { flexDirection: "row", alignItems: "center", gap: 6, height: 34, paddingHorizontal: 14, borderRadius: R.pill, backgroundColor: C.surface, ...shadow },
   roomsText: { fontFamily: F.semibold, fontSize: 13, color: C.ink },
 });
