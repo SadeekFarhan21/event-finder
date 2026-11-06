@@ -521,6 +521,15 @@ export type Database = {
         }
         Returns: undefined
       }
+      venue_daily: {
+        Args: { p_city: string; p_days?: number; p_venue: string }
+        Returns: {
+          day: string
+          rides: number
+          unlocks: number
+          views: number
+        }[]
+      }
       venue_movement: {
         Args: { p_city: string; p_days?: number; p_venue: string }
         Returns: {
