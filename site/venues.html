@@ -39,7 +39,7 @@
   input, select, textarea { font: 400 16px/1.4 var(--body); color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; min-height: 44px; width: 100%; }
   input:hover, select:hover, textarea:hover { border-color: var(--ink-3); }
   input::placeholder, textarea::placeholder { color: var(--placeholder); }
-  .btn { font: 600 16px var(--body); min-height: 44px; border: 1px solid var(--ink); border-radius: 999px; padding: 10px 20px; cursor: pointer; background: var(--surface); color: var(--ink); }
+  .btn { text-decoration: none; align-items: center; justify-content: center; font: 600 16px var(--body); min-height: 44px; border: 1px solid var(--ink); border-radius: 999px; padding: 10px 20px; cursor: pointer; background: var(--surface); color: var(--ink); }
   .btn:hover { background: var(--fill); }
   .btn.primary { background: var(--yellow); border-color: var(--yellow); color: var(--on-yellow); }
   .btn.primary:hover { background: var(--yellow-hover); }
@@ -103,6 +103,7 @@
     --yellow: #FFE14A; --on-yellow: #14130F; --yellow-hover: #F5D63E; --blue: #F2F0E9; --red: #FF7A6B;
     color-scheme: dark;
   }
+  [hidden] { display: none !important; }
 </style>
 </head>
 <body>
@@ -237,7 +238,13 @@
     const { data } = await db.rpc("get_listing", { p_token: token });
     const l = data?.[0];
     $("submit-h").textContent = l ? "Your listing" : "Listing not found";
-    if (!l) { form.hidden = true; return; }
+    if (!l) {
+      form.hidden = true;
+      $("submit-note").textContent = "This link doesn't match a listing. Check the link from your confirmation, or list a new night.";
+      const again = document.createElement("a"); again.href = location.pathname; again.className = "btn primary"; again.textContent = "List a new night";
+      again.style.marginTop = "16px"; again.style.display = "inline-flex"; $("submit-note").after(again);
+      return;
+    }
     const [label, hint] = STATUS[l.status] ?? [l.status, ""];
     const live = l.status === "approved" && !l.live ? "Approved, going on the map in a few minutes." : hint;
     $("submit-note").innerHTML = `<span class="badge ${l.status}">${esc(label)}</span> ${esc(l.review_note ? `Reviewer's note: ${l.review_note}` : live)}`;
