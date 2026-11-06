@@ -73,6 +73,8 @@
     --yellow: #FFE14A; --on-yellow: #14130F; --blue: #F2F0E9; --red: #FF7A6B;
     color-scheme: dark;
   }
+  .actions .link { align-self: center; padding: 12px 8px; color: var(--ink-2); font-size: 15px; text-decoration: underline; text-underline-offset: 3px; }
+  .actions .link:hover { color: var(--ink); }
 </style>
 </head>
 <body>
@@ -88,11 +90,18 @@
   const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
   const LABEL = { nightlife: "Nightlife", music: "Live music", food_drink: "Food & drink", arts: "Arts", sports: "Sports", community: "Community", deal: "Deal" };
   const app = document.getElementById("app");
+  const isAndroid = /android/i.test(navigator.userAgent);
+  const SERVED = ["new york, ny", "los angeles, ca"];
 
   // Same rule as the app: a night runs until 6am, so a 1am set still reads "Tonight".
   function when(e) {
-    if (e.category === "deal" || /happy hour|every (mon|tue|wed|thu|fri|sat|sun)|daily|weekly|nightly/i.test(`${e.title} ${e.deal ?? ""}`))
-      return /happy hour/i.test(`${e.title} ${e.deal ?? ""}`) ? "Happy hour" : "Recurring deal";
+    const text = `${e.title} ${e.deal ?? ""} ${e.description ?? ""}`;
+    if (e.category === "deal" || /happy hour|every (mon|tue|wed|thu|fri|sat|sun)|daily|weekly|nightly/i.test(text)) {
+      // Keep the hours the listing states ("4-7pm", "5 to 8 PM"); never invent them.
+      const hours = text.match(/\b\d{1,2}(:\d\d)?\s*(am|pm)?\s*(-|–|to)\s*\d{1,2}(:\d\d)?\s*(am|pm)\b/i)?.[0];
+      const label = /happy hour/i.test(text) ? "Happy hour" : "Every night this week";
+      return hours ? `${label} · ${hours.replace(/\s*(-|–|to)\s*/i, "–")}` : label;
+    }
     if (!e.start) return "Ongoing";
     const d = new Date(e.start);
     const night = (t) => { const x = new Date(t); x.setHours(x.getHours() - 6, 0, 0, 0); x.setHours(0, 0, 0, 0); return x; };
@@ -101,10 +110,18 @@
     return `${day} · ${d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}`;
   }
 
-  function gone() {
-    app.innerHTML = `<section class="empty"><h1>This night has passed.</h1>
-      <p class="desc">Spots on Scout last a week. Get the app to see what's on now.</p>
-      <div class="actions"><a class="btn primary" href="./">Get Scout for Android</a></div></section>`;
+  // Three different situations, three different messages: an expired night, a link that
+  // doesn't match anything, and a connection problem (which is worth retrying).
+  function gone(kind = "expired") {
+    const copy = {
+      expired: ["This night has passed.", "Spots on Scout last about a week. See what's on now in the app."],
+      missing: ["We couldn't find that link.", "It may have been copied incompletely. Ask your friend to send it again."],
+      offline: ["Couldn't load this right now.", "Check your connection and try again."],
+    }[kind];
+    app.innerHTML = `<section class="empty"><h1>${copy[0]}</h1><p class="desc">${copy[1]}</p>
+      <div class="actions">${kind === "offline"
+        ? `<button class="btn primary" type="button" onclick="location.reload()">Try again</button>`
+        : isAndroid ? `<a class="btn primary" href="./">Get Scout for Android</a>` : `<a class="btn quiet" href="./">About Scout</a>`}</div></section>`;
   }
 
   // A browser joining a crew gets its own random id (kept in this browser), like a phone does.
@@ -148,20 +165,25 @@
     const code = (q.get("crew") || "").toLowerCase();
     let crew = null, id = q.get("id");
     if (code) {
-      const { data } = await db.rpc("get_crews", { p_codes: [code], p_device_id: deviceId() });
+      if (!/^[a-f0-9]{8,16}$/.test(code)) return gone("missing");
+      const { data, error } = await db.rpc("get_crews", { p_codes: [code], p_device_id: deviceId() });
+      if (error) return gone("offline");
       crew = data?.[0] ?? null;
-      if (!crew) return gone();
+      if (!crew) return gone("missing");
+      if (Date.parse(crew.leave_at) < Date.now() - 12 * 3600e3) return gone("expired");
       id = crew.spot_id;
     }
-    if (!id) return gone();
-    const [{ data: live }, { data: g }] = await Promise.all([
+    if (!id) return gone("missing");
+    const [{ data: live, error: loadErr }, { data: g }] = await Promise.all([
       db.from("upcoming_events").select("*").eq("id", id).maybeSingle(),
       db.rpc("going_counts", { p_spot_ids: [id] }),
     ]);
     // The scout may have merged or refreshed the listing since the crew started; the crew keeps
     // its own copy of the spot, so fall back to that.
     const e = live ?? (crew && { venue: crew.venue, title: crew.title, address: crew.address, start: crew.start, category: "" });
-    if (!e) return gone();
+    if (loadErr && !crew) return gone("offline");
+    if (!e) return gone("expired");
+    if (live && !SERVED.includes(live.city)) return gone("expired"); // Scout covers NYC and LA
     const going = Number(g?.[0]?.going ?? 0);
     const dest = encodeURIComponent(`${e.venue}, ${e.address}`);
     document.title = crew ? `Crew to ${e.venue} · Scout` : `${e.venue} · ${when(e)} · Scout`;
@@ -179,14 +201,14 @@
             <div><dt>When</dt><dd>${esc(when(e))}</dd></div>
             <div><dt>Where</dt><dd>${esc(e.address)}</dd></div>
             ${e.price ? `<div><dt>Price</dt><dd>${esc(e.price)}</dd></div>` : ""}
-            ${e.deal ? `<div><dt>Deal</dt><dd>${esc(e.deal)} <span style="color:var(--ink-3)">(unlock in the app)</span></dd></div>` : ""}
+            ${e.deal ? `<div><dt>Deal</dt><dd>${esc(e.deal)}</dd></div>` : ""}
           </dl>
-          ${crew ? "" : `<p class="going">${going ? `<b>${going} ${going === 1 ? "person" : "people"}</b> on Scout ${going === 1 ? "is" : "are"} going.` : "A friend wants you there."}</p>`}
+          ${crew || !going ? "" : `<p class="going"><b>${going} ${going === 1 ? "person" : "people"}</b> on Scout ${going === 1 ? "is" : "are"} going.</p>`}
           <div class="actions">
-            ${crew ? "" : `<a class="btn primary" href="./">Get Scout to say you're going</a>`}
-            <a class="btn quiet" href="https://www.google.com/maps/dir/?api=1&destination=${dest}" target="_blank" rel="noopener">Directions</a>
-            ${e.url && /^https?:\/\//.test(e.url) ? `<a class="btn quiet" href="${esc(e.url)}" target="_blank" rel="noopener">Event page</a>` : ""}
-            ${crew ? `<a class="btn quiet" href="${appLink(code)}">Open in the Scout app</a>` : ""}
+            ${isAndroid && !crew ? `<a class="btn primary" href="./">Get Scout to say you're going</a>` : ""}
+            <a class="btn ${isAndroid && !crew ? "quiet" : "primary"}" href="https://www.google.com/maps/dir/?api=1&destination=${dest}" target="_blank" rel="noopener">Directions</a>
+            ${e.url && /^https?:\/\//.test(e.url) ? `<a class="link" href="${esc(e.url)}" target="_blank" rel="noopener">Event page</a>` : ""}
+            ${crew && isAndroid ? `<a class="link" href="${appLink(code)}">Open in the Scout app</a>` : ""}
           </div>
         </div>
       </article>
@@ -209,7 +231,7 @@
     }));
   }
 
-  render().catch(gone);
+  render().catch(() => gone("offline"));
   // Friends join and head out while the page is open: keep the crew current.
   if (new URLSearchParams(location.search).get("crew")) setInterval(() => { if (!document.querySelector("#nm:focus")) render().catch(() => {}); }, 20000);
 </script>
