@@ -51,7 +51,7 @@ export function SearchHeader({ city, onCityChange, onSubmitCity, onScout, scouti
           </Glass>
           <Tap onPress={onScout} disabled={scouting || !scoutable} style={[s.scout, !scoutable && { opacity: 0.4 }]}
             accessibilityLabel={scouting ? "Scouting this city" : "Scout this city"} accessibilityState={{ busy: scouting, disabled: scouting || !scoutable }}>
-            {scouting ? <ActivityIndicator color={C.surface} size="small" /> : <Text style={s.scoutText}>Scout</Text>}
+            {scouting ? <ActivityIndicator color={C.ink} size="small" /> : <Text style={s.scoutText}>Scout</Text>}
           </Tap>
         </View>
 
@@ -93,8 +93,8 @@ const s = StyleSheet.create({
   search: { flex: 1, flexDirection: "row", alignItems: "center", gap: 8, height: 48, paddingHorizontal: 16, borderRadius: R.pill,
     borderWidth: StyleSheet.hairlineWidth, borderColor: C.hairline, ...shadow },
   input: { flex: 1, fontFamily: F.medium, fontSize: T.body, color: C.ink },
-  scout: { height: 48, paddingHorizontal: 20, borderRadius: R.pill, backgroundColor: C.ink, alignItems: "center", justifyContent: "center", ...shadow },
-  scoutText: { fontFamily: F.semibold, fontSize: T.body, color: C.surface },
+  scout: { height: 48, paddingHorizontal: 20, borderRadius: R.pill, backgroundColor: C.d3, borderWidth: StyleSheet.hairlineWidth, borderColor: C.d4, alignItems: "center", justifyContent: "center", ...shadow },
+  scoutText: { fontFamily: F.semibold, fontSize: T.body, color: C.ink },
   suggest: { marginHorizontal: 16, marginTop: 8, backgroundColor: C.surface, borderRadius: R.md, paddingVertical: 8, ...shadow },
   suggestRow: { flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 16, paddingVertical: 12 },
   suggestText: { flex: 1, fontFamily: F.medium, fontSize: T.body, color: C.ink },
