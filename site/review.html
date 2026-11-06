@@ -54,6 +54,8 @@
 <script>
   const FN = "https://ihxsdwpersowxxtgqcws.supabase.co/functions/v1/scout";
   const $ = (id) => document.getElementById(id);
+  // Only http(s) links become clickable; anything else (javascript:, data:) is shown as text.
+  const safeHref = (u) => { try { const p = new URL(u); return p.protocol === "http:" || p.protocol === "https:" ? p.href : null; } catch { return null; } };
   const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
   // The key stays in this browser only (it's the reviewer's own browser), so the queue reopens on reload.
   const store = { get: () => { try { return localStorage.getItem("scout.reviewKey"); } catch { return null; } },
@@ -74,7 +76,7 @@
       <p class="venue">${esc(s.venue)}</p><p class="title">${esc(s.title)}</p>
       <dl><dt>When</dt><dd>${esc(when)}</dd><dt>Address</dt><dd>${esc(s.address)}</dd>
         ${s.deal ? `<dt>Deal</dt><dd>${esc(s.deal)}</dd>` : ""}${s.description ? `<dt>About</dt><dd>${esc(s.description)}</dd>` : ""}
-        ${s.url ? `<dt>Link</dt><dd><a href="${esc(s.url)}" target="_blank" rel="noopener noreferrer">${esc(s.url)}</a></dd>` : ""}
+        ${s.url ? `<dt>Link</dt><dd>${safeHref(s.url) ? `<a href="${esc(safeHref(s.url))}" target="_blank" rel="noopener noreferrer">${esc(s.url)}</a>` : esc(s.url)}</dd>` : ""}
         <dt>Contact</dt><dd>${esc(s.contact_email)}</dd></dl>
       ${s.status === "pending" ? `<div class="actions"><button class="approve" data-act="approve">Approve</button>
         <input placeholder="Note to the venue if rejecting (optional)" maxlength="300" aria-label="Rejection note">
