@@ -53,6 +53,14 @@
   .form .full { grid-column: 1 / -1; }
   .msg { font-size: 14px; margin-top: 12px; }
   .msg.ok { color: var(--ink); } .msg.err { color: var(--red); }
+  .btn.ghost { background: transparent; color: var(--ink-2); border: 1px solid var(--line); }
+  .manage { display: block; margin-top: 8px; padding: 12px 14px; border-radius: 12px; background: var(--fill); overflow-wrap: anywhere; }
+  .manage a { color: var(--blue); }
+  .copy { font: 600 13px var(--body); border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 4px 10px; margin-left: 4px; cursor: pointer; }
+  .badge { display: inline-block; font-size: 12px; font-weight: 600; padding: 2px 10px; border-radius: 999px; background: var(--fill); color: var(--ink); margin-right: 6px; }
+  .badge.approved { background: var(--yellow); }
+  .badge.rejected { background: var(--ink); color: #fff; }
+  input:disabled, select:disabled, textarea:disabled { background: var(--fill); color: var(--ink-3); }
   .empty { color: var(--ink-3); font-size: 15px; margin-top: 14px; }
   @media (max-width: 700px) {
     .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -88,9 +96,9 @@
     <div id="result"></div>
   </section>
 
-  <section aria-labelledby="submit-h">
+  <section aria-labelledby="submit-h" id="submit-sec">
     <h2 id="submit-h">List an event or deal</h2>
-    <p class="note">We review every submission before it goes on the map, usually within a day.</p>
+    <p class="note" id="submit-note">We review every submission before it goes on the map, usually within a day.</p>
     <form class="form" id="submit">
       <label>City<select name="city"><option>New York, NY</option><option>Los Angeles, CA</option></select></label>
       <label>Venue<input name="venue" required maxlength="120" placeholder="Venue name as on your sign"></label>
@@ -105,7 +113,7 @@
       <label class="full">Description (optional)<textarea name="description" rows="2" maxlength="400"></textarea></label>
       <label>Link (optional)<input name="url" type="url" maxlength="300" placeholder="https://"></label>
       <label>Your email<input name="contact_email" type="email" required maxlength="200"></label>
-      <div class="full"><button class="btn primary" type="submit">Submit for review</button><div class="msg" id="submit-msg" role="status"></div></div>
+      <div class="full"><button class="btn primary" type="submit">Submit for review</button> <button class="btn ghost" type="button" id="withdraw" hidden>Take it down</button><div class="msg" id="submit-msg" role="status"></div></div>
     </form>
   </section>
 </div>
@@ -150,20 +158,78 @@
         : `<p class="empty">${esc(venue)} has no spots on the map right now. List one below.</p>`}`;
   });
 
-  $("submit").addEventListener("submit", async (ev) => {
-    ev.preventDefault();
-    const f = new FormData(ev.target), btn = ev.target.querySelector("button");
-    const val = (k) => (f.get(k) || "").toString().trim() || null;
-    btn.disabled = true; $("submit-msg").className = "msg"; $("submit-msg").textContent = "Sending…";
-    const { error } = await db.from("submissions").insert({
-      city: key(val("city")), venue: val("venue"), address: val("address"), title: val("title"),
-      category: val("category"), start: val("start") ? new Date(val("start")).toISOString() : null,
-      deal: val("deal"), description: val("description"), url: val("url"), contact_email: val("contact_email"),
+  // Private manage link: venues.html?listing=<token>. Same form, prefilled, for edits and take-downs.
+  const token = new URLSearchParams(location.search).get("listing");
+  const form = $("submit");
+  const STATUS = {
+    pending: ["In review", "We'll look at it soon. Approved listings go on the map within minutes."],
+    approved: ["Live on the map", "Riders can see it now. Editing sends it back to review."],
+    rejected: ["Not approved", ""],
+    withdrawn: ["Taken down", "This listing is off the map. Submit a new one any time."],
+  };
+  const manageLink = (t) => `${location.origin}${location.pathname}?listing=${t}`;
+
+  async function loadListing() {
+    const { data } = await db.rpc("get_listing", { p_token: token });
+    const l = data?.[0];
+    $("submit-h").textContent = l ? "Your listing" : "Listing not found";
+    if (!l) { form.hidden = true; return; }
+    const [label, hint] = STATUS[l.status] ?? [l.status, ""];
+    const live = l.status === "approved" && !l.live ? "Approved, going on the map in a few minutes." : hint;
+    $("submit-note").innerHTML = `<span class="badge ${l.status}">${esc(label)}</span> ${esc(l.review_note ? `Reviewer's note: ${l.review_note}` : live)}`;
+    for (const [k, v] of Object.entries({ city: l.city.replace(/\b\w/g, (c) => c.toUpperCase()).replace(/, (\w+)$/, (m, st) => `, ${st.toUpperCase()}`),
+      venue: l.venue, address: l.address, title: l.title, category: l.category, deal: l.deal, description: l.description,
+      url: l.url, contact_email: "on file" })) {
+      if (form.elements[k]) form.elements[k].value = v ?? "";
+    }
+    if (l.start) { const d = new Date(l.start); form.elements.start.value = new Date(d - d.getTimezoneOffset() * 6e4).toISOString().slice(0, 16); }
+    for (const k of ["city", "venue", "contact_email"]) form.elements[k].disabled = true;
+    form.querySelector("button[type=submit]").textContent = "Save changes";
+    $("withdraw").hidden = l.status === "withdrawn";
+    form.querySelectorAll("input, select, textarea, button").forEach((el) => { if (l.status === "withdrawn") el.disabled = true; });
+  }
+  if (token) {
+    document.getElementById("submit-sec").scrollIntoView();
+    loadListing();
+    $("withdraw").addEventListener("click", async () => {
+      $("withdraw").disabled = true;
+      const { error } = await db.rpc("withdraw_listing", { p_token: token });
+      $("withdraw").disabled = false;
+      if (error) { $("submit-msg").className = "msg err"; $("submit-msg").textContent = error.message; return; }
+      $("submit-msg").className = "msg ok"; $("submit-msg").textContent = "Taken down. It's off the map.";
+      loadListing();
     });
+  }
+
+  form.addEventListener("submit", async (ev) => {
+    ev.preventDefault();
+    const f = new FormData(ev.target), btn = ev.target.querySelector("button[type=submit]");
+    const val = (k) => (f.get(k) || "").toString().trim() || null;
+    const start = val("start") ? new Date(val("start")).toISOString() : null;
+    btn.disabled = true; $("submit-msg").className = "msg"; $("submit-msg").textContent = "Sending…";
+    const { data, error } = token
+      ? await db.rpc("update_listing", { p_token: token, p_address: val("address"), p_title: val("title"), p_category: val("category"),
+          p_start: start, p_deal: val("deal") ?? "", p_description: val("description") ?? "", p_url: val("url") ?? "" })
+      : await db.rpc("submit_listing", { p_city: val("city"), p_venue: val("venue"), p_address: val("address"), p_title: val("title"),
+          p_category: val("category"), p_start: start, p_deal: val("deal") ?? "", p_description: val("description") ?? "",
+          p_url: val("url") ?? "", p_contact_email: val("contact_email") });
     btn.disabled = false;
-    if (error) { $("submit-msg").className = "msg err"; $("submit-msg").textContent = "That didn't go through. Check the fields and try again."; return; }
+    if (error) {
+      $("submit-msg").className = "msg err";
+      $("submit-msg").textContent = error.code === "P0001" ? error.message : "That didn't go through. Check the fields and try again.";
+      return;
+    }
+    if (token) {
+      $("submit-msg").className = "msg ok"; $("submit-msg").textContent = "Saved. It's back in review and returns to the map once approved.";
+      return loadListing();
+    }
     ev.target.reset();
-    $("submit-msg").className = "msg ok"; $("submit-msg").textContent = "Thanks. Once it's approved, it goes on the map within a few minutes.";
+    const link = manageLink(data);
+    $("submit-msg").className = "msg ok";
+    $("submit-msg").innerHTML = `Thanks, it's in review. Approved listings go on the map within minutes.
+      <span class="manage">Save your private link to check status, edit, or take it down:
+      <a href="${esc(link)}">${esc(link)}</a> <button type="button" class="copy" id="copy">Copy link</button></span>`;
+    $("copy").addEventListener("click", () => navigator.clipboard?.writeText(link).then(() => { $("copy").textContent = "Copied"; }));
   });
 </script>
 </body>
