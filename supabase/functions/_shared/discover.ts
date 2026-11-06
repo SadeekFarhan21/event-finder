@@ -151,7 +151,7 @@ export async function discover(city: string, { exa, geo, log = () => {}, deadlin
       title: cleanTitle(e.title!, e.venue!),
       venue: cleanVenue(e.venue!),
       address: e.address!,
-      start: validDate(e.start),
+      start: validDate(e.start, city),
       category: CATEGORIES.includes(e.category as Category) ? (e.category as Category) : "community",
       price: e.price || null,
       deal: e.deal || null,
@@ -211,7 +211,28 @@ export function km(a: { lat: number; lng: number }, b: { lat: number; lng: numbe
 
 const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
 const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 80);
-const validDate = (s?: string) => (s && !Number.isNaN(Date.parse(s)) ? new Date(s).toISOString() : null);
+// "2026-11-07T22:00:00" with no offset would be read in the server's zone (UTC on Supabase),
+// turning a 10pm party into 5pm. Bare times are wall-clock times in the city, so read them there.
+const CITY_TZ: [RegExp, string][] = [[/new york/i, "America/New_York"], [/los angeles/i, "America/Los_Angeles"], [/san francisco/i, "America/Los_Angeles"]];
+
+export function validDate(s: string | undefined, city: string) {
+  if (!s || Number.isNaN(Date.parse(s))) return null;
+  const tz = CITY_TZ.find(([re]) => re.test(city))?.[1];
+  if (!tz || /T\d\d:\d\d/.test(s) === false || /(Z|[+-]\d\d:?\d\d)$/.test(s)) return new Date(s).toISOString();
+  // Treat it as UTC, then shift by the city's UTC offset at that moment.
+  const asUtc = new Date(s.replace(/(\.\d+)?$/, "") + "Z");
+  const offsetMin = tzOffsetMinutes(asUtc, tz);
+  return new Date(asUtc.getTime() - offsetMin * 60_000).toISOString();
+}
+
+// Minutes the zone is ahead of UTC at `at` (New York in November: -300).
+function tzOffsetMinutes(at: Date, timeZone: string) {
+  const p = Object.fromEntries(new Intl.DateTimeFormat("en-US", {
+    timeZone, hourCycle: "h23", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit",
+  }).formatToParts(at).map((x) => [x.type, x.value]));
+  const local = Date.UTC(+p.year, +p.month - 1, +p.day, +p.hour, +p.minute, +p.second);
+  return Math.round((local - at.getTime()) / 60_000);
+}
 
 // --- Geocoding (OpenStreetMap Nominatim: free, 1 req/sec; results cached by the host) ---
 let lastGeo = 0;
