@@ -176,7 +176,8 @@ export function ScoutScreen() {
         locations={[0, 0.45, 1]} style={[s.bottomFade, { height: CAROUSEL_BOTTOM + CARD_H + 72 }]} />
 
       <SearchHeader city={cityInput} onCityChange={setCityInput} onSubmitCity={open}
-        onScout={runScout} scouting={scouting} scoutable={scoutable} filter={filter} onFilter={pickFilter} />
+        onScout={runScout} scouting={scouting} scoutable={scoutable} filter={filter} onFilter={pickFilter}
+        onRooms={() => { Haptics.selectionAsync(); setRoomsOpen(true); }} />
 
       <OfflineBanner top={insets.top} />
       <Toast text={toast.text} visible={toast.visible} />
@@ -194,10 +195,6 @@ export function ScoutScreen() {
                 <Text style={[s.roomsText, liveCrews.length > 0 && s.crewsOnText]}>Crews{liveCrews.length ? `  ·  ${liveCrews.length}` : ""}</Text>
               </Tap>
             )}
-            <Tap hitSlop={4} style={s.rooms} onPress={() => { Haptics.selectionAsync(); setRoomsOpen(true); }}>
-              <Ionicons name="business-outline" size={14} color={C.ink} />
-              <Text style={s.roomsText}>Rooms for Yelo nights{leads.length ? `  ·  ${leads.length}` : ""}</Text>
-            </Tap>
           </Animated.View>
           <SpotCarousel ref={carousel} spots={shown} going={going} activeId={active?.id ?? null}
             onSettle={(e) => { Haptics.selectionAsync(); focus(e); }}

@@ -5,9 +5,10 @@ import type { Category, Spot } from "./types";
 
 export type Filter = Category | "all" | "tonight";
 
-export const FILTERS: Filter[] = ["all", "tonight", ...(Object.keys(CATEGORY) as Category[])];
+// Five, all on screen at once: when, then the three things people go out for.
+export const FILTERS: Filter[] = ["tonight", "all", "music", "nightlife", "deal"];
 
-export const filterLabel = (f: Filter) => (f === "all" ? "All" : f === "tonight" ? "Tonight" : CATEGORY[f].label);
+export const filterLabel = (f: Filter) => (f === "all" ? "This week" : f === "tonight" ? "Tonight" : f === "music" ? "Music" : CATEGORY[f].label);
 
 // "Tonight" = dated events from now until 6am, plus standing deals (happy hours run every day).
 export function matches(e: Spot, f: Filter) {

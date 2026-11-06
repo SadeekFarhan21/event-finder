@@ -1,7 +1,6 @@
-// Top of the map: city search, the Scout button, Yelo-city suggestions, and filter chips.
+// Top of the map: the city as a title (with a city menu), the Rooms shortcut, and five filters.
 import { useState } from "react";
-import { ActivityIndicator, Keyboard, Platform, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
-import { BlurView } from "expo-blur";
+import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -23,16 +22,19 @@ type Props = {
   scoutable: boolean;
   filter: Filter;
   onFilter: (f: Filter) => void;
+  onRooms: () => void; // Yelo's partner-team view, kept out of the rider's way
 };
 
-export function SearchHeader({ city, onCityChange, onSubmitCity, onScout, scouting, scoutable, filter, onFilter }: Props) {
-  const [editing, setEditing] = useState(false);
+// The city is the title. Tapping it opens a short menu: Yelo's cities, and (rarely needed)
+// running the agent again. Filters sit under it: five, all visible.
+export function SearchHeader({ city, onCityChange, onSubmitCity, onScout, scouting, scoutable, filter, onFilter, onRooms }: Props) {
+  const [open, setOpen] = useState(false);
   const insets = useSafeAreaInsets();
+  const name = city.split(",")[0];
 
   const pickCity = (c: string) => {
     onCityChange(c);
-    setEditing(false);
-    Keyboard.dismiss();
+    setOpen(false);
     onSubmitCity(c);
   };
 
@@ -43,34 +45,40 @@ export function SearchHeader({ city, onCityChange, onSubmitCity, onScout, scouti
         locations={[0, 0.55, 1]} style={[s.fade, { height: insets.top + HEADER_GAP + HEADER_H + 26 }]} />
       <View style={[s.top, { paddingTop: insets.top + HEADER_GAP }]}>
         <View style={s.row}>
-          <Glass style={s.search}>
-            <Ionicons name="location-outline" size={18} color={C.ink2} />
-            <TextInput selectionColor={C.selection} cursorColor={C.accent} value={city} onChangeText={onCityChange} onSubmitEditing={() => onSubmitCity(city)} placeholder="Search a city"
-              placeholderTextColor={C.placeholder} style={s.input} returnKeyType="search" selectTextOnFocus
-              onFocus={() => setEditing(true)} onBlur={() => setEditing(false)} />
-          </Glass>
-          <Tap onPress={onScout} disabled={scouting || !scoutable} style={[s.scout, !scoutable && { opacity: 0.4 }]}
-            accessibilityLabel={scouting ? "Scouting this city" : "Scout this city"} accessibilityState={{ busy: scouting, disabled: scouting || !scoutable }}>
-            {scouting ? <ActivityIndicator color={C.ink} size="small" /> : <Text style={s.scoutText}>Scout</Text>}
+          <Tap pressedScale={0.98} onPress={() => setOpen((o) => !o)} style={s.cityBtn} hitSlop={8}
+            accessibilityLabel={`City: ${name}. Change city`} accessibilityState={{ expanded: open }}>
+            <Text style={s.city} numberOfLines={1}>{name}</Text>
+            {scouting ? <ActivityIndicator color={C.ink3} size="small" />
+              : <Ionicons name={open ? "chevron-up" : "chevron-down"} size={18} color={C.ink3} style={{ marginTop: 6 }} />}
+          </Tap>
+          <Tap onPress={onRooms} style={s.iconBtn} accessibilityLabel="Rooms for Yelo nights (partner team)">
+            <Ionicons name="business-outline" size={18} color={C.ink2} />
           </Tap>
         </View>
 
-        {editing && (
-          <Animated.View entering={FadeIn.duration(160)} exiting={FadeOut.duration(120)} style={s.suggest}>
+        {open && (
+          <Animated.View entering={FadeIn.duration(160)} exiting={FadeOut.duration(120)} style={s.menu}>
             {CITIES.map((c) => (
-              <Tap key={c} pressedScale={0.99} style={s.suggestRow} onPress={() => pickCity(c)}>
-                <Ionicons name="navigate-outline" size={16} color={C.ink2} />
-                <Text style={s.suggestText}>{c}</Text>
-                <Text style={s.suggestHint}>Yelo city</Text>
+              <Tap key={c} pressedScale={0.99} style={s.menuRow} onPress={() => pickCity(c)} accessibilityState={{ selected: c === city }}>
+                <Text style={[s.menuText, c === city && { color: C.ink }]}>{c.split(",")[0]}</Text>
+                {c === city && <Ionicons name="checkmark" size={18} color={C.accent} />}
               </Tap>
             ))}
+            {scoutable && (
+              <Tap pressedScale={0.99} style={[s.menuRow, s.menuDivider]} disabled={scouting}
+                onPress={() => { setOpen(false); onScout(); }} accessibilityLabel={`Search the web again for ${name}`}>
+                <Ionicons name="refresh" size={16} color={C.ink3} />
+                <Text style={[s.menuText, { flex: 1 }]}>{scouting ? "Searching…" : `Look for new spots in ${name}`}</Text>
+                <Text style={s.menuHint}>~2 min</Text>
+              </Tap>
+            )}
           </Animated.View>
         )}
 
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.chips}>
           {FILTERS.map((k) => (
             <Tap key={k} onPress={() => onFilter(k)} hitSlop={{ top: 6, bottom: 6 }} style={[s.chip, filter === k && s.chipOn]}
-              accessibilityState={{ selected: filter === k }}>
+              accessibilityRole="tab" accessibilityState={{ selected: filter === k }}>
               <Text style={[s.chipText, filter === k && s.chipTextOn]}>{filterLabel(k)}</Text>
             </Tap>
           ))}
@@ -80,29 +88,24 @@ export function SearchHeader({ city, onCityChange, onSubmitCity, onScout, scouti
   );
 }
 
-// Frosted glass on iOS; Android's blur is costly on older devices, so it gets a solid surface.
-function Glass({ style, children }: { style: object; children: React.ReactNode }) {
-  if (Platform.OS !== "ios") return <View style={[style, { backgroundColor: C.surface }]}>{children}</View>;
-  return <BlurView intensity={60} tint="systemChromeMaterialDark" style={[style, { overflow: "hidden" }]}>{children}</BlurView>;
-}
-
 const s = StyleSheet.create({
   fade: { position: "absolute", top: 0, left: 0, right: 0 },
   top: { position: "absolute", top: 0, left: 0, right: 0 },
-  row: { flexDirection: "row", gap: 8, paddingHorizontal: 16 },
-  search: { flex: 1, flexDirection: "row", alignItems: "center", gap: 8, height: 48, paddingHorizontal: 16, borderRadius: R.pill,
-    borderWidth: StyleSheet.hairlineWidth, borderColor: C.hairline, ...shadow },
-  input: { flex: 1, fontFamily: F.medium, fontSize: T.body, color: C.ink },
-  scout: { height: 48, paddingHorizontal: 20, borderRadius: R.pill, backgroundColor: C.d3, borderWidth: StyleSheet.hairlineWidth, borderColor: C.d4, alignItems: "center", justifyContent: "center", ...shadow },
-  scoutText: { fontFamily: F.semibold, fontSize: T.body, color: C.ink },
-  suggest: { marginHorizontal: 16, marginTop: 8, backgroundColor: C.surface, borderRadius: R.md, paddingVertical: 8, ...shadow },
-  suggestRow: { flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 16, paddingVertical: 12 },
-  suggestText: { flex: 1, fontFamily: F.medium, fontSize: T.body, color: C.ink },
-  suggestHint: { fontFamily: F.regular, fontSize: T.meta, color: C.ink3 },
+  row: { flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 20, height: 48 },
+  cityBtn: { flex: 1, flexDirection: "row", alignItems: "center", gap: 6 },
+  city: { flexShrink: 1, fontFamily: F.display, fontSize: 36, lineHeight: 44, color: C.ink },
+  iconBtn: { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center",
+    backgroundColor: "rgba(21,21,19,0.75)", borderWidth: StyleSheet.hairlineWidth, borderColor: C.d4 },
+  menu: { marginHorizontal: 16, marginTop: 4, backgroundColor: C.surface, borderRadius: R.md, paddingVertical: 4,
+    borderWidth: StyleSheet.hairlineWidth, borderColor: C.d4, ...shadow },
+  menuRow: { flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 16, minHeight: 48 },
+  menuDivider: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: C.hairline },
+  menuText: { fontFamily: F.medium, fontSize: T.body, color: C.ink2, flex: 1 },
+  menuHint: { fontFamily: F.regular, fontSize: T.meta, color: C.ink3 },
   chips: { gap: 8, paddingHorizontal: 16, paddingTop: 12, paddingBottom: 8 },
-  chip: { height: 32, paddingHorizontal: 12, justifyContent: "center", borderRadius: R.pill, backgroundColor: C.surface,
-    borderWidth: StyleSheet.hairlineWidth, borderColor: C.hairline },
+  chip: { height: 32, paddingHorizontal: 14, justifyContent: "center", borderRadius: R.pill, backgroundColor: "rgba(21,21,19,0.75)",
+    borderWidth: StyleSheet.hairlineWidth, borderColor: C.d4 },
   chipOn: { backgroundColor: C.ink, borderColor: C.ink },
-  chipText: { fontFamily: F.medium, fontSize: T.small, color: C.ink },
-  chipTextOn: { color: C.surface },
+  chipText: { fontFamily: F.medium, fontSize: T.small, color: C.ink2 },
+  chipTextOn: { color: C.bg },
 });
