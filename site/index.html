@@ -26,84 +26,80 @@
     --yellow: #FFE600;
     --on-yellow: #1A1814;
     --blue: #1F4FFF;
-    --shadow: 0 10px 30px rgba(27, 26, 20, 0.08);
     --display: "Instrument Serif", "Iowan Old Style", Georgia, serif;
     --body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
       --bg: #121210; --surface: #1C1C19; --ink: #F4F2EA; --ink-2: #B9B5A9; --ink-3: #85817A;
-      --line: #2E2D28; --blue: #7F9BFF; --shadow: 0 10px 30px rgba(0, 0, 0, 0.35); color-scheme: dark;
+      --line: #2E2D28; --blue: #7F9BFF; color-scheme: dark;
     }
   }
   :root[data-theme="dark"] {
     --bg: #121210; --surface: #1C1C19; --ink: #F4F2EA; --ink-2: #B9B5A9; --ink-3: #85817A;
-    --line: #2E2D28; --blue: #7F9BFF; --shadow: 0 10px 30px rgba(0, 0, 0, 0.35); color-scheme: dark;
+    --line: #2E2D28; --blue: #7F9BFF; color-scheme: dark;
   }
 
+  /* Type: 13 / 15 / 16 / 18 body sizes, two display sizes. Spacing: 4/8/12/16/24/32/48/64. Hairline borders, no shadows. */
   body { background: var(--bg); color: var(--ink); font: 400 16px/1.55 var(--body); }
-  .wrap { max-width: 1060px; margin: 0 auto; padding-inline: 20px; padding-block: 28px 64px; }
+  .wrap { max-width: 1060px; margin: 0 auto; padding-inline: 16px; padding-block: 24px 64px; }
   a { color: inherit; }
   :focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; border-radius: 6px; }
 
   header { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
-  .mark { display: flex; align-items: center; gap: 10px; font: 600 15px var(--body); }
-  .mark i { width: 30px; height: 30px; border-radius: 9px; background: var(--yellow); color: var(--on-yellow);
-    display: grid; place-items: center; font: 400 22px/1 var(--display); font-style: normal; }
-  .badge { font-size: 12px; color: var(--ink-2); border: 1px solid var(--line); border-radius: 999px; padding: 5px 11px; }
+  .mark { display: flex; align-items: center; gap: 8px; font: 600 15px var(--body); }
+  .mark i { width: 28px; height: 28px; border-radius: 8px; background: var(--yellow); color: var(--on-yellow);
+    display: grid; place-items: center; font: 400 20px/1 var(--display); font-style: normal; }
+  .badge { font-size: 13px; color: var(--ink-3); }
 
   .hero { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr); gap: 48px; align-items: center; margin-top: 48px; }
-  .eyebrow { font-size: 13px; letter-spacing: 0.04em; color: var(--ink-3); }
-  h1 { font: 400 clamp(46px, 7vw, 84px)/0.98 var(--display); letter-spacing: -0.015em; margin: 10px 0 0; text-wrap: balance; }
-  h1 em { color: var(--blue); }
-  .lede { color: var(--ink-2); font-size: 18px; max-width: 34em; margin: 20px 0 0; }
+  .eyebrow { font-size: 13px; color: var(--ink-3); }
+  h1 { font: 400 clamp(44px, 7vw, 80px)/1 var(--display); letter-spacing: -0.015em; margin: 8px 0 0; text-wrap: balance; }
+  h1 em { color: inherit; }
+  .lede { color: var(--ink-2); font-size: 18px; max-width: 34em; margin: 16px 0 0; }
 
-  .get { display: flex; flex-wrap: wrap; gap: 18px; align-items: center; margin-top: 30px; }
-  .btn { display: inline-flex; align-items: center; gap: 10px; background: var(--yellow); color: var(--on-yellow);
-    text-decoration: none; font: 600 17px var(--body); padding: 16px 26px; border-radius: 999px; box-shadow: var(--shadow);
-    transition: transform .15s ease; }
-  .btn:hover { transform: translateY(-1px); }
+  .get { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; margin-top: 32px; }
+  .btn { display: inline-flex; align-items: center; gap: 8px; min-height: 48px; background: var(--yellow); color: var(--on-yellow);
+    text-decoration: none; font: 600 16px var(--body); padding: 12px 24px; border-radius: 999px; }
+  .btn:hover { background: #F5DC00; }
   .btn svg { width: 20px; height: 20px; }
-  .meta { font-size: 13px; color: var(--ink-3); display: grid; gap: 2px; }
+  .meta { font-size: 13px; color: var(--ink-3); display: grid; gap: 4px; }
   .meta a { color: var(--ink-2); }
 
-  .qr { display: flex; align-items: center; gap: 14px; margin-top: 26px; }
-  .qr-box { background: #FFFFFF; padding: 9px; border-radius: 14px; border: 1px solid var(--line); width: 112px; height: 112px; flex: none; }
+  .qr { display: flex; align-items: center; gap: 16px; margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--line); }
+  .qr-box { background: #FFFFFF; padding: 8px; border-radius: 8px; border: 1px solid var(--line); width: 104px; height: 104px; flex: none; }
   .qr-box img, .qr-box canvas { width: 100% !important; height: 100% !important; display: block; }
-  .qr p { margin: 0; font-size: 14px; color: var(--ink-2); max-width: 22em; }
+  .qr p { margin: 0; font-size: 15px; color: var(--ink-2); max-width: 22em; }
 
-  .phone { justify-self: center; width: min(300px, 78vw); border-radius: 38px; padding: 9px; background: #0E0E0D;
-    box-shadow: 0 30px 60px rgba(27, 26, 20, 0.18); }
-  .phone img { display: block; width: 100%; border-radius: 30px; }
+  .phone { justify-self: center; width: min(300px, 78vw); border-radius: 36px; padding: 8px; background: #0E0E0D; }
+  .phone img { display: block; width: 100%; border-radius: 28px; }
 
-  h2 { font: 400 clamp(32px, 4.5vw, 44px)/1.05 var(--display); margin: 0; text-wrap: balance; }
-  section { margin-top: 84px; }
-  .section-head { display: flex; justify-content: space-between; align-items: end; gap: 16px; flex-wrap: wrap; margin-bottom: 22px; }
-  .section-head p { margin: 0; color: var(--ink-2); max-width: 30em; }
+  h2 { font: 400 clamp(32px, 4vw, 40px)/1.1 var(--display); margin: 0; text-wrap: balance; }
+  section { margin-top: 64px; }
+  .section-head { display: grid; gap: 8px; margin-bottom: 24px; }
+  .section-head p { margin: 0; color: var(--ink-2); max-width: 60ch; }
 
   .screens { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
-  figure { margin: 0; display: grid; gap: 10px; min-width: 0; }
-  figure img { width: 100%; border-radius: 18px; border: 1px solid var(--line); box-shadow: var(--shadow); }
-  figcaption { font-size: 14px; color: var(--ink-2); }
+  figure { margin: 0; display: grid; gap: 12px; align-content: start; min-width: 0; }
+  figure img { width: 100%; border-radius: 12px; border: 1px solid var(--line); }
+  figcaption { font-size: 15px; color: var(--ink-2); }
   figcaption b { display: block; color: var(--ink); font-weight: 600; }
 
-  .steps { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; counter-reset: s; }
-  .steps li { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 20px; counter-increment: s; min-width: 0; }
-  .steps li::before { content: counter(s); font: 400 34px/1 var(--display); color: var(--ink-3); display: block; margin-bottom: 10px; }
-  .steps b { display: block; font-weight: 600; margin-bottom: 4px; }
+  .steps { list-style: none; padding: 0; margin: 0; max-width: 680px; border-top: 1px solid var(--line); counter-reset: s; }
+  .steps li { display: grid; grid-template-columns: 32px minmax(0, 1fr); column-gap: 12px; padding: 16px 0; border-bottom: 1px solid var(--line); counter-increment: s; }
+  .steps li::before { content: counter(s); grid-row: span 2; font: 600 16px/1.55 var(--body); color: var(--ink-3); font-variant-numeric: tabular-nums; }
+  .steps b { font-weight: 600; }
   .steps span { color: var(--ink-2); font-size: 15px; }
 
-  .note { margin-top: 16px; font-size: 14px; color: var(--ink-2); }
-  footer { margin-top: 72px; padding-top: 20px; border-top: 1px solid var(--line); font-size: 13px; color: var(--ink-3);
-    display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 20px; }
+  .note { margin: 16px 0 0; font-size: 15px; color: var(--ink-2); max-width: 65ch; }
+  footer { margin-top: 64px; padding-top: 16px; border-top: 1px solid var(--line); font-size: 13px; color: var(--ink-3);
+    display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 24px; }
   .num { font-variant-numeric: tabular-nums; }
 
   @media (max-width: 860px) {
-    .hero { grid-template-columns: minmax(0, 1fr); gap: 36px; margin-top: 32px; }
+    .hero { grid-template-columns: minmax(0, 1fr); gap: 32px; margin-top: 32px; }
     .screens { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .steps { grid-template-columns: minmax(0, 1fr); }
   }
-  @media (prefers-reduced-motion: reduce) { .btn { transition: none; } }
 </style>
 </head>
 <body>
