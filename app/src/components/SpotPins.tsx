@@ -47,7 +47,7 @@ export function SpotPins({ clusters, active, onSpot, onCluster, onActive }: Prop
 // Busier clusters read bigger, so the map shows where the night is at a glance:
 // 2 spots -> 30px, ~8 -> 38px, 25+ -> 44px.
 const clusterSize = (n: number) => {
-  const d = Math.round(26 + Math.min(18, Math.log2(n) * 4));
+  const d = Math.round(24 + Math.min(14, Math.log2(n) * 3));
   return { minWidth: d, height: d, borderRadius: d / 2 };
 };
 
@@ -57,6 +57,6 @@ const s = StyleSheet.create({
   pinActive: { width: 42, height: 42, borderRadius: 21, backgroundColor: C.accent, borderWidth: 3, borderColor: C.bg, alignItems: "center", justifyContent: "center", ...shadow },
   label: { marginTop: 4, paddingHorizontal: 8, paddingVertical: 4, borderRadius: R.pill, backgroundColor: C.surface, maxWidth: 180, ...shadow },
   labelText: { fontFamily: F.semibold, fontSize: T.meta, color: C.ink },
-  cluster: { paddingHorizontal: 8, backgroundColor: C.surface, borderWidth: 1.5, borderColor: C.ink2, alignItems: "center", justifyContent: "center", ...shadow },
-  clusterText: { fontFamily: F.semibold, fontSize: T.small, color: C.ink },
+  cluster: { paddingHorizontal: 6, backgroundColor: "rgba(21,21,19,0.82)", borderWidth: 1, borderColor: C.d4, alignItems: "center", justifyContent: "center", ...shadow },
+  clusterText: { fontFamily: F.medium, fontSize: 12, color: C.ink2 },
 });

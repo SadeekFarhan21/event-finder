@@ -31,11 +31,13 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Tap } from "../components/Tap";
 import { RoomsScreen } from "./RoomsScreen";
 import { CrewsScreen } from "./CrewsScreen";
-import { CARD_H, CARD_INSET, CAROUSEL_BOTTOM } from "../layout";
+import { CARD_H, CARD_INSET, CAROUSEL_BOTTOM, HEADER_GAP, HEADER_H } from "../layout";
 import { color as C, font as F, radius as R, shadow, text as T } from "../theme";
 
 // Share of the map height covered by the bottom pills + cards.
 const BOTTOM_BAND = (CAROUSEL_BOTTOM + CARD_H + 56) / Dimensions.get("window").height;
+// ...and by the header (status bar + city title + chips).
+const TOP_BAND = (HEADER_GAP + HEADER_H + 40) / Dimensions.get("window").height;
 
 const START: Region = { latitude: 40.728, longitude: -73.99, latitudeDelta: 0.09, longitudeDelta: 0.09 };
 const FIT_PADDING = { top: 200, right: 40, bottom: 220, left: 40 };
@@ -82,8 +84,9 @@ export function ScoutScreen() {
     const rest = shown.filter((e) => e.id !== active?.id);
     const partners = rest.filter((e) => e.partner).map((e) => ({ key: e.id, lat: e.lat, lng: e.lng, events: [e] }));
     // Pins that would land behind the bottom pills and cards are noise: hide them (the cards list them anyway).
-    const band = region.latitude - region.latitudeDelta / 2 + region.latitudeDelta * BOTTOM_BAND;
-    return [...clusterEvents(rest.filter((e) => !e.partner), region), ...partners].filter((c) => c.lat > band);
+    const south = region.latitude - region.latitudeDelta / 2, north = region.latitude + region.latitudeDelta / 2;
+    const low = south + region.latitudeDelta * BOTTOM_BAND, high = north - region.latitudeDelta * TOP_BAND;
+    return [...clusterEvents(rest.filter((e) => !e.partner), region), ...partners].filter((c) => c.lat > low && c.lat < high);
   }, [shown, active, region]);
 
   const fit = useCallback((list: Spot[]) => {
