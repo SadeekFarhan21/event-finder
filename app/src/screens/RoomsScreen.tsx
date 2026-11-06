@@ -69,7 +69,7 @@ export function RoomsScreen({ visible, city, leads, setLeads, canSearch, onClose
             <View style={s.item}>
               <View style={{ flex: 1, minWidth: 0 }}>
                 <Text style={s.name} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75}>{l.venue}</Text>
-                <Text style={s.meta} numberOfLines={1}>{[l.area, l.kind].filter(Boolean).join("  ·  ")}</Text>
+                <Text style={s.meta} numberOfLines={1}>{[l.area, l.kind && l.kind.charAt(0).toUpperCase() + l.kind.slice(1)].filter(Boolean).join("  ·  ")}</Text>
                 <Text style={s.fit} numberOfLines={2}>{l.fit}</Text>
                 {(l.quietNight || l.capacity) && (
                   <Text style={s.facts} numberOfLines={1}>
