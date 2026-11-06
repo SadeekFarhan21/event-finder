@@ -14,16 +14,17 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&display=swap">
 <style>
+  /* Five colors: warm neutral ramp (n50 bg, n900 ink, n700/n600 secondary text at AA contrast), Yelo yellow, Yelo blue. */
   /* Layout: a two-column hero (pitch + download | phone), then a strip of real screens, then install steps. */
   :root {
-    --bg: #FAF8F2;
+    --bg: #FBFAF6;
     --surface: #FFFFFF;
-    --ink: #111111;
-    --ink-2: #5E5B53;
-    --ink-3: #8F8B80;
-    --line: #E8E4D8;
+    --ink: #1A1814;
+    --ink-2: #4F4B42;
+    --ink-3: #6B665A;
+    --line: #E8E5D9;
     --yellow: #FFE600;
-    --on-yellow: #111111;
+    --on-yellow: #1A1814;
     --blue: #1F4FFF;
     --shadow: 0 10px 30px rgba(27, 26, 20, 0.08);
     --display: "Instrument Serif", "Iowan Old Style", Georgia, serif;
@@ -110,7 +111,7 @@
 <div class="wrap">
   <header>
     <div class="mark"><i>s</i> Scout</div>
-    <span class="badge">Android · v1.0.0 · Nov 5, 2026</span>
+    <span class="badge">Android · v1.0.0 · Nov 6, 2026</span>
   </header>
 
   <div class="hero">
@@ -123,13 +124,13 @@
       </p>
 
       <div class="get">
-        <a class="btn" href="https://expo.dev/artifacts/eas/yfdt3rsoRpMQjLk-2_BtBJ7wKW5BLUQUpYu3iSkr5vc.apk" target="_blank" rel="noopener">
+        <a class="btn" href="https://expo.dev/artifacts/eas/jY9OECo4Vf0LrCy2sXdZDAzzUKl1P7FMHZ9zcy83ci0.apk" target="_blank" rel="noopener">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11"/><path d="m7 10 5 5 5-5"/><path d="M5 20h14"/></svg>
           Download for Android
         </a>
         <div class="meta">
           <span>APK, installs directly. No Play Store needed.</span>
-          <a href="https://expo.dev/accounts/fsadeek/projects/scout/builds/9916d6b7-8922-4a47-bce6-f492f78644a5" target="_blank" rel="noopener">Or open the install page</a>
+          <a href="https://expo.dev/accounts/fsadeek/projects/scout/builds/3559252a-0eac-480e-9ca9-5e743291c993" target="_blank" rel="noopener">Or open the install page</a>
         </div>
       </div>
 
@@ -174,7 +175,7 @@
 
   <footer>
     <span>Scout is an independent prototype. It is not an official Yelo app.</span>
-    <span class="num">Build 1 · Expo SDK 58 · data refreshed daily</span>
+    <span class="num">Build 2 · Expo SDK 58 · data refreshed daily</span>
   </footer>
 </div>
 
@@ -182,7 +183,7 @@
 <script>
   try {
     new QRCode(document.getElementById("qr"), {
-      text: "https://expo.dev/artifacts/eas/yfdt3rsoRpMQjLk-2_BtBJ7wKW5BLUQUpYu3iSkr5vc.apk",
+      text: "https://expo.dev/artifacts/eas/jY9OECo4Vf0LrCy2sXdZDAzzUKl1P7FMHZ9zcy83ci0.apk",
       width: 256, height: 256, colorDark: "#111111", colorLight: "#FFFFFF",
       correctLevel: QRCode.CorrectLevel.M,
     });
