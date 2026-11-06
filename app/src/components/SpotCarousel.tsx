@@ -9,7 +9,7 @@ import Animated, {
   Extrapolation, FadeInDown, interpolate, useAnimatedRef, useAnimatedScrollHandler, useAnimatedStyle, useSharedValue,
   type SharedValue,
 } from "react-native-reanimated";
-import { whenLabel } from "../lib/time";
+import { clock, isRecurring, whenLabel } from "../lib/time";
 import type { Spot } from "../lib/types";
 import { CARD_GAP, CARD_INSET, CARD_STEP, CARD_W, CAROUSEL_BOTTOM, MEDIA_H } from "../layout";
 import { CATEGORY, color as C, font as F, radius as R, shadow, text as T } from "../theme";
@@ -53,6 +53,10 @@ export function SpotCarousel({ ref, spots, going, activeId, onSettle, onPress, o
   );
 }
 
+// "10 PM" / "Tonight"; standing deals read "Happy hour" / "Every night".
+const bigTime = (e: Spot) => (isRecurring(e) || !e.start ? (/happy hour/i.test(`${e.title} ${e.deal ?? ""}`) ? "Happy hour" : "Any night") : clock(new Date(e.start)));
+const bigDay = (e: Spot) => (isRecurring(e) || !e.start ? "This week" : whenLabel(e).split(" · ")[0]);
+
 // Photo first: the place, then when, then who's going and the ride. Most listings have no photo
 // (the web rarely has a good one), so the fallback is a designed panel, not an empty box.
 function Card({ spot: e, going, index, x, onPress, onRide }: {
@@ -68,16 +72,28 @@ function Card({ spot: e, going, index, x, onPress, onRide }: {
   return (
     <Animated.View style={style}>
       <Tap onPress={onPress} pressedScale={0.985} style={s.card}>
-        <View style={s.media}>
-          {e.image
-            ? <Image source={e.image} style={StyleSheet.absoluteFill} contentFit="cover" transition={250} />
-            : <View style={s.noPhoto}><Ionicons name={CATEGORY[e.category].icon} size={56} color={C.d4} /></View>}
-          <LinearGradient pointerEvents="none" colors={["rgba(0,0,0,0.0)", "rgba(0,0,0,0.55)"]} style={s.shade} />
-          <View style={s.chips}>
-            <View style={s.when}><Text style={s.whenText} numberOfLines={1}>{whenLabel(e)}</Text></View>
-            {e.partner && <View style={s.partner}><Text style={s.partnerText}>Yelo partner</Text></View>}
+        {e.image ? (
+          <View style={s.media}>
+            <Image source={e.image} style={StyleSheet.absoluteFill} contentFit="cover" transition={250} />
+            <LinearGradient pointerEvents="none" colors={["rgba(0,0,0,0.0)", "rgba(0,0,0,0.55)"]} style={s.shade} />
+            <View style={s.chips}>
+              <View style={s.when}><Text style={s.whenText} numberOfLines={1}>{whenLabel(e)}</Text></View>
+              {e.partner && <View style={s.partner}><Text style={s.partnerText}>Yelo partner</Text></View>}
+            </View>
           </View>
-        </View>
+        ) : (
+          // No photo: the time is the picture. Set large in the display face on a warm tonal band.
+          <LinearGradient colors={[C.d3, C.d1]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={[s.media, s.typeBand]}>
+            <View style={{ flex: 1 }}>
+              <Text style={s.bigTime} numberOfLines={1} adjustsFontSizeToFit>{bigTime(e)}</Text>
+              <Text style={s.bigDay} numberOfLines={1}>{bigDay(e)}</Text>
+            </View>
+            <View style={s.bandSide}>
+              {e.partner && <View style={s.partner}><Text style={s.partnerText}>Yelo partner</Text></View>}
+              <Ionicons name={CATEGORY[e.category].icon} size={22} color={C.ink3} style={{ marginTop: "auto" }} />
+            </View>
+          </LinearGradient>
+        )}
         <View style={s.body}>
           <Text style={s.title} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75}>{e.venue}</Text>
           <Text style={s.sub} numberOfLines={1}>
@@ -118,7 +134,10 @@ const s = StyleSheet.create({
   card: { width: CARD_W, backgroundColor: C.surface, borderRadius: R.lg, overflow: "hidden",
     borderWidth: StyleSheet.hairlineWidth, borderColor: C.d4, ...shadow },
   media: { height: MEDIA_H, backgroundColor: C.fill },
-  noPhoto: { position: "absolute", top: 0, right: 0, bottom: 0, left: 0, alignItems: "flex-end", justifyContent: "center", paddingRight: 24, backgroundColor: C.d2 },
+  typeBand: { flexDirection: "row", paddingHorizontal: 16, paddingTop: 12, paddingBottom: 12 },
+  bigTime: { fontFamily: F.display, fontSize: 52, lineHeight: 58, color: C.ink },
+  bigDay: { fontFamily: F.medium, fontSize: T.small, color: C.ink2, marginTop: -2 },
+  bandSide: { alignItems: "flex-end" },
   shade: { position: "absolute", left: 0, right: 0, bottom: 0, height: 56 },
   chips: { position: "absolute", left: 12, right: 12, top: 12, flexDirection: "row", justifyContent: "space-between", gap: 8 },
   when: { paddingHorizontal: 12, height: 28, borderRadius: R.pill, justifyContent: "center", backgroundColor: "rgba(12,12,10,0.78)", flexShrink: 1 },
