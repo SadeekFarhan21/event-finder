@@ -46,8 +46,11 @@ export function dedupeEvents(events: YeloEvent[]): YeloEvent[] {
       kept.push({ ...e, venue: cleanVenue(e.venue), title: cleanTitle(e.title, e.venue) });
       continue;
     }
-    if (RANK[e.confidence] > RANK[twin.confidence]) Object.assign(twin, { ...e, venue: cleanVenue(e.venue), title: cleanTitle(e.title, e.venue), deal: e.deal ?? twin.deal });
-    else if (!twin.deal && e.deal) twin.deal = e.deal;
+    if (RANK[e.confidence] > RANK[twin.confidence]) Object.assign(twin, { ...e, venue: cleanVenue(e.venue), title: cleanTitle(e.title, e.venue), deal: e.deal ?? twin.deal, image: e.image ?? twin.image });
+    else {
+      if (!twin.deal && e.deal) twin.deal = e.deal;
+      if (!twin.image && e.image) twin.image = e.image;
+    }
   }
   return kept;
 }

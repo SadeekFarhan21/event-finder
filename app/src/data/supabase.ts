@@ -2,7 +2,8 @@
 // EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY in .env.local to use it; otherwise the app
 // talks to the local dev server in /server.
 import { createClient } from "@supabase/supabase-js";
-import type { Lead, YeloEvent } from "./api";
+import type { Lead, Spot } from "../lib/types";
+import { cityKey } from "../lib/cities";
 
 const url = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const key = process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
@@ -10,13 +11,12 @@ const key = process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 // No sign-in in this prototype, so no session storage.
 export const supabase = url && key ? createClient(url, key, { auth: { persistSession: false } }) : null;
 
-const cityKey = (c: string) => c.trim().toLowerCase();
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-export async function sbEvents(city: string): Promise<YeloEvent[]> {
+export async function sbEvents(city: string): Promise<Spot[]> {
   const { data, error } = await supabase!.from("upcoming_events").select("*").eq("city", cityKey(city));
   if (error) throw new Error(error.message);
-  return (data ?? []) as YeloEvent[];
+  return (data ?? []) as Spot[];
 }
 
 export async function sbRooms(city: string): Promise<Lead[]> {
@@ -39,7 +39,7 @@ export async function sbRun(task: "events" | "rooms", city: string) {
     await sleep(5000);
     const { data: run } = await supabase!.from("scout_runs").select("added,ms,error").eq("id", runId).single();
     if (run?.error) throw new Error(run.error);
-    if (run?.ms != null) return { added: run.added ?? 0, ms: run.ms };
+    if (run?.ms != null) return { added: run.added ?? 0, ms: run.ms, pending: false };
   }
-  return { added: 0, ms: Date.now() - started }; // still running; results will show on next load
+  return { added: 0, ms: Date.now() - started, pending: true }; // still running server-side
 }

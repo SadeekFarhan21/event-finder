@@ -16,6 +16,7 @@ export type YeloEvent = {
   deal: string | null;
   description: string;
   url: string | null;
+  image?: string | null; // preview image of the source page
   lat: number;
   lng: number;
   city: string;
@@ -102,11 +103,15 @@ export async function discover(city: string, { exa, geo, log = () => {}, deadlin
       const events: RawEvent[] = Array.isArray(parsed?.events) ? parsed.events : [];
       // Grounding is per field, e.g. "events[3].title" -> confidence + citations.
       const grounding = res.output?.grounding ?? [];
+      // Preview image per page Exa read, so each event can borrow its source page's photo.
+      const imageOf = new Map((res.results ?? []).filter((r) => r.image && !NOT_A_PHOTO.test(r.image)).map((r) => [r.url, r.image!]));
       return events.map((e, i): RawEvent & { confidence: YeloEvent["confidence"] } => {
         const g = grounding.filter((x) => x.field.startsWith(`events[${i}]`));
         const rank = { low: 0, medium: 1, high: 2 } as const;
         const confidence = g.length ? g.reduce((m, x) => (rank[x.confidence] < rank[m] ? x.confidence : m), "high" as YeloEvent["confidence"]) : "medium";
-        return { ...e, url: e.url || g.flatMap((x) => x.citations)[0]?.url || "", confidence };
+        const urls = [e.url, ...g.flatMap((x) => x.citations.map((c) => c.url))].filter(Boolean) as string[];
+        const image = urls.map((u) => imageOf.get(u)).find(Boolean) ?? "";
+        return { ...e, url: e.url || urls[0] || "", image, confidence };
       });
     }),
   );
@@ -146,12 +151,13 @@ export async function discover(city: string, { exa, geo, log = () => {}, deadlin
       title: cleanTitle(e.title!, e.venue!),
       venue: cleanVenue(e.venue!),
       address: e.address!,
-      start: validDate(e.start),
+      start: validDate(e.start, city),
       category: CATEGORIES.includes(e.category as Category) ? (e.category as Category) : "community",
       price: e.price || null,
       deal: e.deal || null,
       description: e.description ?? "",
       url: e.url || null,
+      image: e.image || null,
       lat: pt.lat,
       lng: pt.lng,
       city,
@@ -160,9 +166,17 @@ export async function discover(city: string, { exa, geo, log = () => {}, deadlin
       discoveredAt: now.toISOString(),
     });
   }
-  log(`placed ${out.length} events on the map`);
+  // A listings article ("50 things to do this weekend") hands its one banner to every event it
+  // mentions. The same photo on many cards looks broken, so keep only images unique-ish to a spot.
+  const uses = new Map<string, number>();
+  for (const e of out) if (e.image) uses.set(e.image, (uses.get(e.image) ?? 0) + 1);
+  for (const e of out) if (e.image && uses.get(e.image)! > 2) e.image = null;
+  log(`placed ${out.length} events on the map, ${out.filter((e) => e.image).length} with photos`);
   return out;
 }
+
+// Site chrome, not a photo of the place: logos, icons, avatars, placeholders.
+const NOT_A_PHOTO = /logo|favicon|icon|avatar|placeholder|default[-_]?(image|og)|\.svg(\?|$)/i;
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -197,7 +211,28 @@ export function km(a: { lat: number; lng: number }, b: { lat: number; lng: numbe
 
 const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
 const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 80);
-const validDate = (s?: string) => (s && !Number.isNaN(Date.parse(s)) ? new Date(s).toISOString() : null);
+// "2026-11-07T22:00:00" with no offset would be read in the server's zone (UTC on Supabase),
+// turning a 10pm party into 5pm. Bare times are wall-clock times in the city, so read them there.
+const CITY_TZ: [RegExp, string][] = [[/new york/i, "America/New_York"], [/los angeles/i, "America/Los_Angeles"], [/san francisco/i, "America/Los_Angeles"]];
+
+export function validDate(s: string | undefined, city: string) {
+  if (!s || Number.isNaN(Date.parse(s))) return null;
+  const tz = CITY_TZ.find(([re]) => re.test(city))?.[1];
+  if (!tz || /T\d\d:\d\d/.test(s) === false || /(Z|[+-]\d\d:?\d\d)$/.test(s)) return new Date(s).toISOString();
+  // Treat it as UTC, then shift by the city's UTC offset at that moment.
+  const asUtc = new Date(s.replace(/(\.\d+)?$/, "") + "Z");
+  const offsetMin = tzOffsetMinutes(asUtc, tz);
+  return new Date(asUtc.getTime() - offsetMin * 60_000).toISOString();
+}
+
+// Minutes the zone is ahead of UTC at `at` (New York in November: -300).
+function tzOffsetMinutes(at: Date, timeZone: string) {
+  const p = Object.fromEntries(new Intl.DateTimeFormat("en-US", {
+    timeZone, hourCycle: "h23", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit",
+  }).formatToParts(at).map((x) => [x.type, x.value]));
+  const local = Date.UTC(+p.year, +p.month - 1, +p.day, +p.hour, +p.minute, +p.second);
+  return Math.round((local - at.getTime()) / 60_000);
+}
 
 // --- Geocoding (OpenStreetMap Nominatim: free, 1 req/sec; results cached by the host) ---
 let lastGeo = 0;

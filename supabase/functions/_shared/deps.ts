@@ -6,7 +6,10 @@ export type Grounding = { field: string; confidence: "low" | "medium" | "high"; 
 
 // The slice of exa-js we use: search() with an outputSchema.
 export type ExaLike = {
-  search(query: string, options: Record<string, unknown>): Promise<{ output?: { content: unknown; grounding?: Grounding[] } }>;
+  search(query: string, options: Record<string, unknown>): Promise<{
+    output?: { content: unknown; grounding?: Grounding[] };
+    results?: { url: string; image?: string }[]; // the pages Exa read, with their preview images
+  }>;
 };
 
 export type Point = { lat: number; lng: number };

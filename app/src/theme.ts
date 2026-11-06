@@ -1,6 +1,6 @@
 import type { ComponentProps } from "react";
 import type { Ionicons } from "@expo/vector-icons";
-import type { Category } from "./api";
+import type { Category } from "./lib/types";
 
 // One small system: a warm neutral ramp, Yelo yellow for the primary action and the
 // selected spot, Yelo blue only for deals. Everything else stays black/gray.
@@ -15,6 +15,7 @@ export const color = {
   yellow: "#FFE600",
   blue: "#1F4FFF",
   green: "#178A4C",
+  red: "#B42318", // errors only
 };
 
 // Instrument Serif is the display face on joinyelo.com; Inter does the rest.
