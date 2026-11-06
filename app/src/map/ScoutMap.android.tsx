@@ -6,7 +6,7 @@ import { Linking, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { HEADER_GAP, HEADER_H } from "../layout";
 import { color as C, font as F } from "../theme";
-import { Camera, Map, Marker, UserLocation, type CameraRef } from "@maplibre/maplibre-react-native";
+import { Camera, Layer, Map, Marker, UserLocation, type CameraRef } from "@maplibre/maplibre-react-native";
 import type { Region, ScoutMapProps, ScoutMarkerProps } from "./types";
 import { config } from "../config";
 
@@ -43,7 +43,17 @@ export function ScoutMap({ ref, initialRegion, showsUserLocation, onRegionChange
       <Camera ref={camera} initialViewState={{
         center: [initialRegion.longitude, initialRegion.latitude], zoom: zoomFor(initialRegion),
       }} />
-      {showsUserLocation && <UserLocation />}
+      {showsUserLocation && (
+        // "You are here" in the palette (MapLibre's default puck is a stock blue).
+        <UserLocation>
+          <Layer type="circle" id="scout-me-halo" source="mlrn-user-location"
+            paint={{ "circle-radius": 14, "circle-color": C.ink, "circle-opacity": 0.14, "circle-pitch-alignment": "map" }} />
+          <Layer type="circle" id="scout-me-ring" source="mlrn-user-location"
+            paint={{ "circle-radius": 7, "circle-color": C.ink, "circle-pitch-alignment": "map" }} />
+          <Layer type="circle" id="scout-me-dot" source="mlrn-user-location"
+            paint={{ "circle-radius": 4, "circle-color": C.bg, "circle-pitch-alignment": "map" }} />
+        </UserLocation>
+      )}
       {children}
     </Map>
     <Text style={[s.credit, { top: insets.top + HEADER_GAP + HEADER_H + 6 }]} onPress={() => Linking.openURL("https://www.openstreetmap.org/copyright")}

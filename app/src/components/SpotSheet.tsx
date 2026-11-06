@@ -136,8 +136,8 @@ export function SpotSheet({ spot, city, me, unlocked, canAskLocation, onAskLocat
               {e.image ? (
                 <View style={{ height: HERO_H }}>
                   <Image source={e.image} style={StyleSheet.absoluteFill} contentFit="cover" transition={250} />
-                  <LinearGradient pointerEvents="none" colors={["rgba(12,12,10,0.5)", "rgba(12,12,10,0)", "rgba(12,12,10,0.6)", "rgba(12,12,10,0.92)", C.bg]}
-                    locations={[0, 0.25, 0.55, 0.8, 1]} style={StyleSheet.absoluteFill} />
+                  <LinearGradient pointerEvents="none" colors={["rgba(12,12,10,0.5)", "rgba(12,12,10,0)", "rgba(12,12,10,0.72)", "rgba(12,12,10,0.96)", C.bg]}
+                    locations={[0, 0.22, 0.48, 0.7, 1]} style={StyleSheet.absoluteFill} />
                   <View style={s.heroText}>{titleBlock}</View>
                 </View>
               ) : (
