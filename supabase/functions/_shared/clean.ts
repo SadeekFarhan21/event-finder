@@ -34,7 +34,8 @@ const isStanding = (e: YeloEvent) => e.category === "deal" || STANDING.test(`${e
 // deals, or they start within 8 hours of each other. Keeps the higher-confidence one
 // (newer wins ties), and carries over a deal the winner is missing.
 // Same room under two names: "Nublu" and "Nublu 151", "Elsewhere" and "Elsewhere Hall". One name
-// extends the other by whole words and the pins are within a block (~150 m).
+// extends the other by whole words, and they share a street address or the pins are within a block
+// (~150 m). The address check matters: geocoders can place one address a few blocks apart.
 function sameVenue(a: YeloEvent, b: YeloEvent) {
   const ka = key(a.venue), kb = key(b.venue);
   if (ka === kb) return true;
@@ -42,7 +43,9 @@ function sameVenue(a: YeloEvent, b: YeloEvent) {
   const [short, long] = wa.length <= wb.length ? [wa, wb] : [wb, wa];
   const prefix = short.length > 0 && short.join(" ").length >= 4 && short.every((w, i) => long[i] === w);
   const near = Math.hypot((a.lat - b.lat) * 111, (a.lng - b.lng) * 85) < 0.15;
-  return prefix && near;
+  const street = (x: YeloEvent) => (x.address ?? "").split(",")[0].toLowerCase().replace(/[^a-z0-9]/g, "");
+  const sameStreet = street(a).length >= 6 && street(a) === street(b);
+  return prefix && (near || sameStreet);
 }
 const words = (s: string) => cleanVenue(s).toLowerCase().replace(/^the\s+/, "").replace(/[^a-z0-9 ]/g, "").split(/\s+/).filter(Boolean);
 
