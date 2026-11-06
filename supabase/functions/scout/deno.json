@@ -1,6 +1,7 @@
 {
   "imports": {
     "exa-js": "npm:exa-js@2.27.0",
-    "@supabase/supabase-js": "jsr:@supabase/supabase-js@2"
+    "@supabase/supabase-js": "jsr:@supabase/supabase-js@2",
+    "zod": "npm:zod@3.25.76"
   }
 }

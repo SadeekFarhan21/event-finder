@@ -9,7 +9,8 @@
     "npm:@supabase/realtime-js@2.119.0": "2.119.0",
     "npm:@supabase/storage-js@2.119.0": "2.119.0",
     "npm:exa-js@2.27.0": "2.27.0",
-    "npm:openai@^4.52.5": "4.104.0_zod@3.25.76"
+    "npm:openai@^4.52.5": "4.104.0_zod@3.25.76",
+    "npm:zod@3.25.76": "3.25.76"
   },
   "jsr": {
     "@supabase/functions-js@2.119.0": {
@@ -319,7 +320,8 @@
   "workspace": {
     "dependencies": [
       "jsr:@supabase/supabase-js@2",
-      "npm:exa-js@2.27.0"
+      "npm:exa-js@2.27.0",
+      "npm:zod@3.25.76"
     ]
   }
 }

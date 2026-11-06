@@ -16,8 +16,12 @@ import { dedupeEvents } from "../_shared/clean.ts";
 import { isPartner } from "../_shared/partners.ts";
 import { canonicalCity, cityKey } from "../_shared/cities.ts";
 import type { ExaLike, GeoCache } from "../_shared/deps.ts";
+import type { Database } from "../_shared/database.types.ts";
+import { describeIssues, errorBody, ScoutRequest, SERVED_CITIES } from "../_shared/requests.ts";
 
-const db = createClient(
+type EventRow = Database["public"]["Tables"]["events"]["Row"];
+
+const db = createClient<Database>(
   Deno.env.get("SUPABASE_URL")!,
   Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
   { auth: { persistSession: false } },
@@ -31,7 +35,7 @@ const geo: GeoCache = {
   async get(key) {
     const { data } = await db.from("geocache").select("lat,lng").eq("key", key).maybeSingle();
     if (!data) return undefined;
-    return data.lat == null ? null : { lat: data.lat, lng: data.lng };
+    return data.lat == null || data.lng == null ? null : { lat: data.lat, lng: data.lng };
   },
   async set(key, pt) {
     await db.from("geocache").upsert({ key, lat: pt?.lat ?? null, lng: pt?.lng ?? null });
@@ -45,29 +49,36 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, apikey, content-type" } });
   }
-  if (req.method !== "POST") return json(405, { error: "POST { task, city }" });
+  if (req.method !== "POST") return json(405, errorBody("METHOD", "Use POST."));
 
-  const body = await req.json().catch(() => ({}));
-  const { task = "events", city: rawCity, focus: rawFocus } = body;
+  const raw = await req.json().catch(() => null);
+  const parsed = ScoutRequest.safeParse({ task: "events", ...(raw ?? {}) });
+  if (!parsed.success) return json(400, errorBody("BAD_REQUEST", describeIssues(parsed.error)));
+  const body = parsed.data;
+  const { task } = body;
+
   const scoutKey = Deno.env.get("SCOUT_KEY");
   const trusted = !!scoutKey && req.headers.get("Authorization") === `Bearer ${scoutKey}`;
   // Put approved venue submissions on the map (the rolling tick calls this; no search, no Exa).
-  if (task === "publish") return trusted ? json(200, await publishApproved()) : json(401, { error: "Not allowed" });
+  if (task === "publish") return trusted ? json(200, await publishApproved()) : json(401, errorBody("UNAUTHORIZED", "Not allowed."));
   if (task === "review") return review(req.headers.get("Authorization"), body);
 
-  const city = canonicalCity(String(rawCity ?? ""));
-  if (!city || !["events", "rooms"].includes(task)) return json(400, { error: "Expected { task: 'events' | 'rooms', city }" });
+  const city = canonicalCity(body.city);
+  // Public runs only for the cities Yelo serves: arbitrary text never reaches the search prompt.
+  if (!trusted && !(SERVED_CITIES as readonly string[]).includes(city)) {
+    return json(403, errorBody("CITY_NOT_SERVED", `Scout covers ${SERVED_CITIES.map((c) => c.split(",")[0]).join(" and ")} for now.`));
+  }
 
-  const focus = trusted && task === "events" && Number.isInteger(rawFocus) && rawFocus >= 0 ? rawFocus as number : undefined;
+  const focus = trusted && body.task === "events" ? body.focus : undefined;
   if (!trusted) {
     // Rolling single-search runs (focus set) don't count against the app's Scout button.
     const { data: last } = await db.from("scout_runs").select("ran_at").eq("kind", task).eq("city", cityKey(city)).is("focus", null)
       .order("ran_at", { ascending: false }).limit(1).maybeSingle();
     const wait = last ? COOLDOWN_MS - (Date.now() - Date.parse(last.ran_at)) : 0;
-    if (wait > 0) return json(429, { error: `Scouted recently. Try again in ${Math.ceil(wait / 60000)} min.` });
+    if (wait > 0) return json(429, errorBody("RATE_LIMITED", `Scouted recently. Try again in ${Math.ceil(wait / 60000)} min.`));
     const { count } = await db.from("scout_runs").select("id", { count: "exact", head: true }).is("focus", null)
       .gte("ran_at", new Date(Date.now() - 3600e3).toISOString());
-    if ((count ?? 0) >= PUBLIC_RUNS_PER_HOUR) return json(429, { error: "Scout is busy. Try again in a little while." });
+    if ((count ?? 0) >= PUBLIC_RUNS_PER_HOUR) return json(429, errorBody("BUSY", "Scout is busy. Try again in a little while."));
   }
 
   // Claim the slot now so double-taps don't start two runs.
@@ -125,26 +136,26 @@ async function publishApproved() {
 
 // Listing review for the Yelo team (site/review.html). Its own key, separate from SCOUT_KEY, so
 // sharing review access doesn't hand out the ability to run paid searches.
-async function review(auth: string | null, body: { action?: string; id?: number; note?: string }) {
+async function review(auth: string | null, body: Extract<ScoutRequest, { task: "review" }>) {
   const key = Deno.env.get("REVIEW_KEY");
-  if (!key || auth !== `Bearer ${key}`) return json(401, { error: "Wrong review key" });
+  if (!key || auth !== `Bearer ${key}`) return json(401, errorBody("UNAUTHORIZED", "Wrong review key."));
   if (body.action === "list") {
     const { data, error } = await db.from("submissions")
       .select("id, city, venue, address, title, category, start, deal, description, url, contact_email, status, created_at, updated_at")
       .in("status", ["pending", "approved", "rejected"]).order("status").order("updated_at", { ascending: false }).limit(100);
-    return error ? json(500, { error: describe(error) }) : json(200, { submissions: data });
+    return error ? json(500, errorBody("INTERNAL", describe(error))) : json(200, { submissions: data });
   }
-  if ((body.action === "approve" || body.action === "reject") && Number.isInteger(body.id)) {
+  if ((body.action === "approve" || body.action === "reject") && body.id !== undefined) {
     const { error } = await db.from("submissions").update({
       status: body.action === "approve" ? "approved" : "rejected",
       review_note: body.action === "reject" ? String(body.note ?? "").slice(0, 300) || null : null,
       updated_at: new Date().toISOString(),
     }).eq("id", body.id!).eq("status", "pending");
-    if (error) return json(500, { error: describe(error) });
+    if (error) return json(500, errorBody("INTERNAL", describe(error)));
     // Approving publishes right away instead of waiting for the next 5-minute tick.
     return json(200, body.action === "approve" ? await publishApproved() : { ok: true });
   }
-  return json(400, { error: "Expected { task: 'review', action: 'list' | 'approve' | 'reject', id? }" });
+  return json(400, errorBody("BAD_REQUEST", "approve and reject need an id."));
 }
 
 async function runRooms(city: string) {
@@ -160,7 +171,12 @@ const toRow = (e: YeloEvent) => ({
   price: e.price, deal: e.deal, description: e.description, url: e.url, image: e.image ?? null, lat: e.lat, lng: e.lng,
   confidence: e.confidence, partner: !!e.partner, source: e.source, discovered_at: e.discoveredAt,
 });
-const fromRow = (r: Record<string, any>): YeloEvent => ({ ...r, discoveredAt: r.discovered_at } as YeloEvent);
+const fromRow = (r: EventRow): YeloEvent => ({
+  id: r.id, city: r.city, title: r.title, venue: r.venue, address: r.address, start: r.start,
+  category: r.category as YeloEvent["category"], price: r.price, deal: r.deal, description: r.description ?? "",
+  url: r.url, image: r.image, lat: r.lat, lng: r.lng, confidence: r.confidence as YeloEvent["confidence"],
+  partner: r.partner, source: r.source as YeloEvent["source"], discoveredAt: r.discovered_at,
+});
 const roomRow = (l: Lead, city: string) => ({
   id: l.id, city: cityKey(city), venue: l.venue, area: l.area, address: l.address, kind: l.kind, capacity: l.capacity,
   fit: l.fit, quiet_night: l.quietNight, contact: l.contact, url: l.url, confidence: l.confidence, found_at: l.foundAt,
