@@ -14,30 +14,36 @@
     --ink: #1A1814; --ink-2: #4F4B42; --ink-3: #6B665A; --yellow: #FFE600; --blue: #1F4FFF; --red: #B42318;
     --display: "Instrument Serif", Georgia, serif; --body: "Inter", system-ui, sans-serif;
   }
+  /* Type: 13 / 15 body sizes, 22 / 28 / 40 display. Spacing: 4/8/12/16/24/32/48. Hairline borders, no shadows. */
   *,*::before,*::after { box-sizing: border-box }
-  body { margin: 0; background: var(--bg); color: var(--ink); font: 400 15px/1.5 var(--body); }
-  .wrap { max-width: 860px; margin: 0 auto; padding: 28px 16px 64px; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 400 15px/1.55 var(--body); }
+  .wrap { max-width: 860px; margin: 0 auto; padding: 32px 16px 64px; }
   :focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; border-radius: 6px; }
-  h1 { font: 400 44px/1 var(--display); margin: 0; }
-  .note { color: var(--ink-3); font-size: 14px; margin: 8px 0 0; }
-  .keyrow { display: flex; gap: 8px; margin-top: 20px; flex-wrap: wrap; }
-  input, textarea { font: inherit; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; min-width: 0; }
-  .keyrow input { flex: 1 1 260px; }
-  button { font: 600 14px var(--body); border: 0; border-radius: 999px; padding: 10px 16px; cursor: pointer; background: var(--ink); color: #fff; }
-  button.approve { background: var(--yellow); color: var(--ink); }
-  button.reject { background: var(--fill); color: var(--ink); }
+  h1 { font: 400 40px/1.05 var(--display); margin: 0; }
+  .note { color: var(--ink-3); font-size: 15px; margin: 8px 0 0; max-width: 65ch; }
+  .keyrow { display: flex; gap: 8px; margin-top: 24px; flex-wrap: wrap; align-items: end; }
+  .keyrow label { flex-basis: 100%; font-size: 13px; font-weight: 500; color: var(--ink-2); }
+  input, textarea { font: inherit; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; min-height: 44px; min-width: 0; }
+  .keyrow input { flex: 0 1 360px; }
+  button { font: 600 15px var(--body); min-height: 44px; border: 1px solid var(--ink); border-radius: 999px; padding: 0 16px; cursor: pointer; background: var(--surface); color: var(--ink); }
+  button:hover { background: var(--fill); }
+  button.approve, button.primary { background: var(--yellow); border-color: var(--yellow); }
+  button.approve:hover, button.primary:hover { background: #F5DC00; }
+  button.reject { border-color: var(--line); color: var(--ink-2); }
   button:disabled { opacity: .5; cursor: default; }
-  h2 { font: 400 28px/1.1 var(--display); margin: 36px 0 10px; }
-  .item { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px; margin-top: 10px; }
-  .meta { font-size: 12px; color: var(--ink-3); margin: 0; }
-  .venue { font: 400 26px/1.1 var(--display); margin: 4px 0 0; }
+  h2 { font: 400 28px/1.1 var(--display); margin: 32px 0 12px; }
+  .item { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px; margin-top: 8px; }
+  .meta { font-size: 13px; color: var(--ink-3); margin: 0; }
+  .venue { font: 400 22px/1.2 var(--display); margin: 4px 0 0; }
   .title { font-weight: 600; margin: 4px 0 0; }
-  dl { display: grid; grid-template-columns: 80px minmax(0, 1fr); gap: 4px 12px; margin: 12px 0 0; font-size: 14px; }
-  dt { color: var(--ink-3); } dd { margin: 0; overflow-wrap: anywhere; }
-  .actions { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; align-items: center; }
+  dl { display: grid; grid-template-columns: 80px minmax(0, 1fr); gap: 4px 12px; margin: 12px 0 0; }
+  dt { color: var(--ink-3); font-size: 13px; padding-top: 2px; } dd { margin: 0; overflow-wrap: anywhere; }
+  dd a { color: var(--blue); }
+  .actions { display: flex; gap: 8px; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--line); flex-wrap: wrap; align-items: center; }
   .actions input { flex: 1 1 200px; }
-  .empty { color: var(--ink-3); }
-  .err { color: var(--red); }
+  .empty { color: var(--ink-3); margin: 0; }
+  .err { color: var(--red); margin: 12px 0 0; }
+  .err:empty { margin: 0; }
 </style>
 </head>
 <body>
@@ -45,8 +51,9 @@
   <h1>Listing review</h1>
   <p class="note">Venue submissions waiting for a yes or no. Approved listings go on Scout's map right away.</p>
   <form class="keyrow" id="keyform">
-    <input id="key" type="password" placeholder="Review key" autocomplete="current-password" aria-label="Review key" required>
-    <button type="submit">Open queue</button>
+    <label for="key">Review key</label>
+    <input id="key" type="password" autocomplete="current-password" required>
+    <button class="primary" type="submit">Open queue</button>
   </form>
   <p class="err" id="err" role="alert"></p>
   <div id="queue"></div>

@@ -12,64 +12,64 @@
   :root {
     --bg: #FBFAF6; --surface: #FFFFFF; --fill: #F4F2EA; --line: #E8E5D9;
     --ink: #1A1814; --ink-2: #4F4B42; --ink-3: #6B665A;
-    --yellow: #FFE600; --blue: #1F4FFF;
+    --yellow: #FFE600; --blue: #1F4FFF; --red: #B42318;
     --display: "Instrument Serif", "Iowan Old Style", Georgia, serif;
     --body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
   }
+  /* Type: 13 / 15 / 16 body sizes, 26 + 40 display. Spacing: 4/8/12/16/24/32/48. Hairline borders, no shadows. */
   *,*::before,*::after { box-sizing: border-box }
   body { margin: 0; background: var(--bg); color: var(--ink); font: 400 16px/1.55 var(--body); }
   .wrap { max-width: 560px; margin: 0 auto; padding-inline: 16px; padding-block: 24px 64px; }
   a { color: inherit; }
   :focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; border-radius: 6px; }
-  .mark { display: inline-flex; align-items: center; gap: 10px; font-weight: 600; text-decoration: none; }
+  .mark { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; font-weight: 600; text-decoration: none; }
   .mark i { width: 28px; height: 28px; border-radius: 8px; background: var(--yellow); display: grid; place-items: center; font: 400 20px/1 var(--display); font-style: normal; }
-  .card { margin-top: 24px; background: var(--surface); border: 1px solid var(--line); border-radius: 20px; overflow: hidden; }
-  .hero { display: block; width: 100%; height: 200px; object-fit: cover; background: var(--fill); }
-  .body { padding: 22px; }
+  .card { margin-top: 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; }
+  .hero { display: block; width: 100%; height: 200px; object-fit: cover; background: var(--fill); border-bottom: 1px solid var(--line); }
+  .body { padding: 24px 16px; }
   .eyebrow { font-size: 13px; font-weight: 500; color: var(--ink-3); margin: 0; }
-  h1 { font: 400 44px/1.02 var(--display); margin: 4px 0 0; text-wrap: balance; overflow-wrap: anywhere; }
-  .title { font-weight: 600; margin: 10px 0 0; }
-  .desc { color: var(--ink-2); margin: 4px 0 0; }
-  dl { margin: 18px 0 0; border-top: 1px solid var(--line); }
+  h1 { font: 400 40px/1.05 var(--display); margin: 4px 0 0; text-wrap: balance; overflow-wrap: anywhere; }
+  .title { font-weight: 600; margin: 8px 0 0; }
+  .desc { color: var(--ink-2); margin: 4px 0 0; max-width: 65ch; }
+  dl { margin: 16px 0 0; border-top: 1px solid var(--line); }
   dl div { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); }
-  dt { width: 56px; flex: none; font-size: 13px; color: var(--ink-3); padding-top: 1px; }
+  dt { width: 56px; flex: none; font-size: 13px; color: var(--ink-3); padding-top: 2px; }
   dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
-  .going { margin: 16px 0 0; font-size: 14px; color: var(--ink-2); }
+  .going { margin: 16px 0 0; font-size: 15px; color: var(--ink-2); }
   .going b { color: var(--ink); }
-  .actions { display: grid; gap: 10px; margin-top: 20px; }
-  .btn { display: flex; align-items: center; justify-content: center; height: 52px; border-radius: 999px; font-weight: 600; text-decoration: none; }
+  .actions { display: grid; gap: 8px; margin-top: 24px; }
+  .btn { display: flex; align-items: center; justify-content: center; min-height: 48px; padding: 0 16px; border-radius: 999px; font: 600 15px var(--body); color: var(--ink); text-decoration: none; }
   .btn.primary { background: var(--yellow); }
-  .btn.quiet { background: var(--fill); }
-  .note { font-size: 13px; color: var(--ink-3); text-align: center; margin: 18px 0 0; }
+  .btn.primary:hover { background: #F5DC00; }
+  .btn.quiet { background: var(--surface); border: 1px solid var(--line); }
+  .btn.quiet:hover { border-color: var(--ink-3); }
+  .note { font-size: 13px; color: var(--ink-3); margin: 16px 0 0; }
   .empty { margin-top: 48px; }
-  .invite { font: 400 26px/1.15 var(--display); margin: 28px 0 0; }
-  .crew { margin-top: 18px; padding: 16px; border-radius: 16px; background: var(--fill); }
-  .crewhead { margin: 0; font-size: 14px; color: var(--ink-2); }
+  .invite { font: 400 26px/1.2 var(--display); margin: 32px 0 0; text-wrap: balance; }
+  .crew { margin-top: 16px; padding: 16px; border-radius: 12px; border: 1px solid var(--line); background: var(--fill); }
+  .crewhead { margin: 0; font-size: 15px; color: var(--ink-2); }
   .crewhead b { color: var(--ink); }
-  .members { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
-  .member { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 999px; background: var(--surface); font-size: 14px; font-weight: 500; }
-  .member small { color: var(--ink-3); font-size: 12px; font-weight: 400; }
+  .members { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  .member { display: inline-flex; align-items: center; gap: 8px; padding: 4px 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); font-size: 15px; font-weight: 500; }
+  .member small { color: var(--ink-3); font-size: 13px; font-weight: 400; }
   .member.out { opacity: .5; }
   .member i { width: 8px; height: 8px; border-radius: 50%; background: var(--ink); }
   .member i.on_way { background: var(--yellow); box-shadow: 0 0 0 1px var(--ink); }
   .member i.out { background: var(--line); }
-  .join { margin-top: 14px; }
-  .join label { display: block; font-size: 13px; font-weight: 500; color: var(--ink-2); margin-bottom: 6px; }
+  .join { margin-top: 16px; }
+  .join label { display: block; font-size: 13px; font-weight: 500; color: var(--ink-2); margin-bottom: 4px; }
   .joinrow { display: flex; gap: 8px; flex-wrap: wrap; }
-  .joinrow input { flex: 1 1 160px; min-width: 0; font: inherit; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 0 12px; height: 48px; }
-  .joinrow .btn { flex: 1 1 140px; border: 0; font: 600 15px var(--body); cursor: pointer; height: 48px; }
-  .statusrow { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
-  .statusrow .btn { flex: 1 1 140px; border: 0; font: 600 15px var(--body); cursor: pointer; }
-  .btn.quiet { background: var(--fill); }
-  .crew .btn.quiet { background: var(--surface); border: 1px solid var(--line); }
-  .msg { font-size: 13px; color: #B42318; margin: 8px 0 0; min-height: 1em; }
-  .empty h1 { font-size: 36px; }
+  .joinrow input { flex: 1 1 160px; min-width: 0; font: inherit; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 0 12px; height: 48px; }
+  .joinrow .btn, .statusrow .btn { flex: 1 1 140px; border: 0; cursor: pointer; }
+  .statusrow { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
+  .crew .btn.quiet { border: 1px solid var(--line); }
+  .msg { font-size: 13px; color: var(--red); margin: 8px 0 0; min-height: 1em; }
 </style>
 </head>
 <body>
 <div class="wrap">
   <a class="mark" href="./"><i>s</i> Scout</a>
-  <main id="app" aria-live="polite"><p class="note" style="text-align:left;margin-top:32px">Loading the night…</p></main>
+  <main id="app" aria-live="polite"><p class="note" style="margin-top:32px">Loading the night…</p></main>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.0/dist/umd/supabase.js"></script>
