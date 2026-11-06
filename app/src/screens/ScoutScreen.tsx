@@ -19,6 +19,8 @@ import { useGoing } from "../hooks/useGoing";
 import { useCrews } from "../hooks/useCrews";
 import { openRide } from "../lib/ride";
 import { newIds } from "../lib/fresh";
+import { onNetworkChange } from "../lib/net";
+import { friendlyError } from "../lib/report";
 import { track } from "../data/activity";
 import { useToast } from "../hooks/useToast";
 import { SearchHeader } from "../components/SearchHeader";
@@ -99,6 +101,7 @@ export function ScoutScreen() {
   // While the camera flies to a new city, its tiles are still loading: hold the pins so they
   // don't float on a black map, then bring them in once the ground is drawn.
   const [fresh, setFresh] = useState<Set<string>>(new Set()); // first found in the last 24h
+  const [loadFailed, setLoadFailed] = useState(false); // the last load never reached the server
   const [settling, setSettling] = useState(false);
   const settleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const settle = useCallback((ms: number) => {
@@ -114,6 +117,7 @@ export function ScoutScreen() {
     setActive(null);
     try {
       const list = await load(city);
+      setLoadFailed(false);
       // Open on tonight; on a quiet night (fewer than 3 things on), show the week instead.
       const tonight = list.filter((e) => matches(e, "tonight")).length;
       setFilter(tonight >= 3 ? "tonight" : "all");
@@ -124,11 +128,14 @@ export function ScoutScreen() {
       if (city !== mapCity) settle(1800);
       setTimeout(() => fit(list), 300);
     } catch (err) {
-      show((err as Error).message || "Couldn't load spots", true);
+      setLoadFailed(true);
+      show(friendlyError(err, "Couldn't load spots"), true);
     }
   }, [load, fit, show, mapCity, settle]);
 
   useEffect(() => { open(cityInput); }, []);
+  // Back online after a failed load: try again on its own instead of leaving an empty map.
+  useEffect(() => onNetworkChange((offline) => { if (!offline && loadFailed) open(cityInput); }), [loadFailed, cityInput, open]);
 
   const runScout = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -150,7 +157,7 @@ export function ScoutScreen() {
       show(added ? `${added} new spots` : "Up to date. No new spots this time.");
       fit(list);
     } catch (err) {
-      show((err as Error).message);
+      show(friendlyError(err, "Couldn't start the search. Try again in a moment."));
     }
   };
 
@@ -208,8 +215,10 @@ export function ScoutScreen() {
 
       {loading && !spots.length ? <LoadingCard /> : !shown.length && !scouting ? (
         <EmptyCard
-          title={spots.length ? "Nothing here yet" : `No spots in ${cityName} yet`}
-          body={spots.length ? "Try another filter." : scoutable ? "Tap Scout to find this week's events and deals." : "Add an Exa key on the server to scout this city."} />
+          title={loadFailed ? "Couldn't load spots" : spots.length ? "Nothing here yet" : `No spots in ${cityName} yet`}
+          body={loadFailed ? "Check your connection. Scout will try again as soon as you're back online."
+            : spots.length ? "Try This week, or another filter."
+            : scoutable ? `Open the ${cityName} menu and choose "Look for new spots".` : "New spots usually appear within the hour."} />
       ) : (
         <>
           <Animated.View entering={FadeIn.delay(150)} style={s.roomsWrap}>
