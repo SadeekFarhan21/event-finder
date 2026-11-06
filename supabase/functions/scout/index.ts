@@ -47,11 +47,13 @@ Deno.serve(async (req) => {
   }
   if (req.method !== "POST") return json(405, { error: "POST { task, city }" });
 
-  const { task = "events", city: rawCity, focus: rawFocus } = await req.json().catch(() => ({}));
+  const body = await req.json().catch(() => ({}));
+  const { task = "events", city: rawCity, focus: rawFocus } = body;
   const scoutKey = Deno.env.get("SCOUT_KEY");
   const trusted = !!scoutKey && req.headers.get("Authorization") === `Bearer ${scoutKey}`;
   // Put approved venue submissions on the map (the rolling tick calls this; no search, no Exa).
   if (task === "publish") return trusted ? json(200, await publishApproved()) : json(401, { error: "Not allowed" });
+  if (task === "review") return review(req.headers.get("Authorization"), body);
 
   const city = canonicalCity(String(rawCity ?? ""));
   if (!city || !["events", "rooms"].includes(task)) return json(400, { error: "Expected { task: 'events' | 'rooms', city }" });
@@ -119,6 +121,30 @@ async function publishApproved() {
   // An address that won't geocode needs a person: send it back to review instead of retrying forever.
   if (failed.length) await db.from("submissions").update({ status: "pending" }).in("id", failed.map((f) => f.id));
   return { published, failed };
+}
+
+// Listing review for the Yelo team (site/review.html). Its own key, separate from SCOUT_KEY, so
+// sharing review access doesn't hand out the ability to run paid searches.
+async function review(auth: string | null, body: { action?: string; id?: number; note?: string }) {
+  const key = Deno.env.get("REVIEW_KEY");
+  if (!key || auth !== `Bearer ${key}`) return json(401, { error: "Wrong review key" });
+  if (body.action === "list") {
+    const { data, error } = await db.from("submissions")
+      .select("id, city, venue, address, title, category, start, deal, description, url, contact_email, status, created_at, updated_at")
+      .in("status", ["pending", "approved", "rejected"]).order("status").order("updated_at", { ascending: false }).limit(100);
+    return error ? json(500, { error: describe(error) }) : json(200, { submissions: data });
+  }
+  if ((body.action === "approve" || body.action === "reject") && Number.isInteger(body.id)) {
+    const { error } = await db.from("submissions").update({
+      status: body.action === "approve" ? "approved" : "rejected",
+      review_note: body.action === "reject" ? String(body.note ?? "").slice(0, 300) || null : null,
+      updated_at: new Date().toISOString(),
+    }).eq("id", body.id!).eq("status", "pending");
+    if (error) return json(500, { error: describe(error) });
+    // Approving publishes right away instead of waiting for the next 5-minute tick.
+    return json(200, body.action === "approve" ? await publishApproved() : { ok: true });
+  }
+  return json(400, { error: "Expected { task: 'review', action: 'list' | 'approve' | 'reject', id? }" });
 }
 
 async function runRooms(city: string) {
