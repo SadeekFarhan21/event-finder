@@ -1,8 +1,15 @@
 // iOS: Apple Maps through react-native-maps. No API key, and it runs in Expo Go.
 import { useImperativeHandle, useRef } from "react";
 import { StyleSheet } from "react-native";
-import MapView, { Marker } from "react-native-maps";
+import MapView, { Marker, Polygon } from "react-native-maps";
 import type { ScoutMapProps, ScoutMarkerProps } from "./types";
+
+// Apple's dark map is navy and can't be restyled. A world-sized warm near-black wash, drawn as a map
+// overlay (below every pin), pulls it toward Scout's palette and quiets the labels.
+const WORLD = [
+  { latitude: 85, longitude: -180 }, { latitude: 85, longitude: 0 }, { latitude: 85, longitude: 180 },
+  { latitude: -85, longitude: 180 }, { latitude: -85, longitude: 0 }, { latitude: -85, longitude: -180 },
+];
 
 export function ScoutMap({ ref, initialRegion, showsUserLocation, onRegionChange, onPress, children }: ScoutMapProps) {
   const map = useRef<MapView>(null);
@@ -15,6 +22,7 @@ export function ScoutMap({ ref, initialRegion, showsUserLocation, onRegionChange
     <MapView ref={map} style={StyleSheet.absoluteFill} initialRegion={initialRegion} userInterfaceStyle="dark"
       mapType="mutedStandard" showsPointsOfInterests={false} showsCompass={false} toolbarEnabled={false}
       showsUserLocation={showsUserLocation} onRegionChangeComplete={onRegionChange} onPress={onPress}>
+      <Polygon coordinates={WORLD} fillColor="rgba(12,12,10,0.55)" strokeWidth={0} tappable={false} zIndex={-1} />
       {children}
     </MapView>
   );
