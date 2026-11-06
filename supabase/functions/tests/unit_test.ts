@@ -121,3 +121,12 @@ Deno.test("calmCaps: shouting scraped titles become title case, acronyms stay", 
   assertEquals(calmCaps("Corey King Live w/ Matthew Stevens"), "Corey King Live w/ Matthew Stevens"); // untouched
   assertEquals(calmCaps("NYC"), "NYC");
 });
+
+Deno.test("dedupe keeps the earliest discovery time (so re-found spots aren't 'new')", () => {
+  const out = dedupeEvents([
+    ev({ id: "refound", discoveredAt: "2026-11-06T20:00:00Z", confidence: "high" }),
+    ev({ id: "original", discoveredAt: "2026-11-04T10:00:00Z" }),
+  ]);
+  assertEquals(out.length, 1);
+  assertEquals(out[0].discoveredAt, "2026-11-04T10:00:00Z");
+});

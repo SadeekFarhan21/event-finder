@@ -18,6 +18,7 @@ import { useMyLocation } from "../hooks/useMyLocation";
 import { useGoing } from "../hooks/useGoing";
 import { useCrews } from "../hooks/useCrews";
 import { openRide } from "../lib/ride";
+import { newIds } from "../lib/fresh";
 import { track } from "../data/activity";
 import { useToast } from "../hooks/useToast";
 import { SearchHeader } from "../components/SearchHeader";
@@ -97,6 +98,7 @@ export function ScoutScreen() {
 
   // While the camera flies to a new city, its tiles are still loading: hold the pins so they
   // don't float on a black map, then bring them in once the ground is drawn.
+  const [fresh, setFresh] = useState<Set<string>>(new Set()); // first found in the last 24h
   const [settling, setSettling] = useState(false);
   const settleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const settle = useCallback((ms: number) => {
@@ -115,7 +117,10 @@ export function ScoutScreen() {
       // Open on tonight; on a quiet night (fewer than 3 things on), show the week instead.
       const tonight = list.filter((e) => matches(e, "tonight")).length;
       setFilter(tonight >= 3 ? "tonight" : "all");
-      if (list.length) show(tonight >= 3 ? `${tonight} things on tonight` : `${list.length} spots this week`);
+      const found = newIds(list);
+      setFresh(found);
+      const lead = tonight >= 3 ? `${tonight} things on tonight` : `${list.length} spots this week`;
+      if (list.length) show(found.size ? `${lead}  ·  ${found.size} new` : lead);
       if (city !== mapCity) settle(1800);
       setTimeout(() => fit(list), 300);
     } catch (err) {
@@ -214,7 +219,7 @@ export function ScoutScreen() {
               </Tap>
             )}
           </Animated.View>
-          <SpotCarousel ref={carousel} spots={shown} going={going} activeId={active?.id ?? null}
+          <SpotCarousel ref={carousel} spots={shown} fresh={fresh} going={going} activeId={active?.id ?? null}
             onSettle={(e) => { Haptics.selectionAsync(); focus(e); }}
             onPress={(e) => (active?.id === e.id ? setDetail(e) : focus(e, true))}
             onRide={(e) => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); track(e, "ride", mapCity ?? cityInput); openRide(e); }} />

@@ -22,13 +22,14 @@ type Props = {
   ref?: Ref<CarouselRef>;
   spots: Spot[];
   going: Record<string, number>; // spot id -> people going
+  fresh?: Set<string>; // ids found since the last visit
   activeId: string | null;
   onSettle: (spot: Spot) => void; // a swipe came to rest on this card
   onPress: (spot: Spot, index: number) => void;
   onRide: (spot: Spot) => void;
 };
 
-export function SpotCarousel({ ref, spots, going, activeId, onSettle, onPress, onRide }: Props) {
+export function SpotCarousel({ ref, spots, fresh, going, activeId, onSettle, onPress, onRide }: Props) {
   const list = useAnimatedRef<Animated.FlatList<Spot>>();
   const x = useSharedValue(0);
   const onScroll = useAnimatedScrollHandler((e) => { x.value = e.contentOffset.x; });
@@ -49,7 +50,7 @@ export function SpotCarousel({ ref, spots, going, activeId, onSettle, onPress, o
         snapToInterval={CARD_STEP} decelerationRate="fast" disableIntervalMomentum
         contentContainerStyle={{ gap: CARD_GAP, paddingHorizontal: CARD_INSET }}
         onScroll={onScroll} scrollEventThrottle={16} onMomentumScrollEnd={onEnd}
-        renderItem={({ item, index }) => <Card spot={item} going={going[item.id] ?? 0} index={index} x={x} onPress={() => onPress(item, index)} onRide={() => onRide(item)} />} />
+        renderItem={({ item, index }) => <Card spot={item} isNew={!!fresh?.has(item.id)} going={going[item.id] ?? 0} index={index} x={x} onPress={() => onPress(item, index)} onRide={() => onRide(item)} />} />
     </Animated.View>
   );
 }
@@ -60,8 +61,8 @@ const bigDay = (e: Spot) => (isRecurring(e) || !e.start ? "This week" : whenLabe
 
 // Photo first: the place, then when, then who's going and the ride. Most listings have no photo
 // (the web rarely has a good one), so the fallback is a designed panel, not an empty box.
-function Card({ spot: e, going, index, x, onPress, onRide }: {
-  spot: Spot; going: number; index: number; x: SharedValue<number>; onPress: () => void; onRide: () => void;
+function Card({ spot: e, isNew, going, index, x, onPress, onRide }: {
+  spot: Spot; isNew: boolean; going: number; index: number; x: SharedValue<number>; onPress: () => void; onRide: () => void;
 }) {
   const style = useAnimatedStyle(() => {
     const d = (x.value - index * CARD_STEP) / CARD_STEP; // 0 = centered, ±1 = one card away
@@ -78,7 +79,10 @@ function Card({ spot: e, going, index, x, onPress, onRide }: {
             <Image source={e.image} style={StyleSheet.absoluteFill} contentFit="cover" transition={250} />
             <LinearGradient pointerEvents="none" colors={["rgba(0,0,0,0.0)", "rgba(0,0,0,0.55)"]} style={s.shade} />
             <View style={s.chips}>
-              <View style={s.when}><Text style={s.whenText} numberOfLines={1}>{whenLabel(e)}</Text></View>
+              <View style={s.whenRow}>
+                <View style={s.when}><Text style={s.whenText} numberOfLines={1}>{whenLabel(e)}</Text></View>
+                {isNew && <View style={s.newTag}><Text style={s.newText}>New</Text></View>}
+              </View>
               {e.partner && <View style={s.partner}><View style={s.partnerMark} /><Text style={s.partnerText}>Yelo partner</Text></View>}
             </View>
           </View>
@@ -87,7 +91,7 @@ function Card({ spot: e, going, index, x, onPress, onRide }: {
           <LinearGradient colors={[C.d3, C.d1]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={[s.media, s.typeBand]}>
             <View style={{ flex: 1 }}>
               <Text style={s.bigTime} numberOfLines={1} adjustsFontSizeToFit>{bigTime(e)}</Text>
-              <Text style={s.bigDay} numberOfLines={1}>{bigDay(e)}</Text>
+              <Text style={s.bigDay} numberOfLines={1}>{bigDay(e)}{isNew ? "  ·  New" : ""}</Text>
             </View>
             <View style={s.bandSide}>
               {e.partner && <View style={s.partner}><View style={s.partnerMark} /><Text style={s.partnerText}>Yelo partner</Text></View>}
@@ -132,6 +136,9 @@ const s = StyleSheet.create({
   card: { width: CARD_W, backgroundColor: C.surface, borderRadius: R.lg, overflow: "hidden",
     borderWidth: StyleSheet.hairlineWidth, borderColor: C.d4, ...shadow },
   media: { height: MEDIA_H, backgroundColor: C.fill },
+  whenRow: { flexDirection: "row", gap: 6, flexShrink: 1 },
+  newTag: { paddingHorizontal: 10, height: 28, borderRadius: R.pill, justifyContent: "center", backgroundColor: C.ink },
+  newText: { fontFamily: F.semibold, fontSize: T.meta, color: C.bg },
   typeBand: { flexDirection: "row", paddingHorizontal: 16, paddingTop: 12, paddingBottom: 12 },
   bigTime: { fontFamily: F.display, fontSize: 52, lineHeight: 58, color: C.ink },
   bigDay: { fontFamily: F.medium, fontSize: T.small, color: C.ink2, marginTop: -2 },

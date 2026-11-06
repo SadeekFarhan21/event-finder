@@ -96,3 +96,11 @@ Deno.test("cities: aliases fold (must match supabase/functions/_shared/cities.ts
   expect(canonicalCity("weho")).toBe("Los Angeles, CA");
   expect(cityKey("L.A.")).toBe("los angeles, ca");
 });
+
+Deno.test("fresh: New means first found in the last 24 hours", async () => {
+  const { isNew } = await import("../app/src/lib/fresh.ts");
+  const now = Date.parse("2026-11-06T22:00:00Z");
+  expect(isNew(spot({ discovered_at: "2026-11-06T10:00:00Z" }), now)).toBe(true);
+  expect(isNew(spot({ discovered_at: "2026-11-05T20:00:00Z" }), now)).toBe(false);
+  expect(isNew(spot({}), now)).toBe(false);
+});

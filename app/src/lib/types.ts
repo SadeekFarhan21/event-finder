@@ -21,6 +21,7 @@ export type Spot = {
   confidence: Confidence;
   source: "exa" | "demo" | "venue";
   partner?: boolean; // one of Yelo's venue partners
+  discovered_at?: string; // when the agent first found it (never moves forward)
 };
 
 // "Rooms": a venue that could host a Yelo night.

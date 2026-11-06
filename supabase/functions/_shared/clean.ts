@@ -63,11 +63,14 @@ export function dedupeEvents(events: YeloEvent[]): YeloEvent[] {
       kept.push({ ...e, venue: cleanVenue(e.venue), title: cleanTitle(e.title, e.venue) });
       continue;
     }
+    // "New" means first found: a re-found listing keeps the earliest discovery time.
+    const first = twin.discoveredAt < e.discoveredAt ? twin.discoveredAt : e.discoveredAt;
     if (RANK[e.confidence] > RANK[twin.confidence]) Object.assign(twin, { ...e, venue: cleanVenue(e.venue), title: cleanTitle(e.title, e.venue), deal: e.deal ?? twin.deal, image: e.image ?? twin.image });
     else {
       if (!twin.deal && e.deal) twin.deal = e.deal;
       if (!twin.image && e.image) twin.image = e.image;
     }
+    twin.discoveredAt = first;
   }
   return kept;
 }
