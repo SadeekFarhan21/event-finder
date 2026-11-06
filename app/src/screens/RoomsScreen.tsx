@@ -63,31 +63,29 @@ export function RoomsScreen({ visible, city, leads, setLeads, canSearch, onClose
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
       <View style={[s.root, Platform.OS === "android" && { paddingTop: insets.top }]}>
         <FlatList data={leads} keyExtractor={(l) => l.id} ListHeaderComponent={header}
-          contentContainerStyle={{ paddingHorizontal: 20, gap: 12, paddingBottom: Math.max(insets.bottom, 16) + 32 }}
+          contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: Math.max(insets.bottom, 16) + 32 }}
           ListEmptyComponent={busy ? undefined : <Text style={s.empty}>No rooms yet. Tap Find rooms to search this city.</Text>}
-          renderItem={({ item: l }) => (
-            <View style={s.card}>
-              <Text style={s.meta} numberOfLines={1}>
-                {[l.area, l.kind].filter(Boolean).join("  ·  ")}
-              </Text>
-              <Text style={s.name} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75}>{l.venue}</Text>
-              <Text style={s.fit} numberOfLines={3}>{l.fit}</Text>
-              <View style={s.footer}>
-                <View style={s.tags}>
-                  {l.quietNight && (
-                    <View style={s.night}><Ionicons name="moon-outline" size={13} color={C.ink} /><Text style={s.nightText}>{l.quietNight}</Text></View>
-                  )}
-                  {l.capacity && (
-                    <View style={s.cap}><Ionicons name="people-outline" size={13} color={C.ink2} /><Text style={s.capText}>{l.capacity}</Text></View>
-                  )}
-                </View>
-                {(l.contact || l.url) && (
-                  <Tap onPress={() => contact(l)} style={s.contact} accessibilityLabel={`Contact ${l.venue}`}>
-                    <Text style={s.contactText}>{l.contact?.includes("@") ? "Contact" : "Website"}</Text>
-                    <Ionicons name="arrow-forward" size={14} color={C.ink} />
-                  </Tap>
+          ItemSeparatorComponent={() => <View style={s.rule} />}
+          renderItem={({ item: l, index }) => (
+            <View style={s.item}>
+              <Text style={s.index}>{String(index + 1).padStart(2, "0")}</Text>
+              <View style={{ flex: 1, minWidth: 0 }}>
+                <Text style={s.meta} numberOfLines={1}>{[l.area, l.kind].filter(Boolean).join("  ·  ").toUpperCase()}</Text>
+                <Text style={s.name} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75}>{l.venue}</Text>
+                <Text style={s.fit} numberOfLines={2}>{l.fit}</Text>
+                {(l.quietNight || l.capacity) && (
+                  <Text style={s.facts} numberOfLines={1}>
+                    {[l.quietNight && `Quiet ${l.quietNight}s`, l.capacity].filter(Boolean).join("   ·   ")}
+                  </Text>
                 )}
               </View>
+              {(l.contact || l.url) && (
+                <Tap onPress={() => contact(l)} style={s.go} hitSlop={8}
+                  accessibilityLabel={`${l.contact?.includes("@") ? "Email" : "Open the website of"} ${l.venue}`}>
+                  <Ionicons name={l.contact?.includes("@") ? "mail-outline" : "arrow-up-outline"} size={17} color={C.ink}
+                    style={l.contact?.includes("@") ? undefined : { transform: [{ rotate: "45deg" }] }} />
+                </Tap>
+              )}
             </View>
           )} />
       </View>
@@ -108,9 +106,9 @@ const s = StyleSheet.create({
   hint: { fontFamily: F.regular, fontSize: T.small, color: C.ink3, marginTop: 8 },
   empty: { fontFamily: F.regular, fontSize: T.body, color: C.ink3, marginTop: 40 },
   card: { backgroundColor: C.surface, borderRadius: R.lg, padding: 16, borderWidth: 1, borderColor: C.hairline },
-  meta: { fontFamily: F.medium, fontSize: T.meta, color: C.ink3 },
+  meta: { fontFamily: F.semibold, fontSize: 11, color: C.ink3, letterSpacing: 1.4 },
   name: { fontFamily: F.display, fontSize: T.title, lineHeight: 32, color: C.ink, marginTop: 4 },
-  fit: { fontFamily: F.regular, fontSize: T.small, lineHeight: 20, color: C.ink2, marginTop: 4 },
+  fit: { fontFamily: F.regular, fontSize: T.small, lineHeight: 20, color: C.ink3, marginTop: 6 },
   footer: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 8 },
   tags: { flexDirection: "row", gap: 8, flexShrink: 1 },
   cap: { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 8, paddingVertical: 4, borderRadius: R.pill, backgroundColor: C.fill },
@@ -119,4 +117,9 @@ const s = StyleSheet.create({
   nightText: { fontFamily: F.semibold, fontSize: T.meta, color: C.ink },
   contact: { flexDirection: "row", alignItems: "center", gap: 4, minHeight: 44, paddingLeft: 12 },
   contactText: { fontFamily: F.semibold, fontSize: T.small, color: C.ink },
+  rule: { height: StyleSheet.hairlineWidth, backgroundColor: C.hairline },
+  item: { flexDirection: "row", alignItems: "flex-start", gap: 16, paddingVertical: 20 },
+  index: { fontFamily: F.display, fontSize: T.body, color: C.ink3, marginTop: 2, width: 22 },
+  facts: { fontFamily: F.medium, fontSize: T.meta, color: C.ink2, marginTop: 10 },
+  go: { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center", borderWidth: StyleSheet.hairlineWidth, borderColor: C.d4, marginTop: 18 },
 });
