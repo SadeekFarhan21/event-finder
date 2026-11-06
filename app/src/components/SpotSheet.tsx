@@ -175,15 +175,17 @@ export function SpotSheet({ spot, city, me, unlocked, canAskLocation, onAskLocat
 
             {/* Who's going, and getting your people there */}
             <View style={s.row}>
-              <View style={s.faces}>
-                {people.length ? people.slice(0, 3).map((m, i) => (
-                  <View key={i} style={[s.face, { marginLeft: i ? -10 : 0, zIndex: 3 - i }, m.status === "on_way" && s.faceOnWay]}>
-                    <Text style={[s.faceText, m.status === "on_way" && { color: C.bg }]}>{m.me ? "You" : initials(m.name)}</Text>
-                  </View>
-                )) : <View style={s.face}><Ionicons name="people" size={14} color={C.ink3} /></View>}
-              </View>
-              <Text style={s.rowText} numberOfLines={1}>
-                {going ? `${going} going` : "Nobody yet"}{isGoing && going > 1 ? ", including you" : ""}
+              {people.length ? (
+                <View style={s.faces}>
+                  {people.slice(0, 3).map((m, i) => (
+                    <View key={i} style={[s.face, { marginLeft: i ? -10 : 0, zIndex: 3 - i }, m.status === "on_way" && s.faceOnWay]}>
+                      <Text style={[s.faceText, m.status === "on_way" && { color: C.bg }]}>{m.me ? "You" : initials(m.name)}</Text>
+                    </View>
+                  ))}
+                </View>
+              ) : <Ionicons name="person-outline" size={18} color={C.ink2} />}
+              <Text style={[s.rowText, !going && { color: C.ink2, fontFamily: F.medium }]} numberOfLines={1}>
+                {going ? `${going} going` : "No one going yet"}{isGoing && going > 1 ? ", including you" : ""}
               </Text>
               <Tap style={[s.pill, isGoing && s.pillOn]} disabled={isGoing && !onUnGo} accessibilityState={{ selected: isGoing }}
                 accessibilityHint={isGoing && onUnGo ? "Tap to take it back" : undefined}

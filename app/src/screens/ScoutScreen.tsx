@@ -27,6 +27,7 @@ import { SpotSheet } from "../components/SpotSheet";
 import { EmptyCard, LoadingCard } from "../components/BottomStates";
 import { Toast } from "../components/Toast";
 import { OfflineBanner } from "../components/OfflineBanner";
+import { FirstRunHint } from "../components/FirstRunHint";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Tap } from "../components/Tap";
 import { RoomsScreen } from "./RoomsScreen";
@@ -186,6 +187,7 @@ export function ScoutScreen() {
         onRooms={() => { Haptics.selectionAsync(); setRoomsOpen(true); }} />
 
       <OfflineBanner top={insets.top} />
+      <FirstRunHint top={insets.top} city={cityInput} dismissed={!!detail || !!active} />
       <Toast text={toast.text} visible={toast.visible} />
 
       {loading && !spots.length ? <LoadingCard /> : !shown.length && !scouting ? (
