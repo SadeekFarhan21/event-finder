@@ -1,5 +1,6 @@
 import { View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 import { useFonts, InstrumentSerif_400Regular, InstrumentSerif_400Regular_Italic } from "@expo-google-fonts/instrument-serif";
 import { Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold } from "@expo-google-fonts/inter";
 import { ScoutScreen } from "./src/screens/ScoutScreen";
@@ -12,7 +13,7 @@ export default function App() {
   });
   return (
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: C.bg }}>
-      {fontsLoaded ? <ScoutScreen /> : <View />}
+      <SafeAreaProvider>{fontsLoaded ? <ScoutScreen /> : <View />}</SafeAreaProvider>
     </GestureHandlerRootView>
   );
 }
