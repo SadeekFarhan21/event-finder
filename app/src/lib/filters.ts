@@ -21,8 +21,9 @@ export function matches(e: Spot, f: Filter) {
   return e.category === f;
 }
 
-// Yelo partners first, then soonest; standing deals after dated events.
+// Yelo partners first, unconfirmed listings last, then soonest; standing deals after dated events.
 export function sortSpots(spots: Spot[]) {
   const t = (e: Spot) => (e.start && !isRecurring(e) ? Date.parse(e.start) : Infinity);
-  return [...spots].sort((a, b) => Number(!!b.partner) - Number(!!a.partner) || t(a) - t(b));
+  const shaky = (e: Spot) => Number(e.confidence === "low");
+  return [...spots].sort((a, b) => Number(!!b.partner) - Number(!!a.partner) || shaky(a) - shaky(b) || t(a) - t(b));
 }

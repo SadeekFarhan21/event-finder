@@ -105,7 +105,9 @@ export function SpotSheet({ spot, me, unlocked, onUnlock, onClose }: Props) {
           )}
 
           <Text style={s.source}>
-            {e.source === "demo" ? "Demo listing" : `Found on the web · ${e.confidence} confidence`}
+            {e.source === "demo" ? "Demo listing"
+              : e.confidence === "low" ? "Unconfirmed listing. Check the event page before you go."
+              : "Found on the web"}
             {fare ? "  ·  Fares are estimates" : ""}
           </Text>
         </ScrollView>
