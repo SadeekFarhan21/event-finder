@@ -42,6 +42,8 @@
   .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; margin-top: 20px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); }
   .stat { padding: 18px; border-left: 1px solid var(--line); min-width: 0; }
   .stat:first-child { border-left: 0; }
+  .stats.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .subh { font: 600 13px var(--body); color: var(--ink-3); margin: 22px 0 0; letter-spacing: .02em; }
   .stat b { display: block; font: 400 40px/1 var(--display); font-variant-numeric: tabular-nums; }
   .stat span { font-size: 13px; color: var(--ink-3); }
   ul.spots { list-style: none; padding: 0; margin: 16px 0 0; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); }
@@ -64,7 +66,8 @@
   .empty { color: var(--ink-3); font-size: 15px; margin-top: 14px; }
   @media (max-width: 700px) {
     .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .stat:nth-child(3) { border-left: 0; } .stat:nth-child(n+3) { border-top: 1px solid var(--line); }
+    .stats:not(.three) .stat:nth-child(3) { border-left: 0; } .stats:not(.three) .stat:nth-child(n+3) { border-top: 1px solid var(--line); }
+    .stats.three { grid-template-columns: minmax(0, 1fr); } .stats.three .stat { border-left: 0; } .stats.three .stat + .stat { border-top: 1px solid var(--line); }
     .form { grid-template-columns: minmax(0, 1fr); }
   }
 </style>
@@ -82,7 +85,7 @@
 
   <section aria-labelledby="stats-h">
     <h2 id="stats-h">How riders engage with you</h2>
-    <p class="note">Last 7 days. Counts come from the Scout app: people who opened your spot, tapped Ride, or unlocked your deal.</p>
+    <p class="note">Last 7 days. Counts come from the Scout app: people who opened your spot, tapped Ride, or unlocked your deal, and crews of friends heading to you together.</p>
     <form class="row" id="lookup">
       <label style="flex: 0 1 200px">City
         <select id="city"><option>New York, NY</option><option>Los Angeles, CA</option></select>
@@ -138,10 +141,12 @@
     ev.preventDefault();
     const venue = $("venue").value.trim(), city = $("city").value;
     $("result").innerHTML = `<p class="empty">Loading…</p>`;
-    const [stats, spots] = await Promise.all([
+    const [stats, spots, move] = await Promise.all([
       db.rpc("venue_stats", { p_venue: venue, p_city: city, p_days: 7 }),
       db.rpc("venue_spots", { p_venue: venue, p_city: city }),
+      db.rpc("venue_movement", { p_venue: venue, p_city: city, p_days: 7 }),
     ]);
+    const m = move.data?.[0] ?? { crews: 0, people: 0, on_way: 0 };
     if (stats.error || spots.error) { $("result").innerHTML = `<p class="msg err">Couldn't load stats. Try again in a moment.</p>`; return; }
     const by = Object.fromEntries((stats.data ?? []).map((r) => [r.kind, r]));
     const people = Math.max(0, ...(stats.data ?? []).map((r) => r.people));
@@ -154,9 +159,25 @@
         <div class="stat"><b>${n("unlock")}</b><span>Deals unlocked</span></div>
         <div class="stat"><b>${people.toLocaleString()}</b><span>People reached</span></div>
       </div>
+      <h3 class="subh">Ride activity</h3>
+      <div class="stats three">
+        <div class="stat"><b>${Number(m.crews).toLocaleString()}</b><span>Crews heading here</span></div>
+        <div class="stat"><b>${Number(m.people).toLocaleString()}</b><span>Riders in those crews</span></div>
+        <div class="stat"><b>${Number(m.on_way).toLocaleString()}</b><span>Marked on the way</span></div>
+      </div>
       ${(spots.data ?? []).length ? `<ul class="spots">${spots.data.map((s) => `<li><span>${esc(s.title)}${s.partner ? '<span class="tag">Yelo partner</span>' : ""}</span><small>${esc(fmt(s.start))}</small></li>`).join("")}</ul>`
         : `<p class="empty">${esc(venue)} has no spots on the map right now. List one below.</p>`}`;
   });
+
+  // Shareable stats link: venues.html?venue=Nublu&city=New%20York%2C%20NY opens straight to the numbers.
+  {
+    const q = new URLSearchParams(location.search);
+    if (q.get("venue")) {
+      if (q.get("city")) $("city").value = q.get("city");
+      $("venue").value = q.get("venue");
+      $("lookup").requestSubmit();
+    }
+  }
 
   // Private manage link: venues.html?listing=<token>. Same form, prefilled, for edits and take-downs.
   const token = new URLSearchParams(location.search).get("listing");
