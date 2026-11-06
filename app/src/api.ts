@@ -66,13 +66,19 @@ type WhenFields = Pick<YeloEvent, "start" | "category" | "title" | "deal">;
 
 export const isRecurring = (e: WhenFields) => e.category === "deal" || RECURRING.test(`${e.title} ${e.deal ?? ""}`);
 
+// A night out runs until 6am: a 1am set belongs to the evening before, so it reads "Tonight".
+const NIGHT_SHIFT = 6 * 3600e3;
+const nightDay = (t: number) => new Date(new Date(t - NIGHT_SHIFT).toDateString()).getTime();
+
+// End of the current night (6am), shared by the "Tonight" filter and the labels.
+export const nightEnd = (now = Date.now()) => nightDay(now) + 30 * 3600e3;
+
 export function whenLabel(e: WhenFields) {
   const text = `${e.title} ${e.deal ?? ""}`;
   if (isRecurring(e)) return /happy hour/i.test(text) ? "Happy hour" : "Recurring deal";
   if (!e.start) return "Ongoing";
   const d = new Date(e.start);
-  const today = new Date();
-  const days = Math.round((new Date(d.toDateString()).getTime() - new Date(today.toDateString()).getTime()) / 864e5);
+  const days = Math.round((nightDay(d.getTime()) - nightDay(Date.now())) / 864e5);
   const day = days === 0 ? "Tonight" : days === 1 ? "Tomorrow" : d.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
   return `${day} · ${d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}`;
 }
