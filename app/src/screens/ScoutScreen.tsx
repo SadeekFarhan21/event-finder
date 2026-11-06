@@ -19,7 +19,7 @@ import { useGoing } from "../hooks/useGoing";
 import { useCrews } from "../hooks/useCrews";
 import { openRide } from "../lib/ride";
 import { newIds } from "../lib/fresh";
-import { onNetworkChange } from "../lib/net";
+import { isOffline, onNetworkChange } from "../lib/net";
 import { friendlyError } from "../lib/report";
 import { track } from "../data/activity";
 import { useToast } from "../hooks/useToast";
@@ -129,7 +129,8 @@ export function ScoutScreen() {
       setTimeout(() => fit(list), 300);
     } catch (err) {
       setLoadFailed(true);
-      show(friendlyError(err, "Couldn't load spots"), true);
+      // Offline already has its own banner; a toast on top of it just collides.
+      if (!isOffline()) show(friendlyError(err, "Couldn't load spots"), true);
     }
   }, [load, fit, show, mapCity, settle]);
 
