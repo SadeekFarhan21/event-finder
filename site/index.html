@@ -20,6 +20,7 @@
   .ios { margin: 24px 0 0; padding: 12px 16px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); color: var(--ink-2); font-size: 16px; max-width: 34em; }
   .ios + .get { margin-top: 16px; }
   .get .btn.quiet { background: transparent; color: var(--ink); border: 1px solid var(--line); }
+  footer a { display: inline-flex; align-items: center; min-height: 44px; }
 </style>
 <title>Scout for Android</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -49,7 +50,7 @@
   :focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; border-radius: 8px; }
 
   header { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
-  .mark { display: inline-flex; align-items: baseline; gap: 0; font: 400 28px/1 var(--display); color: var(--ink); text-decoration: none; }
+  .mark { display: inline-flex; align-items: baseline; min-height: 44px; padding: 8px 0; gap: 0; font: 400 28px/1 var(--display); color: var(--ink); text-decoration: none; }
   .mark i { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--yellow); margin-left: 3px; }
   .mark-sub { font: 500 14px var(--body); color: var(--ink-3); margin-left: 10px; }
   .badge { font-size: 14px; color: var(--ink-3); }
@@ -67,7 +68,7 @@
   .btn:hover { background: var(--yellow-hover); }
   .btn svg { width: 20px; height: 20px; }
   .meta { font-size: 14px; color: var(--ink-3); display: grid; gap: 4px; }
-  .meta a { color: var(--ink-2); }
+  .meta a { color: var(--ink-2); display: inline-flex; align-items: center; min-height: 44px; }
 
   .qr { display: flex; align-items: center; gap: 16px; margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--line); }
   .qr-box { background: #FFFFFF; padding: 8px; border-radius: 8px; border: 1px solid var(--line); width: 104px; height: 104px; flex: none; }
