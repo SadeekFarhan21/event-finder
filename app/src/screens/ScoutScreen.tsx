@@ -60,6 +60,7 @@ export function ScoutScreen() {
 
   const open = useCallback(async (typed: string) => {
     const city = canonicalCity(typed); // "nyc" and "New York, NY" are the same map
+    if (!city) { setCityInput(mapCity ?? "New York, NY"); return; } // empty search: keep the current city
     setCityInput(city);
     setActive(null);
     try {
@@ -69,13 +70,14 @@ export function ScoutScreen() {
     } catch (err) {
       show((err as Error).message || "Couldn't load spots", true);
     }
-  }, [load, fit, show]);
+  }, [load, fit, show, mapCity]);
 
   useEffect(() => { open(cityInput); }, []);
 
   const runScout = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     const city = canonicalCity(cityInput);
+    if (!city) { show("Type a city to scout first."); return; }
     setCityInput(city);
     show(`Searching ${city.split(",")[0]} · about 2 min`, true);
     try {
