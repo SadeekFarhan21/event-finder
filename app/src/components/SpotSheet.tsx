@@ -154,7 +154,7 @@ export function SpotSheet({ spot, city, me, unlocked, canAskLocation, onAskLocat
           <View style={s.content}>
             <Text style={s.facts}>{facts}</Text>
 
-            <Text style={s.bill}>{e.title}</Text>
+            <Text style={s.bill} numberOfLines={2}>{e.title}</Text>
             {!!e.description && (
               <Tap pressedScale={1} onPress={() => setMore((m) => !m)} accessibilityLabel={more ? "Show less" : "Show more"}>
                 <Text style={s.desc} numberOfLines={more ? undefined : 2}>{e.description}</Text>
@@ -185,9 +185,9 @@ export function SpotSheet({ spot, city, me, unlocked, canAskLocation, onAskLocat
             {crew ? (
               <Animated.View entering={FadeIn} style={s.crew}>
                 <View style={{ flex: 1 }}>
-                  <Text style={s.crewTitle}>Your crew  ·  {leaveLabel(crew.leaveAt)}</Text>
+                  <Text style={s.crewTitle} numberOfLines={1}>{leaveLabel(crew.leaveAt)}</Text>
                   <Text style={s.crewSub} numberOfLines={1}>
-                    {people.length} coming{crew.members.some((m) => m.status === "on_way") ? `  ·  ${crew.members.filter((m) => m.status === "on_way").length} on the way` : ""}
+                    Your crew  ·  {people.length} coming{crew.members.some((m) => m.status === "on_way") ? `  ·  ${crew.members.filter((m) => m.status === "on_way").length} on the way` : ""}
                   </Text>
                 </View>
                 {meInCrew?.status === "out" ? (

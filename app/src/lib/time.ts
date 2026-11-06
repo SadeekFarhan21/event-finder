@@ -43,3 +43,10 @@ export function whenPhrase(e: WhenFields) {
   const day = days === 0 ? "tonight" : days === 1 ? "tomorrow" : d.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
   return `${day} at ${clock(d)}`;
 }
+
+// "Producer Mondays with Ray Angry & The Council of…": long scraped titles, cut at a word.
+export function shortTitle(title: string, max = 48) {
+  if (title.length <= max) return title;
+  const cut = title.slice(0, max).replace(/\s+\S*$/, "");
+  return `${cut}…`;
+}

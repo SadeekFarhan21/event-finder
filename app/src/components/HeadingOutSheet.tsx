@@ -74,7 +74,7 @@ export function HeadingOutSheet({ spot, visible, onStart, onClose }: {
         <View style={[s.sheet, { paddingBottom: Math.max(insets.bottom, 16) + 12 }]}>
           <View style={s.grabber} />
           <Text style={s.title}>Go with friends</Text>
-          <Text style={s.sub} numberOfLines={1}>{spot.venue}  ·  pick when you're leaving, then send the link</Text>
+          <Text style={s.sub} numberOfLines={1}>{spot.venue}. Pick when you're leaving.</Text>
 
           <View style={s.options}>
             {options.map((o, i) => {

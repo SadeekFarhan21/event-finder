@@ -2,7 +2,7 @@
 // spot_activity (kind 'going', unique devices), and what this device said lives on the device.
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import type { Spot } from "../lib/types";
-import { whenPhrase } from "../lib/time";
+import { shortTitle, whenPhrase } from "../lib/time";
 import { supabase } from "./supabase";
 
 const MINE_KEY = "scout.going";
@@ -28,4 +28,4 @@ export const saveMine = (mine: Set<string>) =>
 export const spotLink = (e: Spot) => `${SITE}/e.html?id=${encodeURIComponent(e.id)}`;
 
 export const inviteMessage = (e: Spot, going: boolean) =>
-  `${going ? "I'm going to" : "Want to come to"} ${e.title} at ${e.venue}, ${whenPhrase(e)}? ${spotLink(e)}`;
+  `${going ? "I'm going to" : "Come to"} ${e.venue} ${whenPhrase(e)}: ${shortTitle(e.title)}. ${spotLink(e)}`;
