@@ -1,5 +1,6 @@
 // The main screen: map of spots, search + filters on top, cards along the bottom.
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Linking, StyleSheet, Text, View } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { LinearGradient } from "expo-linear-gradient";
@@ -45,6 +46,8 @@ const TOP_BAND = (HEADER_GAP + HEADER_H + 40) / Dimensions.get("window").height;
 
 const START: Region = { latitude: 40.728, longitude: -73.99, latitudeDelta: 0.09, longitudeDelta: 0.09 };
 const FIT_PADDING = { top: 200, right: 40, bottom: 220, left: 40 };
+
+const CITY_KEY = "scout.city";
 
 export function ScoutScreen() {
   const map = useRef<ScoutMapRef>(null);
@@ -118,6 +121,7 @@ export function ScoutScreen() {
     try {
       const list = await load(city);
       setLoadFailed(false);
+      AsyncStorage.setItem(CITY_KEY, city).catch(() => {});
       // Open on tonight; on a quiet night (fewer than 3 things on), show the week instead.
       const tonight = list.filter((e) => matches(e, "tonight")).length;
       setFilter(tonight >= 3 ? "tonight" : "all");
@@ -134,7 +138,11 @@ export function ScoutScreen() {
     }
   }, [load, fit, show, mapCity, settle]);
 
-  useEffect(() => { open(cityInput); }, []);
+  // Reopen the city the rider last looked at (an LA rider shouldn't land in New York every launch).
+  useEffect(() => {
+    AsyncStorage.getItem(CITY_KEY).catch(() => null)
+      .then((saved) => open(canonicalCity(saved ?? "") || cityInput));
+  }, []);
   // Back online after a failed load: try again on its own instead of leaving an empty map.
   useEffect(() => onNetworkChange((offline) => { if (!offline && loadFailed) open(cityInput); }), [loadFailed, cityInput, open]);
 
