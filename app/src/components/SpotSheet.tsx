@@ -11,6 +11,7 @@ import Animated, { FadeInDown, interpolate, useAnimatedStyle, useSharedValue, wi
 import { scheduleOnRN } from "react-native-worklets";
 import { estimateFare, type Point } from "../lib/fare";
 import { openRide } from "../lib/ride";
+import { track } from "../data/activity";
 import { whenLabel } from "../lib/time";
 import type { Spot } from "../lib/types";
 import { CATEGORY, color as C, font as F, radius as R } from "../theme";
@@ -21,18 +22,19 @@ const OFFSCREEN = SCREEN_H;
 const OPEN = { damping: 24, stiffness: 240, mass: 0.9 };
 
 type Props = {
-  spot: Spot | null; me: Point | null; unlocked: boolean;
+  spot: Spot | null; city: string; me: Point | null; unlocked: boolean;
   canAskLocation: boolean; onAskLocation: () => void; // ask for location here, where the ride price explains why
   onUnlock: (spot: Spot) => void; onClose: () => void;
 };
 
-export function SpotSheet({ spot, me, unlocked, canAskLocation, onAskLocation, onUnlock, onClose }: Props) {
+export function SpotSheet({ spot, city, me, unlocked, canAskLocation, onAskLocation, onUnlock, onClose }: Props) {
   const y = useSharedValue(OFFSCREEN);
   const [shown, setShown] = useState<Spot | null>(null); // stays mounted while sliding out
 
   useEffect(() => {
     if (!spot) return;
     setShown(spot);
+    track(spot, "view", city);
     y.value = OFFSCREEN;
     y.value = withSpring(0, OPEN);
   }, [spot?.id]);
@@ -127,13 +129,13 @@ export function SpotSheet({ spot, me, unlocked, canAskLocation, onAskLocation, o
 
         {/* Actions stay put while the details scroll */}
         <View style={[s.actions, { paddingBottom: Math.max(insets.bottom, 16) + 8 }]}>
-          <Tap style={[s.btn, s.btnPrimary]} onPress={() => openRide(e)}>
+          <Tap style={[s.btn, s.btnPrimary]} onPress={() => { track(e, "ride", city); openRide(e); }}>
             <Ionicons name="car-outline" size={18} color={C.ink} />
             <Text style={s.btnPrimaryText}>{fare ? `Ride · ~$${fare.yelo}` : "Ride there"}</Text>
           </Tap>
           {e.deal ? (
             <Tap style={[s.btn, s.btnDeal, unlocked && { opacity: 0.45 }]} disabled={unlocked}
-              onPress={() => { Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); onUnlock(e); }}>
+              onPress={() => { Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); track(e, "unlock", city); onUnlock(e); }}>
               <Text style={s.btnDealText}>{unlocked ? "Unlocked" : "Unlock deal"}</Text>
             </Tap>
           ) : e.url ? (

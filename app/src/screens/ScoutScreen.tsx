@@ -164,7 +164,7 @@ export function ScoutScreen() {
       <RoomsScreen visible={roomsOpen} city={mapCity ?? cityInput} leads={leads} setLeads={setLeads} canSearch={scoutable}
         onClose={() => setRoomsOpen(false)} />
 
-      <SpotSheet spot={detail} me={me} canAskLocation={canAskLocation} onAskLocation={askLocation} unlocked={!!detail && unlocked.has(detail.id)}
+      <SpotSheet spot={detail} city={mapCity ?? cityInput} me={me} canAskLocation={canAskLocation} onAskLocation={askLocation} unlocked={!!detail && unlocked.has(detail.id)}
         onUnlock={(e) => setUnlocked((u) => new Set(u).add(e.id))} onClose={() => setDetail(null)} />
     </View>
   );
