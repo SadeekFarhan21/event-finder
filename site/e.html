@@ -22,8 +22,9 @@
   .wrap { max-width: 560px; margin: 0 auto; padding-inline: 16px; padding-block: 24px 64px; }
   a { color: inherit; }
   :focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; border-radius: 8px; }
-  .mark { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; font-weight: 600; text-decoration: none; }
-  .mark i { width: 28px; height: 28px; border-radius: 8px; background: var(--yellow); display: grid; place-items: center; font: 400 20px/1 var(--display); font-style: normal;  color: var(--on-yellow); }
+  .mark { display: inline-flex; align-items: baseline; gap: 0; font: 400 26px/1 var(--display); color: var(--ink); text-decoration: none; }
+  .mark i { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--yellow); margin-left: 3px; }
+  .mark-sub { font: 500 14px var(--body); color: var(--ink-3); margin-left: 10px; }
   .card { margin-top: 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; }
   .hero { display: block; width: 100%; height: 200px; object-fit: cover; background: var(--fill); border-bottom: 1px solid var(--line); }
   .body { padding: 24px 16px; }
@@ -79,7 +80,7 @@
 </head>
 <body>
 <div class="wrap">
-  <a class="mark" href="./"><i>s</i> Scout</a>
+  <a class="mark" href="./">Scout<i aria-hidden="true"></i></a>
   <main id="app" aria-live="polite"><p class="note" style="margin-top:32px">Loading the night…</p></main>
 </div>
 
