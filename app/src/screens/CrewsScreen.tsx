@@ -44,7 +44,7 @@ export function CrewsScreen({ visible, crews, linkCode, onJoin, onStatus, onRide
   };
 
   const header = (
-    <View style={[s.head, Platform.OS === "android" && { paddingTop: insets.top + 16 }]}>
+    <View style={s.head}>
       <Tap onPress={onClose} hitSlop={12} style={s.close} accessibilityLabel="Close crews">
         <Ionicons name="chevron-down" size={22} color={C.ink} />
       </Tap>
@@ -70,7 +70,7 @@ export function CrewsScreen({ visible, crews, linkCode, onJoin, onStatus, onRide
 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
-      <View style={s.root}>
+      <View style={[s.root, Platform.OS === "android" && { paddingTop: insets.top }]}>
         <FlatList data={crews} keyExtractor={(c) => c.code} ListHeaderComponent={header}
           contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: insets.bottom + 32, gap: 12 }}
           keyboardShouldPersistTaps="handled"

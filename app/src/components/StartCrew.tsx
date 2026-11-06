@@ -77,7 +77,7 @@ const s = StyleSheet.create({
   box: { padding: 16, borderRadius: R.lg, backgroundColor: C.fill, gap: 8 },
   label: { fontFamily: F.medium, fontSize: T.meta, color: C.ink3, marginTop: 2 },
   chips: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  chip: { height: 44, paddingHorizontal: 16, borderRadius: R.pill, justifyContent: "center", backgroundColor: C.surface, borderWidth: 1, borderColor: C.hairline },
+  chip: { height: 44, paddingHorizontal: 12, borderRadius: R.pill, justifyContent: "center", backgroundColor: C.surface, borderWidth: 1, borderColor: C.hairline },
   chipOn: { backgroundColor: C.ink, borderColor: C.ink },
   chipText: { fontFamily: F.semibold, fontSize: T.small, color: C.ink },
   input: { height: 44, borderRadius: R.md, paddingHorizontal: 12, backgroundColor: C.surface, borderWidth: 1, borderColor: C.hairline,

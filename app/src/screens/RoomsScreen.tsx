@@ -41,7 +41,7 @@ export function RoomsScreen({ visible, city, leads, setLeads, canSearch, onClose
   const insets = useSafeAreaInsets();
   // The header scrolls with the list: on a small phone a fixed header left room for ~1.5 cards.
   const header = (
-    <View style={[s.head, Platform.OS === "android" && { paddingTop: insets.top + 16 }]}>
+    <View style={s.head}>
       <Tap onPress={onClose} hitSlop={12} style={s.close} accessibilityLabel="Close rooms">
         <Ionicons name="chevron-down" size={22} color={C.ink} />
       </Tap>
@@ -61,7 +61,7 @@ export function RoomsScreen({ visible, city, leads, setLeads, canSearch, onClose
 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
-      <View style={s.root}>
+      <View style={[s.root, Platform.OS === "android" && { paddingTop: insets.top }]}>
         <FlatList data={leads} keyExtractor={(l) => l.id} ListHeaderComponent={header}
           contentContainerStyle={{ paddingHorizontal: 20, gap: 12, paddingBottom: Math.max(insets.bottom, 16) + 32 }}
           ListEmptyComponent={busy ? undefined : <Text style={s.empty}>No rooms yet. Tap Find rooms to search this city.</Text>}
