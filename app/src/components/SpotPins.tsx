@@ -27,7 +27,7 @@ export function SpotPins({ clusters, active, onSpot, onCluster, onActive }: Prop
           </ScoutMarker>
         ) : (
           <ScoutMarker key={c.key} coordinate={{ latitude: c.lat, longitude: c.lng }} onPress={() => onCluster(c.events)}>
-            <View style={s.cluster}><Text style={s.clusterText}>{c.events.length}</Text></View>
+            <View style={[s.cluster, clusterSize(c.events.length)]}><Text style={s.clusterText}>{c.events.length}</Text></View>
           </ScoutMarker>
         );
       })}
@@ -44,12 +44,19 @@ export function SpotPins({ clusters, active, onSpot, onCluster, onActive }: Prop
   );
 }
 
+// Busier clusters read bigger, so the map shows where the night is at a glance:
+// 2 spots -> 30px, ~8 -> 38px, 25+ -> 44px.
+const clusterSize = (n: number) => {
+  const d = Math.round(26 + Math.min(18, Math.log2(n) * 4));
+  return { minWidth: d, height: d, borderRadius: d / 2 };
+};
+
 const s = StyleSheet.create({
   pin: { width: 28, height: 28, borderRadius: 14, backgroundColor: C.ink, borderWidth: 2, borderColor: "#fff", alignItems: "center", justifyContent: "center", ...shadow, shadowOpacity: 0.2 },
   pinPartner: { borderColor: C.yellow, borderWidth: 3 },
   pinActive: { width: 42, height: 42, borderRadius: 21, backgroundColor: C.yellow, borderWidth: 3, borderColor: "#fff", alignItems: "center", justifyContent: "center", ...shadow, shadowOpacity: 0.25 },
   label: { marginTop: 4, paddingHorizontal: 9, paddingVertical: 4, borderRadius: R.pill, backgroundColor: C.surface, maxWidth: 180, ...shadow },
   labelText: { fontFamily: F.semibold, fontSize: 12, color: C.ink },
-  cluster: { minWidth: 32, height: 32, paddingHorizontal: 8, borderRadius: 16, backgroundColor: C.surface, borderWidth: 1.5, borderColor: C.ink, alignItems: "center", justifyContent: "center", ...shadow },
+  cluster: { paddingHorizontal: 8, backgroundColor: C.surface, borderWidth: 1.5, borderColor: C.ink, alignItems: "center", justifyContent: "center", ...shadow },
   clusterText: { fontFamily: F.semibold, fontSize: 13, color: C.ink },
 });

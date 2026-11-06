@@ -15,10 +15,10 @@ export function clusterEvents(events: Spot[], region: Region): Cluster[] {
   const clusters = [...buckets].map(([key, group]) => toCluster(key, group));
 
   // Pins near a cell edge land in neighboring buckets and render on top of each other;
-  // fold any two clusters closer than ~60% of a cell into one.
+  // fold any two clusters closer than ~75% of a cell (clusters grow with their count, so they need the room) into one.
   const merged: Cluster[] = [];
   for (const c of clusters) {
-    const near = merged.find((m) => Math.hypot(m.lat - c.lat, m.lng - c.lng) < cell * 0.6);
+    const near = merged.find((m) => Math.hypot(m.lat - c.lat, m.lng - c.lng) < cell * 0.75);
     if (near) Object.assign(near, toCluster(near.key, [...near.events, ...c.events]));
     else merged.push(c);
   }
