@@ -27,8 +27,9 @@
   .keyrow input { flex: 0 1 360px; }
   button { font: 600 15px var(--body); min-height: 44px; border: 1px solid var(--ink); border-radius: 999px; padding: 0 16px; cursor: pointer; background: var(--surface); color: var(--ink); }
   button:hover { background: var(--fill); }
-  button.approve, button.primary { background: var(--yellow); border-color: var(--yellow); }
-  button.approve:hover, button.primary:hover { background: #F5DC00; }
+  /* Yellow only for the decision itself; "Open queue" stays outlined. */
+  button.approve { background: var(--yellow); border-color: var(--yellow); }
+  button.approve:hover { background: #F5DC00; }
   button.reject { border-color: var(--line); color: var(--ink-2); }
   button:disabled { opacity: .5; cursor: default; }
   h2 { font: 400 28px/1.1 var(--display); margin: 32px 0 12px; }
