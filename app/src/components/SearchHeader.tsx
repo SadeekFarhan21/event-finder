@@ -56,7 +56,8 @@ export function SearchHeader({ city, onCityChange, onSubmitCity, onScout, scouti
           </Tap>
         </View>
 
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.chips}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.chips} style={open && { opacity: 0 }}
+          pointerEvents={open ? "none" : "auto"}>
           {FILTERS.map((k) => (
             <Tap key={k} onPress={() => onFilter(k)} hitSlop={{ top: 6, bottom: 6 }} style={[s.chip, filter === k && s.chipOn]}
               accessibilityRole="tab" accessibilityState={{ selected: filter === k }}>
