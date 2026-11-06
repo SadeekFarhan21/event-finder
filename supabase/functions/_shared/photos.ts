@@ -12,6 +12,20 @@ const SITE_CARD = /(^|[\/_.-])(share|sharing|social|og[-_]?default|opengraph[-_]
 
 const MAX_BYTES = 256 * 1024;
 
+// A page's preview photo only stands for a spot when the page is about that venue: a word from
+// the venue's name (4+ letters, not a generic word) appears in the page's host or path. A
+// "best live music this weekend" roundup leads with some other show's photo; that must not be
+// shown as this venue.
+const GENERIC = new Set(["the", "bar", "club", "room", "hall", "house", "lounge", "cafe", "gallery", "studio", "new", "york", "theater", "theatre", "music", "brooklyn", "manhattan", "angeles"]);
+export function pageAboutVenue(pageUrl: string | null | undefined, venue: string): boolean {
+  if (!pageUrl) return false;
+  let u: URL;
+  try { u = new URL(pageUrl); } catch { return false; }
+  const hay = (u.hostname + u.pathname).toLowerCase().replace(/[^a-z0-9]/g, "");
+  const words = venue.toLowerCase().normalize("NFKD").replace(/[^a-z0-9 ]/g, " ").split(/\s+/).filter((w) => w.length >= 4 && !GENERIC.has(w));
+  return words.some((w) => hay.includes(w));
+}
+
 export function isPublicHttps(raw: string): URL | null {
   let u: URL;
   try { u = new URL(raw); } catch { return null; }

@@ -1,4 +1,5 @@
 // The discovery agent: Exa search -> structured events -> geocode -> dedupe.
+import { pageAboutVenue } from "./photos.ts";
 import { isRateLimit, type AgentDeps, type GeoCache, type Point } from "./deps.ts";
 import { cleanTitle, cleanVenue } from "./clean.ts";
 import { partnerAddress, partnersIn } from "./partners.ts";
@@ -116,7 +117,7 @@ export async function discover(city: string, { exa, geo, log = () => {}, deadlin
         const rank = { low: 0, medium: 1, high: 2 } as const;
         const confidence = g.length ? g.reduce((m, x) => (rank[x.confidence] < rank[m] ? x.confidence : m), "high" as YeloEvent["confidence"]) : "medium";
         const urls = [e.url, ...g.flatMap((x) => x.citations.map((c) => c.url))].filter(Boolean) as string[];
-        const image = urls.map((u) => imageOf.get(u)).find(Boolean) ?? "";
+        const image = urls.filter((u) => pageAboutVenue(u, String(e.venue ?? ""))).map((u) => imageOf.get(u)).find(Boolean) ?? "";
         return { ...e, url: e.url || urls[0] || "", image, confidence };
       });
     }),

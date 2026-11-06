@@ -4,7 +4,7 @@ import { cleanTitle, cleanVenue, dedupeEvents } from "../_shared/clean.ts";
 import { canonicalCity, cityKey } from "../_shared/cities.ts";
 import { validDate, type YeloEvent } from "../_shared/discover.ts";
 import { describeIssues, errorBody, ScoutRequest } from "../_shared/requests.ts";
-import { isPrivateAddress, isPublicHttps, isSafeTarget, ogImageFrom } from "../_shared/photos.ts";
+import { isPrivateAddress, isPublicHttps, isSafeTarget, ogImageFrom, pageAboutVenue } from "../_shared/photos.ts";
 
 const ev = (over: Partial<YeloEvent>): YeloEvent => ({
   id: "x", city: "new york, ny", title: "Jazz", venue: "Nublu", address: "151 Avenue C", start: "2026-11-07T00:00:00Z",
@@ -129,4 +129,12 @@ Deno.test("dedupe keeps the earliest discovery time (so re-found spots aren't 'n
   ]);
   assertEquals(out.length, 1);
   assertEquals(out[0].discoveredAt, "2026-11-04T10:00:00Z");
+});
+
+Deno.test("photos: only a page about the venue can supply its photo", () => {
+  assert(pageAboutVenue("https://www.terrablues.com/calendar", "Terra Blues"));
+  assert(pageAboutVenue("https://dice.fm/event/nublu-151-fkajazz", "Nublu 151"));
+  assert(!pageAboutVenue("https://www.theaquarian.com/2026/11/06/the-manhattan-beat-the-best-live-music-choices-this-weekend-in-nyc/", "Terra Blues"));
+  assert(!pageAboutVenue("https://example.com/best-bars", "The Bar Room")); // only generic words
+  assert(!pageAboutVenue(null, "Nublu"));
 });

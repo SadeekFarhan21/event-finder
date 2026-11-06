@@ -19,7 +19,7 @@ import type { ExaLike, GeoCache } from "../_shared/deps.ts";
 import type { Database } from "../_shared/database.types.ts";
 import { describeIssues, errorBody, ScoutRequest, SERVED_CITIES } from "../_shared/requests.ts";
 import { agentLogger, log } from "../_shared/log.ts";
-import { findPagePhoto } from "../_shared/photos.ts";
+import { findPagePhoto, pageAboutVenue } from "../_shared/photos.ts";
 
 type EventRow = Database["public"]["Tables"]["events"]["Row"];
 
@@ -177,13 +177,14 @@ async function review(auth: string | null, body: Extract<ScoutRequest, { task: "
 
 // Up to 12 spots per call, soonest first, 4 pages at a time. Each spot is tried once.
 async function fillPhotos() {
-  const { data } = await db.from("events").select("id, url").is("image", null).is("photo_checked_at", null)
+  const { data } = await db.from("events").select("id, url, venue").is("image", null).is("photo_checked_at", null)
     .like("url", "https://%").order("start", { ascending: true, nullsFirst: false }).limit(12);
   const rows = data ?? [];
   let found = 0;
   for (let i = 0; i < rows.length; i += 4) {
     await Promise.all(rows.slice(i, i + 4).map(async (r) => {
-      const image = await findPagePhoto(r.url!);
+      // Only a page about this venue can supply its photo (not a city-wide roundup).
+      const image = pageAboutVenue(r.url, r.venue) ? await findPagePhoto(r.url!) : null;
       if (image) found++;
       await db.from("events").update({ image, photo_checked_at: new Date().toISOString() }).eq("id", r.id);
     }));
