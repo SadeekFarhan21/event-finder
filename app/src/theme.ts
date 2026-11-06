@@ -28,6 +28,7 @@ export const color = {
   onAccent: "#14130F",
   red: "#FF7A6B",
   scrim: "rgba(0,0,0,0.55)", // dims the map behind the spot sheet
+  selection: "rgba(255,225,74,0.35)", // selected text in inputs (Android defaults to green)
 };
 
 // Instrument Serif is the display face on joinyelo.com; Inter does the rest.

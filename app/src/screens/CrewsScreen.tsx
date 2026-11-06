@@ -54,10 +54,10 @@ export function CrewsScreen({ visible, crews, linkCode, onJoin, onStatus, onRide
       <View style={s.joinBox}>
         <Text style={s.label}>Got a link from a friend?</Text>
         <Text style={s.fieldLabel}>Crew link or code</Text>
-        <TextInput value={code} onChangeText={(v) => { setCode(v); setJoined(null); }} placeholder="scout-download.vercel.app/e.html?crew=…"
+        <TextInput selectionColor={C.selection} cursorColor={C.accent} value={code} onChangeText={(v) => { setCode(v); setJoined(null); }} placeholder="scout-download.vercel.app/e.html?crew=…"
           placeholderTextColor={C.placeholder} style={s.input} autoCapitalize="none" autoCorrect={false} accessibilityLabel="Crew link or code" />
         <Text style={s.fieldLabel}>Your first name</Text>
-        <TextInput value={name} onChangeText={setName} placeholder="First name" placeholderTextColor={C.placeholder}
+        <TextInput selectionColor={C.selection} cursorColor={C.accent} value={name} onChangeText={setName} placeholder="First name" placeholderTextColor={C.placeholder}
           style={s.input} maxLength={30} autoCapitalize="words" accessibilityLabel="Your first name" />
         {error && <Text style={s.error}>{error}</Text>}
         {joined && !error && <Text style={s.success}>You're in. The crew for {joined} is below.</Text>}

@@ -45,7 +45,7 @@ export function SearchHeader({ city, onCityChange, onSubmitCity, onScout, scouti
         <View style={s.row}>
           <Glass style={s.search}>
             <Ionicons name="location-outline" size={18} color={C.ink2} />
-            <TextInput value={city} onChangeText={onCityChange} onSubmitEditing={() => onSubmitCity(city)} placeholder="Search a city"
+            <TextInput selectionColor={C.selection} cursorColor={C.accent} value={city} onChangeText={onCityChange} onSubmitEditing={() => onSubmitCity(city)} placeholder="Search a city"
               placeholderTextColor={C.placeholder} style={s.input} returnKeyType="search" selectTextOnFocus
               onFocus={() => setEditing(true)} onBlur={() => setEditing(false)} />
           </Glass>

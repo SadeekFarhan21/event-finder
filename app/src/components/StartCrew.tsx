@@ -60,7 +60,7 @@ export function StartCrew({ spot, onStart, onCancel }: {
         ))}
       </View>
       <Text style={s.label}>Your name, for your friends</Text>
-      <TextInput value={name} onChangeText={setName} placeholder="First name" placeholderTextColor={C.placeholder}
+      <TextInput selectionColor={C.selection} cursorColor={C.accent} value={name} onChangeText={setName} placeholder="First name" placeholderTextColor={C.placeholder}
         style={s.input} maxLength={30} autoCapitalize="words" returnKeyType="done" />
       {error && <Text style={s.error}>{error}</Text>}
       <View style={s.row}>
