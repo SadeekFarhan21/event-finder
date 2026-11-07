@@ -183,7 +183,10 @@ export async function discover(city: string, { exa, geo, log = () => {}, deadlin
 }
 
 // Site chrome, not a photo of the place: logos, icons, avatars, placeholders.
-const NOT_A_PHOTO = /logo|favicon|icon|avatar|placeholder|default[-_]?(image|og)|\.svg(\?|$)/i;
+// Not a photo of the place: logos, icons, and the social-network badges venue sites link out with
+// (Mattie's "photo" was mattiesweho.com/images/f/tiktok-22.webp). Only a file *named* for a network
+// counts: Instagram post images and "…_facebook_1920x1005.jpg" event art are real photos.
+export const NOT_A_PHOTO = /logo|favicon|icon|avatar|placeholder|default[-_]?(image|og)|\.svg(\?|$)|\/(tiktok|instagram|facebook|twitter|x|youtube|spotify|linkedin|pinterest|snapchat|whatsapp)([-_]?(\d+|white|black|color|round|square))*\.(png|webp|jpe?g|gif)(\?|$)|social\/[\w-]*preview|[-_/]badge[-_.]/i;
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
