@@ -16,46 +16,56 @@ const LATE = ["nightlife", "music"];
 
 export function planNight(spots: Spot[], now = Date.now(), me?: { lat: number; lng: number } | null): Stop[] {
   const end = nightEnd(now);
-  const timed = spots.filter((e) => !isRecurring(e) && e.start && Date.parse(e.start) >= now - 20 * 60000 && Date.parse(e.start) < end);
   const usable = (e: Spot) => e.confidence !== "low";
-
-  const stops: Stop[] = [];
+  const timed = spots.filter((e) => usable(e) && !isRecurring(e) && e.start && Date.parse(e.start) >= now - 20 * 60000 && Date.parse(e.start) < end);
   // Start from the rider only when they're in this city: browsing LA from New York, every stop is
   // thousands of km from "here" and nothing would ever fit.
   const here = me && spots.some((e) => km(me, e) <= 25) ? me : null;
-  let at: { lat: number; lng: number } | null = here;
-  let free = now; // when the rider is free to start the next stop
+  const reach = (e: Spot) => !here || km(here, e) <= MAX_KM;
+  const fromHere = (e: Spot) => (here ? km(here, e) : 0) - (e.partner ? 0.3 : 0);
 
-  // Open with a happy hour that's on right now, nearest first (partners win ties).
-  const deals = spots.filter((e) => isRecurring(e) && usable(e) && dealRank(e, now) === 0);
-  const near = (e: Spot) => (at ? km(at, e) : 0) - (e.partner ? 0.3 : 0);
-  const opener = [...deals].sort((a, b) => near(a) - near(b))[0];
-  if (opener && (!at || km(at, opener) <= MAX_KM)) {
-    stops.push({ spot: opener, step: "Start here", hop: null });
-    at = opener; free = now + 60 * 60000;
+  // The route from one first stop: greedy, close by and soon after the one before.
+  function build(seed: Spot | null): Stop[] {
+    const stops: Stop[] = [];
+    let at: { lat: number; lng: number } | null = here;
+    let free = now; // when the rider is free to start the next stop
+    if (seed) {
+      stops.push({ spot: seed, step: "Start here", hop: null });
+      at = seed; free = isRecurring(seed) ? now + 60 * 60000 : Date.parse(seed.start!) + STAY;
+    }
+    while (stops.length < 3) {
+      const used = new Set(stops.map((s) => s.spot.venue.toLowerCase()));
+      const prev = stops[stops.length - 1]?.spot;
+      const cands = timed.filter((e) => !used.has(e.venue.toLowerCase()) && Date.parse(e.start!) >= free - 15 * 60000
+        && (!at || km(at, e) <= MAX_KM));
+      if (!cands.length) break;
+      // Close by and soon; a different kind of night than the last stop; Yelo partners nudged up.
+      // The last stop leans late (a club or a set), so the night ends somewhere with a room.
+      const score = (e: Spot) => (at ? km(at, e) : 0) + (Date.parse(e.start!) - free) / 3600e3 * 0.8
+        - (e.partner ? 0.5 : 0) + (prev && prev.category === e.category ? 0.6 : 0)
+        + (stops.length === 2 && !LATE.includes(e.category) ? 1 : 0);
+      const next = cands.sort((a, b) => score(a) - score(b))[0];
+      const d = at && stops.length ? km(at, next) : null;
+      const hop = d === null ? null : d < 0.5 ? "a short walk" : `${(d * 0.621).toFixed(1)} mi`;
+      // "Late" only for what really is (9 PM to 6 AM in the city): a 7 PM set reads "Then".
+      const h = cityHour(Date.parse(next.start!)), late = h >= 21 || h < 6;
+      stops.push({ spot: next, step: stops.length === 0 ? "Start here" : late && stops.length === 2 ? "Late" : "Then", hop });
+      at = next; free = Date.parse(next.start!) + STAY;
+    }
+    return stops;
   }
 
-  while (stops.length < 3) {
-    const used = new Set(stops.map((s) => s.spot.venue.toLowerCase()));
-    const prev = stops[stops.length - 1]?.spot;
-    const cands = timed.filter((e) => usable(e) && !used.has(e.venue.toLowerCase()) && Date.parse(e.start!) >= free - 15 * 60000
-      && (!at || km(at, e) <= MAX_KM));
-    if (!cands.length) break;
-    // Close by and soon; a different kind of night than the last stop; Yelo partners nudged up.
-    // The last stop leans late (a club or a set), so the night ends somewhere with a room.
-    const score = (e: Spot) => (at ? km(at, e) : 0) + (Date.parse(e.start!) - free) / 3600e3 * 0.8
-      - (e.partner ? 0.5 : 0) + (prev && prev.category === e.category ? 0.6 : 0)
-      + (stops.length === 2 && !LATE.includes(e.category) ? 1 : 0);
-    const next = cands.sort((a, b) => score(a) - score(b))[0];
-    const d = at && stops.length ? km(at, next) : null;
-    const hop = d === null ? null : d < 0.5 ? "a short walk" : `${(d * 0.621).toFixed(1)} mi`;
-    // "Late" only for what really is (9 PM to 6 AM in the city): a 7 PM set reads "Then".
-    const h = cityHour(Date.parse(next.start!)), late = h >= 21 || h < 6;
-    stops.push({ spot: next, step: stops.length === 0 ? "Start here" : late && stops.length === 2 ? "Late" : "Then", hop });
-    at = next; free = Date.parse(next.start!) + STAY;
+  // Try first stops in order of preference until one leads somewhere: a happy hour on now (nearest,
+  // partners first), then the soonest sets. One isolated pick used to sink the whole plan, so swapping
+  // out a stop left nothing.
+  const deals = spots.filter((e) => isRecurring(e) && usable(e) && dealRank(e, now) === 0 && reach(e)).sort((a, b) => fromHere(a) - fromHere(b));
+  const firsts = timed.filter(reach).sort((a, b) => Date.parse(a.start!) + fromHere(a) * 3600e3 - Date.parse(b.start!) - fromHere(b) * 3600e3);
+  for (const seed of [...deals.slice(0, 6), ...firsts.slice(0, 6)]) {
+    const p = build(seed);
+    if (p.length >= 2) return p;
   }
   // One stop isn't a plan; the regular list already shows it.
-  return stops.length >= 2 ? stops : [];
+  return [];
 }
 
 // The plan as a text to friends: each stop with its time and its link, in order.
