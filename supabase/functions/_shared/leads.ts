@@ -90,7 +90,7 @@ export function tidyLead(l: Lead): Lead {
   return {
     ...l,
     area: l.area.split("/")[0].split(",")[0].trim(),
-    kind: l.kind.split("(")[0].split(" with ")[0].split(/\s+\/\s+|,\s*/)[0].trim(),
+    kind: shortKind(l.kind),
     capacity: shortCapacity(l.capacity),
     quietNight: shortNight(l.quietNight),
     contact: shortContact(l.contact),
@@ -154,4 +154,12 @@ export async function findLeads(city: string, { exa, log = () => {} }: Pick<Agen
   }
   log(`${out.length} room leads`);
   return out;
+}
+
+// A room's type should read like "Cocktail bar", not a description the model wrote
+// ("Old East Coast study/pub-themed bar"). Trimming a description into a type gives nonsense,
+// so keep it only when it is already short; otherwise show no type rather than a cut-off one.
+export function shortKind(kind: string) {
+  const k = kind.split("(")[0].split(/\s+with\s+/i)[0].trim();
+  return k.split(/\s+/).length <= 3 && k.length <= 22 && !/[\/–—]/.test(k) ? k : "";
 }

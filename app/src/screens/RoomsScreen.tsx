@@ -10,6 +10,13 @@ import { runLeads } from "../data/api";
 import type { Lead } from "../lib/types";
 import { color as C, font as F, radius as R, text as T } from "../theme";
 
+// Same rule as the agent: a type only when it's already short ("Wine bar"), never a cut-off description.
+function shortKind(kind?: string | null) {
+  const k = (kind ?? "").split("(")[0].split(/\s+with\s+/i)[0].trim();
+  if (!k || k.split(/\s+/).length > 3 || k.length > 22 || /[\/–—]/.test(k)) return "";
+  return k.charAt(0).toUpperCase() + k.slice(1);
+}
+
 export function RoomsScreen({ visible, city, leads, setLeads, canSearch, onClose }: {
   visible: boolean; city: string; leads: Lead[]; setLeads: (l: Lead[]) => void; canSearch: boolean; onClose: () => void;
 }) {
@@ -69,7 +76,7 @@ export function RoomsScreen({ visible, city, leads, setLeads, canSearch, onClose
             <View style={s.item}>
               <View style={{ flex: 1, minWidth: 0 }}>
                 <Text style={s.name} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75}>{l.venue}</Text>
-                <Text style={s.meta} numberOfLines={1}>{[l.area?.replace(/\s*\([^)]*\)/g, ""), l.kind && l.kind.charAt(0).toUpperCase() + l.kind.slice(1)].filter(Boolean).join("  ·  ")}</Text>
+                <Text style={s.meta} numberOfLines={1}>{[l.area?.replace(/\s*\([^)]*\)/g, ""), shortKind(l.kind)].filter(Boolean).join("  ·  ")}</Text>
                 <Text style={s.fit} numberOfLines={2}>{l.fit}</Text>
                 {(l.quietNight || l.capacity) && (
                   <Text style={s.facts} numberOfLines={1}>
