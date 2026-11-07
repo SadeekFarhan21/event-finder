@@ -46,7 +46,9 @@ const BOTTOM_BAND = (CAROUSEL_BOTTOM + CARD_H + 56) / Dimensions.get("window").h
 const TOP_BAND = (HEADER_GAP + HEADER_H + 40) / Dimensions.get("window").height;
 
 const START: Region = { latitude: 40.728, longitude: -73.99, latitudeDelta: 0.09, longitudeDelta: 0.09 };
-const FIT_PADDING = { top: 200, right: 40, bottom: 220, left: 40 };
+// Frame spots clear of the bands where pins are hidden (header on top, pills and cards below),
+// or a framed spot can land under the cards and vanish. Plus a pin's height of breathing room.
+const FIT_PADDING = { top: HEADER_GAP + HEADER_H + 40 + 32, right: 40, bottom: CAROUSEL_BOTTOM + CARD_H + 56 + 32, left: 40 };
 
 const CITY_KEY = "scout.city";
 
@@ -100,8 +102,10 @@ export function ScoutScreen() {
       .filter((c) => c.lat > low && c.lat < high && !underActive(c));
   }, [shown, active, region]);
 
-  const fit = useCallback((list: Spot[]) => {
-    const core = coreOf(list);
+  // all: frame every spot (a tapped bubble). Otherwise the dense core, so a few far-flung spots
+  // don't zoom the whole city out.
+  const fit = useCallback((list: Spot[], all = false) => {
+    const core = all ? list : coreOf(list);
     if (core.length) map.current?.fitTo(core.map((e) => ({ latitude: e.lat, longitude: e.lng })), FIT_PADDING);
   }, []);
 
@@ -192,7 +196,7 @@ export function ScoutScreen() {
   const openCluster = (list: Spot[]) => {
     const lats = list.map((e) => e.lat), lngs = list.map((e) => e.lng);
     const spreadKm = Math.hypot((Math.max(...lats) - Math.min(...lats)) * 111, (Math.max(...lngs) - Math.min(...lngs)) * 85);
-    if (spreadKm > 0.04) return fit(list);
+    if (spreadKm > 0.04) return fit(list, true);
     const first = sortSpots(list)[0];
     Haptics.selectionAsync();
     focus(first, true);
