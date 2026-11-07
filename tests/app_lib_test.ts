@@ -318,6 +318,10 @@ Deno.test("planNight: happy hour now, a show close by later, then somewhere late
   expect(planNight([show], now)).toEqual([]);
   // Browsing another city: the rider's own location (here, Los Angeles) is ignored, not a 4 km leash.
   expect(planNight([late, show, hh], now, { lat: 34.05, lng: -118.25 }).map((p) => p.spot.id)).toEqual(["hh", "show", "late"]);
+  // An isolated first pick (a partner happy hour far from everything) no longer sinks the plan:
+  // the next opener that leads somewhere is used.
+  const lonely = spot("lonely", "Far Bar", "deal", null, 40.9, { deal: "Happy Hour 4-7pm", partner: true });
+  expect(planNight([lonely, hh, show, late], now).map((p) => p.spot.id)).toEqual(["hh", "show", "late"]);
   // A third stop at 8:30 PM is "Then", not "Late".
   const early = spot("early", "Club F", "music", at(18.5), 40.724), evening = spot("evening", "Room G", "nightlife", at(20.5), 40.726);
   expect(planNight([hh, early, evening], now).map((p) => p.step)).toEqual(["Start here", "Then", "Then"]);
