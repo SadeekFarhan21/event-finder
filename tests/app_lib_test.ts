@@ -11,6 +11,7 @@ import { estimateFare, km } from "../app/src/lib/fare";
 import { canonicalCity, cityKey } from "../app/src/lib/cities";
 import { similar } from "../app/src/lib/case";
 import { goingLine, initials } from "../app/src/lib/friends";
+import { matchesQuery, parseQuery, priceOf } from "../app/src/lib/search";
 
 const spot = (over: Partial<Spot>): Spot => ({
   id: "s", city: "new york, ny", title: "Jazz", venue: "Nublu", address: "151 Avenue C", start: null, category: "music",
@@ -174,4 +175,19 @@ Deno.test("initials: first letter of each word, at most two", () => {
   expect(initials("Maya")).toBe("M");
   expect(initials("maya lin")).toBe("ML");
   expect(initials("  Ana Maria Lopez ")).toBe("AM");
+});
+
+Deno.test("search: every word must match, with aliases and a price cap", () => {
+  const jazz = { venue: "Smalls", title: "Late jazz jam", description: "", deal: null, price: "$25", address: "183 W 10th St, New York", category: "music" } as unknown as Spot;
+  const club = { venue: "Elsewhere", title: "AEREA", description: "Techno till 3am", deal: "Free before 11pm", price: "$21+", address: "599 Johnson Ave, Brooklyn", category: "nightlife" } as unknown as Spot;
+  const m = (q: string, e: Spot) => matchesQuery(e, parseQuery(q));
+  expect(m("jazz", jazz)).toBe(true);
+  expect(m("jazz brooklyn", jazz)).toBe(false);     // both words must match
+  expect(m("dance", club)).toBe(true);              // alias: techno
+  expect(m("free", club)).toBe(true);
+  expect(m("Brooklyn", club)).toBe(true);           // case-insensitive, address counts
+  expect(m("under $20", jazz)).toBe(false);         // $25
+  expect(m("under 20", club)).toBe(true);           // free entry counts as 0
+  expect(priceOf({ price: null, deal: null } as never)).toBe(null);
+  expect(m("", jazz)).toBe(true);
 });

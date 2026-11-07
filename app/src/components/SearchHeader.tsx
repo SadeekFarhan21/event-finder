@@ -1,6 +1,6 @@
 // Top of the map: the city as a title (with a city menu), the Rooms shortcut, and five filters.
 import { useEffect, useState } from "react";
-import { ActivityIndicator, BackHandler, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, BackHandler, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Feather } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -24,12 +24,15 @@ type Props = {
   filter: Filter;
   onFilter: (f: Filter) => void;
   onRooms: () => void; // Yelo's partner-team view, kept out of the rider's way
+  query: string; onQuery: (q: string) => void; // search within the spots on the map
 };
 
 // The city is the title. Tapping it opens a short menu: Yelo's cities, and (rarely needed)
 // running the agent again. Filters sit under it: five, all visible.
-export function SearchHeader({ city, onCityChange, onSubmitCity, onScout, scouting, scoutable, filter, onFilter, onRooms }: Props) {
+export function SearchHeader({ city, onCityChange, onSubmitCity, onScout, scouting, scoutable, filter, onFilter, onRooms, query, onQuery }: Props) {
   const [open, setOpen] = useState(false);
+  const [searching, setSearching] = useState(!!query);
+  const endSearch = () => { onQuery(""); setSearching(false); };
   // Shows the agent at work: when Scout last searched this city on its own.
   const [last, setLast] = useState<{ ranAt: string; added: number } | null>(null);
   useEffect(() => { if (open) lastRun(city).then(setLast); }, [open, city]);
@@ -42,6 +45,12 @@ export function SearchHeader({ city, onCityChange, onSubmitCity, onScout, scouti
     const sub = BackHandler.addEventListener("hardwareBackPress", () => { setOpen(false); return true; });
     return () => sub.remove();
   }, [open]);
+  // Back closes the search too (after the menu), instead of leaving the app.
+  useEffect(() => {
+    if (!searching || open) return;
+    const sub = BackHandler.addEventListener("hardwareBackPress", () => { onQuery(""); setSearching(false); return true; });
+    return () => sub.remove();
+  }, [searching, open, onQuery]);
 
   const pickCity = (c: string) => {
     onCityChange(c);
@@ -68,11 +77,25 @@ export function SearchHeader({ city, onCityChange, onSubmitCity, onScout, scouti
             {scouting ? <ActivityIndicator color={C.ink3} size="small" />
               : <Feather name={open ? "chevron-up" : "chevron-down"} size={18} color={C.ink3} style={{ marginTop: 6 }} />}
           </Tap>
+          <Tap onPress={() => (searching ? endSearch() : setSearching(true))} style={s.roundBtn} hitSlop={4}
+            accessibilityLabel={searching ? "Close search" : "Search spots"}>
+            <Feather name={searching ? "x" : "search"} size={17} color={C.ink2} />
+          </Tap>
           <Tap onPress={onRooms} style={s.iconBtn} accessibilityLabel="Rooms for Yelo nights (partner team)">
             <Text style={s.roomsText}>Rooms</Text>
           </Tap>
         </View>
 
+        {searching ? (
+          // Search replaces the chips (the filter still applies: "jazz" on Tonight is jazz tonight).
+          <View style={[s.searchBox, open && { opacity: 0 }]}>
+            <Feather name="search" size={16} color={C.ink3} />
+            <TextInput value={query} onChangeText={onQuery} autoFocus placeholder={`Jazz, free, rooftop, under $20`}
+              placeholderTextColor={C.placeholder} style={s.searchInput} returnKeyType="search" autoCorrect={false}
+              selectionColor={C.selection} cursorColor={C.accent} accessibilityLabel="Search spots" />
+            {!!query && <Tap onPress={() => onQuery("")} hitSlop={10} accessibilityLabel="Clear search"><Feather name="x-circle" size={16} color={C.ink3} /></Tap>}
+          </View>
+        ) : (
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.chips} style={open && { opacity: 0 }}
           pointerEvents={open ? "none" : "auto"}>
           {FILTERS.map((k) => (
@@ -82,6 +105,7 @@ export function SearchHeader({ city, onCityChange, onSubmitCity, onScout, scouti
             </Tap>
           ))}
         </ScrollView>
+        )}
 
       </View>
       {/* A sibling of the header, not a child: drawn outside the header's bounds, the rows got broken
@@ -134,6 +158,11 @@ const s = StyleSheet.create({
   menuAction: { fontFamily: F.medium, fontSize: T.small, color: C.ink3 },
   lastRun: { fontFamily: F.regular, fontSize: T.meta, color: C.ink3, paddingHorizontal: 16, paddingTop: 4, paddingBottom: 10 },
   menuHint: { fontFamily: F.regular, fontSize: T.meta, color: C.ink3 },
+  roundBtn: { width: 36, height: 36, borderRadius: 18, alignItems: "center", justifyContent: "center",
+    backgroundColor: "rgba(21,21,19,0.75)", borderWidth: StyleSheet.hairlineWidth, borderColor: C.d4 },
+  searchBox: { flexDirection: "row", alignItems: "center", gap: 10, height: 44, marginHorizontal: 16, marginTop: 10, marginBottom: 6,
+    paddingHorizontal: 14, borderRadius: R.pill, backgroundColor: C.surface, borderWidth: StyleSheet.hairlineWidth, borderColor: C.d4 },
+  searchInput: { flex: 1, fontFamily: F.regular, fontSize: T.body, color: C.ink, paddingVertical: 0 },
   chips: { gap: 6, paddingHorizontal: 16, paddingTop: 12, paddingBottom: 8 },
   chip: { height: 32, paddingHorizontal: 12, justifyContent: "center", borderRadius: R.pill, backgroundColor: "rgba(21,21,19,0.75)",
     borderWidth: StyleSheet.hairlineWidth, borderColor: C.d4 },

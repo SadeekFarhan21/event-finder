@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { setCityZone } from "../lib/time";
+import { matchesQuery, parseQuery } from "../lib/search";
 import type { CrewPeople } from "../lib/friends";
 import { Linking, StyleSheet, Text, View } from "react-native";
 import { StatusBar } from "expo-status-bar";
@@ -101,7 +102,9 @@ export function ScoutScreen() {
     }
     return by;
   }, [crewsApi.crews]);
-  const shown = useMemo(() => sortSpots(spots.filter((e) => matches(e, filter))), [spots, filter]);
+  const [query, setQuery] = useState("");
+  const parsed = useMemo(() => parseQuery(query), [query]);
+  const shown = useMemo(() => sortSpots(spots.filter((e) => matches(e, filter) && matchesQuery(e, parsed))), [spots, filter, parsed]);
   // The active pin never folds into a cluster. Partners do (a lone partner pin used to sit on top of
   // neighbouring bubbles); a bubble holding one gets the partner's ink ring instead.
   const clusters = useMemo(() => {
@@ -122,6 +125,13 @@ export function ScoutScreen() {
     const core = all ? list : coreOf(list);
     if (core.length) map.current?.fitTo(core.map((e) => ({ latitude: e.lat, longitude: e.lng })), FIT_PADDING);
   }, []);
+
+  // Searching: once typing pauses, frame every match so none sit off-screen.
+  useEffect(() => {
+    if (!query.trim() || !shown.length) return;
+    const t = setTimeout(() => fit(shown, true), 450);
+    return () => clearTimeout(t);
+  }, [query, shown, fit]);
 
   // While the camera flies to a new city, its tiles are still loading: hold the pins so they
   // don't float on a black map, then bring them in once the ground is drawn.
@@ -241,7 +251,7 @@ export function ScoutScreen() {
 
       <SearchHeader city={cityInput} onCityChange={setCityInput} onSubmitCity={open}
         onScout={runScout} scouting={scouting} scoutable={scoutable} filter={filter} onFilter={pickFilter}
-        onRooms={() => { Haptics.selectionAsync(); setRoomsOpen(true); }} />
+        onRooms={() => { Haptics.selectionAsync(); setRoomsOpen(true); }} query={query} onQuery={setQuery} />
 
       <OfflineBanner top={insets.top} />
       <FirstRunHint top={insets.top} city={cityInput} dismissed={!!detail || !!active} />
@@ -249,8 +259,9 @@ export function ScoutScreen() {
 
       {loading && !spots.length ? <LoadingCard /> : !shown.length && !scouting ? (
         <EmptyCard
-          title={loadFailed ? "Couldn't load spots" : spots.length ? "Nothing here yet" : `No spots in ${cityName} yet`}
+          title={loadFailed ? "Couldn't load spots" : query.trim() && spots.length ? `Nothing matches "${query.trim()}"` : spots.length ? "Nothing here yet" : `No spots in ${cityName} yet`}
           body={loadFailed ? "Check your connection. Scout will try again as soon as you're back online."
+            : query.trim() && spots.length ? (filter === "all" ? "Try another word, like a venue, a genre or a neighbourhood." : "Try This week, or another word.")
             : spots.length ? "Try This week, or another filter."
             : scoutable ? `Open the ${cityName} menu and choose "Look for new spots".` : "New spots usually appear within the hour."} />
       ) : (
