@@ -360,3 +360,21 @@ Deno.test("inviteBill: shared messages never repeat the venue or the time", () =
   expect(withBill("Come to Nublu tonight at 8 PM", "")).toBe("Come to Nublu tonight at 8 PM.");
   expect(withBill("Come to Nublu tonight at 8 PM", long)).not.toContain("….");
 });
+
+// React Native crashes on raw text inside a View ("Text strings must be rendered within a <Text>").
+// The easy way to make one: an element and a JSX comment on the same line ("<Icon /> {/* why */}"):
+// the space between them becomes a text node. #58 shipped exactly that; this keeps it from coming back.
+Deno.test("no element followed by a same-line JSX comment", async () => {
+  const bad: string[] = [];
+  async function walk(dir: string) {
+    for await (const f of Deno.readDir(dir)) {
+      const p = `${dir}/${f.name}`;
+      if (f.isDirectory) await walk(p);
+      else if (p.endsWith(".tsx")) (await Deno.readTextFile(p)).split("\n").forEach((line, i) => {
+        if (/(\/>|<\/[\w.]+>)[ \t]+\{\/\*/.test(line)) bad.push(`${p}:${i + 1}`);
+      });
+    }
+  }
+  await walk(new URL("../app/src", import.meta.url).pathname);
+  expect(bad).toEqual([]);
+});
