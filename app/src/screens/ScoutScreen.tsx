@@ -109,6 +109,13 @@ export function ScoutScreen() {
   const shown = useMemo(() => rankByVenue(sortSpots(spots.filter((e) => matches(e, filter) && matchesQuery(e, parsed)
     && (filter !== "saved" || saved.has(e.id)))), parsed), [spots, filter, parsed, saved]);
   // Saved spots in this city (the chip count); the shortlist only shows what's still on the map.
+  // The open spot's venue: its other dated nights after this one (all of them if this is a standing deal).
+  const moreNights = useMemo(() => {
+    if (!detail) return [];
+    const v = detail.venue.trim().toLowerCase(), after = detail.start ? Date.parse(detail.start) : 0;
+    return spots.filter((e) => e.id !== detail.id && e.venue.trim().toLowerCase() === v && e.start && Date.parse(e.start) > after)
+      .sort((a, b) => Date.parse(a.start!) - Date.parse(b.start!));
+  }, [detail, spots]);
   const savedHere = useMemo(() => spots.filter((e) => saved.has(e.id)).length, [spots, saved]);
   // The Saved chip disappears with the last saved spot (or in a city with none); don't leave it selected.
   useEffect(() => { if (filter === "saved" && !savedHere) setFilter("tonight"); }, [filter, savedHere]);
@@ -322,7 +329,7 @@ export function ScoutScreen() {
         onUnGo={detail && myGoing.has(detail.id) && !crewsApi.crews.some((c) => c.spotId === detail.id && c.members.some((m) => m.me && m.status !== "out"))
           ? (e) => { unGo(e); show("You're no longer going"); } : undefined}
         crew={detail ? crewsApi.crews.find((c) => c.spotId === detail.id) : undefined} canCrew={crewsApi.available}
-        onStartCrew={(e, leaveAt, name) => crewsApi.start(e, leaveAt, name)} onCrewStatus={crewsApi.status} isSaved={!!detail && saved.has(detail.id)} onToggleSave={toggleSave} onClose={() => setDetail(null)} />
+        onStartCrew={(e, leaveAt, name) => crewsApi.start(e, leaveAt, name)} onCrewStatus={crewsApi.status} isSaved={!!detail && saved.has(detail.id)} onToggleSave={toggleSave} moreNights={moreNights} onOpenSpot={(n) => { setDetail(n); focus(n); }} onClose={() => setDetail(null)} />
     </View>
   );
 }
