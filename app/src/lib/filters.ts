@@ -3,16 +3,16 @@ import { CATEGORY } from "../theme";
 import { dealRank, isRecurring, nightEnd, nowWord } from "./time";
 import type { Category, Spot } from "./types";
 
-export type Filter = Category | "all" | "tonight" | "saved"; // "saved": the rider's shortlist (matched by id on the map screen)
+export type Filter = Category | "all" | "tonight" | "saved" | "near"; // "saved": the rider's shortlist (matched by id on the map screen)
 
 // Five, all on screen at once: when, then the three things people go out for.
 export const FILTERS: Filter[] = ["tonight", "all", "music", "nightlife", "deal"];
 
-export const filterLabel = (f: Filter) => (f === "saved" ? "Saved" : f === "all" ? "This week" : f === "tonight" ? nowWord() : f === "music" ? "Music" : CATEGORY[f].label);
+export const filterLabel = (f: Filter) => (f === "near" ? "Near me" : f === "saved" ? "Saved" : f === "all" ? "This week" : f === "tonight" ? nowWord() : f === "music" ? "Music" : CATEGORY[f].label);
 
 // "Tonight" = dated events from now until 6am, plus standing deals (happy hours run every day).
 export function matches(e: Spot, f: Filter) {
-  if (f === "all" || f === "saved") return true; // "saved" is narrowed by id where the saved set lives
+  if (f === "all" || f === "saved" || f === "near") return true; // "saved" is narrowed by id where the saved set lives
   if (f === "tonight") {
     if (isRecurring(e)) return true;
     if (!e.start) return false;

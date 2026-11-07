@@ -28,11 +28,12 @@ type Props = {
   onRooms: () => void; // Yelo's partner-team view, kept out of the rider's way
   query: string; onQuery: (q: string) => void; // search within the spots on the map
   savedCount?: number; // a Saved chip appears once something is saved
+  canNear?: boolean; // a Near me chip appears once the rider has shared location
 };
 
 // The city is the title. Tapping it opens a short menu: Yelo's cities, and (rarely needed)
 // running the agent again. Filters sit under it: five, all visible.
-export function SearchHeader({ city, onCityChange, onSubmitCity, onScout, scouting, scoutable, filter, onFilter, onRooms, query, onQuery, savedCount = 0 }: Props) {
+export function SearchHeader({ city, onCityChange, onSubmitCity, onScout, scouting, scoutable, filter, onFilter, onRooms, query, onQuery, savedCount = 0, canNear = false }: Props) {
   const [open, setOpen] = useState(false);
   const [searching, setSearching] = useState(!!query);
   const endSearch = () => { onQuery(""); setSearching(false); };
@@ -113,7 +114,7 @@ export function SearchHeader({ city, onCityChange, onSubmitCity, onScout, scouti
         ) : (
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.chips} style={open && { opacity: 0 }}
           pointerEvents={open ? "none" : "auto"}>
-          {(savedCount > 0 ? [...FILTERS, "saved" as Filter] : FILTERS).map((k) => (
+          {[...FILTERS.slice(0, 1), ...(canNear ? ["near" as Filter] : []), ...FILTERS.slice(1), ...(savedCount > 0 ? ["saved" as Filter] : [])].map((k) => (
             <Tap key={k} onPress={() => onFilter(k)} hitSlop={{ top: 6, bottom: 6 }} style={[s.chip, filter === k && s.chipOn]}
               accessibilityRole="tab" accessibilityState={{ selected: filter === k }}>
               <Text style={[s.chipText, filter === k && s.chipTextOn]}>{k === "saved" ? `Saved · ${savedCount}` : filterLabel(k)}</Text>

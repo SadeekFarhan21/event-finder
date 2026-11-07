@@ -4,6 +4,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { nowWord, setCityZone } from "../lib/time";
 import { matchesQuery, parseQuery, rankByVenue } from "../lib/search";
 import { useSaved } from "../hooks/useSaved";
+import { km } from "../lib/fare";
 import type { CrewPeople } from "../lib/friends";
 import { Linking, StyleSheet, Text, View } from "react-native";
 import { StatusBar } from "expo-status-bar";
@@ -106,8 +107,13 @@ export function ScoutScreen() {
   const [query, setQuery] = useState("");
   const parsed = useMemo(() => parseQuery(query), [query]);
   const { saved, toggle: toggleSave } = useSaved();
-  const shown = useMemo(() => rankByVenue(sortSpots(spots.filter((e) => matches(e, filter) && matchesQuery(e, parsed)
-    && (filter !== "saved" || saved.has(e.id)))), parsed), [spots, filter, parsed, saved]);
+  // Near me: within 2 miles of the rider, nearest first (only offered once location is shared).
+  const dist = useCallback((e: Spot) => (me ? km(me, { lat: e.lat, lng: e.lng }) : Infinity), [me]);
+  const shown = useMemo(() => {
+    const list = spots.filter((e) => matches(e, filter) && matchesQuery(e, parsed)
+      && (filter !== "saved" || saved.has(e.id)) && (filter !== "near" || dist(e) <= 3.2));
+    return filter === "near" ? [...list].sort((a, b) => dist(a) - dist(b)) : rankByVenue(sortSpots(list), parsed);
+  }, [spots, filter, parsed, saved, dist]);
   // Saved spots in this city (the chip count); the shortlist only shows what's still on the map.
   // The open spot's venue: its other dated nights after this one (all of them if this is a standing deal).
   const moreNights = useMemo(() => {
@@ -118,7 +124,7 @@ export function ScoutScreen() {
   }, [detail, spots]);
   const savedHere = useMemo(() => spots.filter((e) => saved.has(e.id)).length, [spots, saved]);
   // The Saved chip disappears with the last saved spot (or in a city with none); don't leave it selected.
-  useEffect(() => { if (filter === "saved" && !savedHere) setFilter("tonight"); }, [filter, savedHere]);
+  useEffect(() => { if ((filter === "saved" && !savedHere) || (filter === "near" && !me)) setFilter("tonight"); }, [filter, savedHere, me]);
   // The active pin never folds into a cluster. Partners do (a lone partner pin used to sit on top of
   // neighbouring bubbles); a bubble holding one gets the partner's ink ring instead.
   const clusters = useMemo(() => {
@@ -262,7 +268,7 @@ export function ScoutScreen() {
     setFilter(f);
     setActive(null);
     carousel.current?.scrollTo(0, false);
-    fit(f === "saved" ? spots.filter((e) => saved.has(e.id)) : spots.filter((e) => matches(e, f)), f === "saved"); // a short list: frame every saved spot
+    fit(f === "saved" ? spots.filter((e) => saved.has(e.id)) : f === "near" ? spots.filter((e) => dist(e) <= 3.2) : spots.filter((e) => matches(e, f)), f === "saved"); // a short list: frame every saved spot
   };
 
   const cityName = cityInput.split(",")[0];
@@ -281,7 +287,7 @@ export function ScoutScreen() {
 
       <SearchHeader city={cityInput} onCityChange={setCityInput} onSubmitCity={open}
         onScout={runScout} scouting={scouting} scoutable={scoutable} filter={filter} onFilter={pickFilter}
-        onRooms={() => { Haptics.selectionAsync(); setRoomsOpen(true); }} query={query} onQuery={setQuery} savedCount={savedHere} />
+        onRooms={() => { Haptics.selectionAsync(); setRoomsOpen(true); }} query={query} onQuery={setQuery} savedCount={savedHere} canNear={!!me} />
 
       <OfflineBanner top={insets.top} />
       <FirstRunHint top={insets.top} city={cityInput} dismissed={!!detail || !!active} />
