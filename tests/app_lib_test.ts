@@ -223,3 +223,13 @@ Deno.test("happy hour status comes from the listing's own hours", () => {
     expect(dealStatus({ title: "Late", deal: "11-2am" }, Date.parse("2026-11-08T06:00:00Z"))).toBe("On until 2 AM"); // 1 AM
   } finally { setCityZone(null); }
 });
+
+Deno.test("deals: on now first, then soonest, then over or unknown", () => {
+  const t = new FakeTime(new Date("2026-11-07T22:30:00Z")); // 5:30 PM in New York
+  try {
+    setCityZone("New York, NY");
+    const d = (id: string, deal: string) => ({ id, start: null, category: "deal", title: "Happy hour", deal, partner: id === "none" }) as unknown as Spot;
+    const out = sortSpots([d("none", "Half off"), d("later", "Happy hour 6-8pm"), d("now", "Happy hour 4-7pm"), d("over", "Happy hour 2-4pm")]);
+    expect(out.map((e) => e.id)).toEqual(["now", "later", "none", "over"]);
+  } finally { setCityZone(null); t.restore(); }
+});

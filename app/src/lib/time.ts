@@ -68,6 +68,16 @@ export function dealStatus(e: Pick<WhenFields, "title" | "deal">, now = Date.now
   function sayUTC(m: number) { const hh = Math.floor(m / 60) % 24, mm = m % 60; return `${hh % 12 || 12}${mm ? `:${String(mm).padStart(2, "0")}` : ""} ${hh < 12 ? "AM" : "PM"}`; }
 }
 
+// For ordering standing deals: running now (0), starting later today (1, by start), over or no hours (2).
+export function dealRank(e: Pick<WhenFields, "title" | "deal">, now = Date.now()): number {
+  const h = dealHours(`${e.deal ?? ""} ${e.title}`);
+  if (!h) return 3000;
+  const p = parts(now), mins = +p.hour * 60 + +p.minute;
+  const on = h.to > h.from ? mins >= h.from && mins < h.to : mins >= h.from || mins < h.to;
+  if (on) return 0;
+  return mins < h.from ? 1 + h.from : 3000;
+}
+
 export function whenLabel(e: WhenFields) {
   if (isRecurring(e)) {
     const base = /happy hour/i.test(`${e.title} ${e.deal ?? ""}`) ? "Happy hour" : "Recurring deal";
