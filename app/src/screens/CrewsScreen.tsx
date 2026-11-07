@@ -13,7 +13,6 @@ import { Tap } from "../components/Tap";
 import { initials } from "../lib/friends";
 import { color as C, font as F, radius as R, text as T } from "../theme";
 
-const ACCENT_TINT = C.d3;
 
 export function CrewsScreen({ visible, crews, photos, linkCode, onJoin, onStatus, onRide, onOpen, onClose }: {
   visible: boolean; crews: Crew[];
@@ -82,18 +81,16 @@ export function CrewsScreen({ visible, crews, photos, linkCode, onJoin, onStatus
   // Your crews come first; starting or joining one is the rarer case, below them.
   const footer = (
     <View style={{ gap: 12 }}>
-    <Tap pressedScale={0.99} onPress={onClose} style={s.start} accessibilityLabel="Start a crew: pick a spot on the map">
-      <View style={{ flex: 1 }}>
-        <Text style={s.startTitle}>Start one from any spot</Text>
-        <Text style={s.startSub}>Pick a spot on the map, tap Go with friends, and send the link.</Text>
-      </View>
-      <View style={s.startBtn}><Feather name="plus" size={24} color={C.ink} /></View>
-    </Tap>
+      <Tap pressedScale={0.99} onPress={onClose} style={s.start} accessibilityLabel="Start a crew: pick a spot on the map">
+        <View style={{ flex: 1 }}>
+          <Text style={s.startTitle}>Start one from any spot</Text>
+          <Text style={s.startSub}>Pick a spot on the map, tap Go with friends, and send the link.</Text>
+        </View>
+        <View style={s.startBtn}><Feather name="plus" size={22} color={C.ink} /></View>
+      </Tap>
       {/* Join a friend's crew from a pasted link */}
       <View style={s.joinBox}>
-        <View style={s.joinHead}>
-          <Text style={s.joinTitle}>Got a link from a friend?</Text>
-        </View>
+        <Text style={s.joinTitle}>Got a link from a friend?</Text>
         <Field label="Crew link or code">
           <TextInput selectionColor={C.selection} cursorColor={C.accent} value={code} onChangeText={(v) => { setCode(v); setJoined(null); }}
             placeholder="Paste the link they sent" placeholderTextColor={C.placeholder} style={s.input}
@@ -103,14 +100,10 @@ export function CrewsScreen({ visible, crews, photos, linkCode, onJoin, onStatus
           <TextInput selectionColor={C.selection} cursorColor={C.accent} value={name} onChangeText={setName} placeholder="First name"
             placeholderTextColor={C.placeholder} style={s.input} maxLength={30} autoCapitalize="words" accessibilityLabel="Your first name" />
         </Field>
-        {error && <Text style={s.error}>{error}</Text>}
-        {joined !== null && !error && <Text style={s.success}>{joined ? `You're in. The crew for ${joined} is at the top.` : "You're in. Your crew is at the top."}</Text>}
+        {error && <Text style={s.error} accessibilityLiveRegion="polite">{error}</Text>}
+        {joined !== null && !error && <Text style={s.success} accessibilityLiveRegion="polite">{joined ? `You're in. The crew for ${joined} is at the top.` : "You're in. Your crew is at the top."}</Text>}
         <Tap style={[s.joinBtn, !ready && s.joinBtnOff]} disabled={!ready || busy} onPress={join}>
-          {busy ? <ActivityIndicator color={C.bg} size="small" /> : (
-            <>
-              <Text style={[s.joinText, !ready && { color: C.ink3 }]}>Join crew</Text>
-            </>
-          )}
+            {busy ? <ActivityIndicator color={C.bg} size="small" /> : <Text style={[s.joinText, !ready && { color: C.ink3 }]}>Join crew</Text>}
         </Tap>
       </View>
 
@@ -131,7 +124,7 @@ export function CrewsScreen({ visible, crews, photos, linkCode, onJoin, onStatus
   );
 }
 
-function Field({ label, children }: { icon?: string; label: string; children: React.ReactNode }) {
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <View style={{ gap: 6 }}>
       <Text style={s.fieldLabel}>{label}</Text>
@@ -186,7 +179,7 @@ function CrewTile({ crew, photo, onStatus, onRide, onOpen }: {
           <Text style={s.peopleTitle}>{coming.length} coming</Text>
           <Text style={s.peopleSub}>{onWay && onWay === coming.length ? "Everyone's on the way" : onWay ? `${onWay} on the way` : "Nobody's left yet"}</Text>
         </View>
-        <Tap style={s.round} accessibilityLabel="Invite to crew" onPress={() => Share.share({ message: crewInvite(crew) }).catch(() => {})}>
+        <Tap style={s.round} hitSlop={6} accessibilityLabel="Invite to crew" onPress={() => Share.share({ message: crewInvite(crew) }).catch(() => {})}>
           <Feather name="user-plus" size={16} color={C.ink} />
         </Tap>
       </View>
@@ -203,7 +196,7 @@ function CrewTile({ crew, photo, onStatus, onRide, onOpen }: {
           <Text style={s.btnPrimaryText}>{me?.status === "on_way" ? "Open ride" : "I'm on my way"}</Text>
         </Tap>
       </View>
-      {failed && <Text style={s.statusErr}>{"No connection. Your crew didn't get that, try again."}</Text>}
+      {failed && <Text style={s.statusErr} accessibilityLiveRegion="polite">{"Your crew didn't get that. Check your connection and try again."}</Text>}
     </View>
   );
 }
@@ -220,11 +213,9 @@ const s = StyleSheet.create({
   titleItalic: { fontFamily: F.displayItalic },
   sub: { fontFamily: F.regular, fontSize: T.small, lineHeight: 21, color: C.ink2, marginTop: 8 },
   joinBox: { padding: 16, borderRadius: R.lg, backgroundColor: C.surface, gap: 12, borderWidth: StyleSheet.hairlineWidth, borderColor: C.d4 },
-  joinHead: { flexDirection: "row", alignItems: "center", gap: 10 },
-  iconTile: { width: 30, height: 30, borderRadius: 10, alignItems: "center", justifyContent: "center", backgroundColor: ACCENT_TINT },
   joinTitle: { fontFamily: F.semibold, fontSize: T.small, color: C.ink },
   fieldLabel: { fontFamily: F.medium, fontSize: T.small, color: C.ink2 },
-  fieldBox: { flexDirection: "row", alignItems: "center", gap: 10, height: 48, paddingHorizontal: 12, borderRadius: R.md, backgroundColor: C.bg,
+  fieldBox: { flexDirection: "row", alignItems: "center", gap: 8, height: 48, paddingHorizontal: 12, borderRadius: R.md, backgroundColor: C.bg,
     borderWidth: StyleSheet.hairlineWidth, borderColor: C.d4 },
   input: { flex: 1, fontFamily: F.regular, fontSize: T.body, color: C.ink, paddingVertical: 0 },
   success: { fontFamily: F.medium, fontSize: T.small, color: C.ink },
@@ -236,13 +227,11 @@ const s = StyleSheet.create({
   section: { flexShrink: 1, fontFamily: F.display, fontSize: T.title, color: C.ink },
   countPill: { minWidth: 24, height: 24, paddingHorizontal: 8, borderRadius: 12, alignItems: "center", justifyContent: "center", backgroundColor: C.d3 },
   countText: { fontFamily: F.semibold, fontSize: T.meta, color: C.ink },
-  empty: { fontFamily: F.regular, fontSize: T.body, color: C.ink3, marginTop: 4 },
   tile: { padding: 12, borderRadius: R.lg, backgroundColor: C.surface, borderWidth: StyleSheet.hairlineWidth, borderColor: C.d4, gap: 12 },
   strip: { height: 112, borderRadius: R.md, overflow: "hidden", backgroundColor: C.d2 },
-  stripEmpty: { position: "absolute", top: 0, right: 0, bottom: 0, left: 0, alignItems: "flex-end", justifyContent: "center", paddingRight: 20 },
   stripChip: { position: "absolute", top: 8, left: 8, flexDirection: "row", alignItems: "center", gap: 6, height: 26, paddingHorizontal: 10, borderRadius: R.pill,
     backgroundColor: "rgba(12,12,10,0.75)", borderWidth: StyleSheet.hairlineWidth, borderColor: "rgba(255,255,255,0.14)" },
-  chipInline: { position: "relative", top: 0, left: 0, alignSelf: "flex-start", marginTop: 4, marginLeft: 4 },
+  chipInline: { position: "relative", top: 0, left: 0, alignSelf: "flex-start", marginTop: 4, marginLeft: 4, backgroundColor: C.d2 },
   dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: C.ink },
   stripChipText: { fontFamily: F.semibold, fontSize: T.meta, color: C.ink },
   venue: { fontFamily: F.display, fontSize: T.title, lineHeight: 32, color: C.ink, marginTop: 8, paddingHorizontal: 4 },
@@ -252,10 +241,10 @@ const s = StyleSheet.create({
   faces: { flexDirection: "row" },
   face: { minWidth: 32, height: 32, paddingHorizontal: 2, borderRadius: 16, alignItems: "center", justifyContent: "center", backgroundColor: C.d3, borderWidth: 2, borderColor: C.surface },
   faceOnWay: { backgroundColor: C.ink },
-  faceText: { fontFamily: F.semibold, fontSize: 10, color: C.ink },
+  faceText: { fontFamily: F.semibold, fontSize: T.meta, color: C.ink },
   peopleTitle: { fontFamily: F.semibold, fontSize: T.small, color: C.ink },
-  peopleSub: { fontFamily: F.regular, fontSize: T.meta, color: C.ink3, marginTop: 1 },
-  round: { width: 36, height: 36, borderRadius: 18, alignItems: "center", justifyContent: "center", backgroundColor: C.fill },
+  peopleSub: { fontFamily: F.regular, fontSize: T.meta, color: C.ink3, marginTop: 2 },
+  round: { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center", backgroundColor: C.fill, borderWidth: StyleSheet.hairlineWidth, borderColor: C.d4 },
   statusErr: { fontFamily: F.medium, fontSize: T.small, color: C.red, paddingHorizontal: 4 },
   actions: { flexDirection: "row", gap: 8 },
   btn: { height: 46, borderRadius: R.pill, flexDirection: "row", gap: 6, alignItems: "center", justifyContent: "center" },

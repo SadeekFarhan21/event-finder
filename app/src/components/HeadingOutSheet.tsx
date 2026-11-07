@@ -69,7 +69,7 @@ export function HeadingOutSheet({ spot, visible, onStart, onClose }: {
 
   return (
     <Modal visible={visible} transparent animationType="slide" statusBarTranslucent navigationBarTranslucent onRequestClose={onClose}>
-      <Pressable style={s.scrim} onPress={onClose} accessibilityLabel="Close" />
+      <Pressable style={s.scrim} onPress={onClose} accessibilityRole="button" accessibilityLabel="Close" />
       <KeyboardAvoidingView behavior="padding" style={s.wrap} pointerEvents="box-none">
         <View style={[s.sheet, { paddingBottom: Math.max(insets.bottom, 16) + 12 }]}>
           {/* Backstop: the sheet's color runs past the bottom edge, so nothing behind it shows through */}
@@ -99,14 +99,10 @@ export function HeadingOutSheet({ spot, visible, onStart, onClose }: {
           <TextInput value={name} onChangeText={setName} placeholder="First name" placeholderTextColor={C.placeholder}
             selectionColor={C.selection} cursorColor={C.accent} style={s.input} maxLength={30} autoCapitalize="words"
             returnKeyType="done" accessibilityLabel="Your first name" />
-          {error && <Text style={s.error}>{error}</Text>}
+          {error && <Text style={s.error} accessibilityLiveRegion="polite">{error}</Text>}
 
           <Tap style={[s.cta, !name.trim() && s.ctaOff]} disabled={!name.trim() || busy} onPress={start}>
-            {busy ? <ActivityIndicator color={C.onAccent} /> : (
-              <>
-                <Text style={[s.ctaText, !name.trim() && { color: C.ink3 }]}>Start crew and send link</Text>
-              </>
-            )}
+            {busy ? <ActivityIndicator color={C.onAccent} /> : <Text style={[s.ctaText, !name.trim() && { color: C.ink3 }]}>Start crew and send link</Text>}
           </Tap>
         </View>
       </KeyboardAvoidingView>
@@ -130,8 +126,8 @@ const s = StyleSheet.create({
   optionTime: { fontFamily: F.regular, fontSize: T.body, color: C.ink3, fontVariant: ["tabular-nums"] },
   optionTimeOn: { color: C.ink },
   check: { width: 20, alignItems: "flex-end" },
-  label: { fontFamily: F.medium, fontSize: T.meta, color: C.ink3, marginTop: 24, marginBottom: 8 },
-  input: { height: 48, borderRadius: R.md, paddingHorizontal: 16, backgroundColor: C.bg, borderWidth: 1, borderColor: C.hairline,
+  label: { fontFamily: F.medium, fontSize: T.small, color: C.ink2, marginTop: 24, marginBottom: 8 },
+  input: { height: 48, borderRadius: R.md, paddingHorizontal: 12, backgroundColor: C.bg, borderWidth: StyleSheet.hairlineWidth, borderColor: C.d4,
     fontFamily: F.regular, fontSize: T.body, color: C.ink },
   error: { fontFamily: F.medium, fontSize: T.small, color: C.red, marginTop: 8 },
   cta: { height: 54, borderRadius: R.pill, backgroundColor: C.accent, flexDirection: "row", gap: 8, alignItems: "center", justifyContent: "center", marginTop: 16 },

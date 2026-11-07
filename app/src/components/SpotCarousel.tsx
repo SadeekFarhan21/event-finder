@@ -113,7 +113,7 @@ function Card({ spot: e, step, isNew, going, crew, me, index, x, onPress, onRide
           <LinearGradient colors={[C.d3, C.d1]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={[s.media, s.typeBand]}>
             <View style={{ flex: 1 }}>
               <Text style={s.bigTime} numberOfLines={1} adjustsFontSizeToFit>{bigTime(e)}</Text>
-              <Text style={s.bigDay} numberOfLines={1}>{step ? [step.step, step.hop].filter(Boolean).join("  ·  ") : `${bigDay(e)}${isNew ? "  ·  New" : ""}`}</Text>
+              <Text style={s.bigDay} numberOfLines={1}>{step ? [step.step, isRecurring(e) ? dealStatus(e)?.replace(/^On /, "") : null, step.hop].filter(Boolean).join("  ·  ") : `${bigDay(e)}${isNew ? "  ·  New" : ""}`}</Text>
             </View>
             <View style={s.bandSide}>
               {e.partner && <View style={s.partner}><View style={s.partnerMark} /><Text style={s.partnerText}>Yelo partner</Text></View>}
