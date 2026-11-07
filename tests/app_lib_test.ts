@@ -145,3 +145,15 @@ Deno.test("goingLine names your crew, then counts everyone else", () => {
   expect(goingLine(4, { others: ["Maya", "Jo", "Sam"], me: true })).toBe("Maya, Jo and you · 1 more");
   expect(goingLine(0, { others: ["Maya"], me: false })).toBe("Maya"); // count not refreshed yet
 });
+
+Deno.test("late in the night: started sets say so and sort after ones to come", () => {
+  const t = new FakeTime(new Date("2026-11-07T06:20:00Z")); // 1:20 AM in New York
+  try {
+    setCityZone("New York, NY");
+    const early = { id: "a", start: "2026-11-07T03:30:00Z", category: "nightlife", title: "Set", deal: null } as unknown as Spot; // 10:30 PM
+    const late = { id: "b", start: "2026-11-07T06:30:00Z", category: "nightlife", title: "Set", deal: null } as unknown as Spot;  // 1:30 AM
+    expect(whenLabel(early as never)).toBe("Started · 10:30 PM");
+    expect(whenLabel(late as never)).toBe("Tonight · 1:30 AM");
+    expect(sortSpots([early, late]).map((e) => e.id)).toEqual(["b", "a"]);
+  } finally { setCityZone(null); t.restore(); }
+});

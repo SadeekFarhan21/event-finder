@@ -42,7 +42,8 @@ export function whenLabel(e: WhenFields) {
   if (!e.start) return "Ongoing";
   const d = new Date(e.start);
   const days = nightDay(d.getTime()) - nightDay(Date.now());
-  const day = days === 0 ? "Tonight" : days === 1 ? "Tomorrow" : fmt(d, { weekday: "short", month: "short", day: "numeric" });
+  // Already under way: say so, rather than "Tonight" for a set that began hours ago.
+  const day = d.getTime() <= Date.now() ? "Started" : days === 0 ? "Tonight" : days === 1 ? "Tomorrow" : fmt(d, { weekday: "short", month: "short", day: "numeric" });
   return `${day} · ${fmt(d, { hour: "numeric", minute: "2-digit" })}`;
 }
 
