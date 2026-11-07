@@ -200,6 +200,10 @@
     } catch { return crypto.randomUUID(); }
   }
   // Android: open the crew in Scout if it's installed, otherwise land on the download page.
+  // Android: open this spot in Scout if it's installed (scout://spot/<short>), otherwise the download page.
+  const spotApp = (e) => e?.short
+    ? `intent://spot/${e.short}#Intent;scheme=scout;package=com.farhan.scout;S.browser_fallback_url=${encodeURIComponent(location.origin + "/")};end`
+    : "./";
   const appLink = (code) => /android/i.test(navigator.userAgent)
     ? `intent://crew/${code}#Intent;scheme=scout;package=com.farhan.scout;S.browser_fallback_url=${encodeURIComponent(location.origin + "/")};end`
     : "./";
@@ -354,7 +358,7 @@
           </dl>
           ${crew || !going ? "" : `<p class="going"><b>${going} ${going === 1 ? "person" : "people"}</b> on Scout ${going === 1 ? "is" : "are"} going.</p>`}
           <div class="actions">
-            ${isAndroid && !crew ? `<a class="btn primary" href="./">Get Scout to say you're going</a>` : ""}
+            ${isAndroid && !crew ? `<a class="btn primary" href="${esc(spotApp(e))}">Open in Scout</a>` : ""}
             <a class="btn ${crew || isAndroid ? "quiet" : "primary"}" href="https://www.google.com/maps/dir/?api=1&destination=${dest}" target="_blank" rel="noopener">Directions</a>
             ${e.url && /^https?:\/\//.test(e.url) ? `<a class="link" href="${esc(e.url)}" target="_blank" rel="noopener">Event page</a>` : ""}
             ${calLink(e) ? `<a class="link" href="${esc(calLink(e))}" target="_blank" rel="noopener">Add to calendar</a>` : ""}
