@@ -64,10 +64,11 @@ export function CrewsScreen({ visible, crews, photos, linkCode, onJoin, onStatus
       )}
       <Text style={s.sub}>Friends join from your link, and everyone sees who's coming and who's on the way.</Text>
 
-      <View style={s.sectionRow}>
+      {/* No crews yet: no empty heading; the start card below leads. */}
+      {crews.length > 0 && <View style={s.sectionRow}>
         <Text style={s.section} numberOfLines={1}>Active tonight</Text>
         {live.length > 0 && <View style={s.countPill}><Text style={s.countText}>{live.length}</Text></View>}
-      </View>
+      </View>}
     </View>
   );
 
@@ -115,7 +116,6 @@ export function CrewsScreen({ visible, crews, photos, linkCode, onJoin, onStatus
         <FlatList data={crews} keyExtractor={(c) => c.code} ListHeaderComponent={header} ListFooterComponent={footer}
           contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: insets.bottom + 32, gap: 12 }}
           keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}
-          ListEmptyComponent={<Text style={s.empty}>No crews yet tonight.</Text>}
           renderItem={({ item }) => (
             <CrewTile crew={item} photo={photos[item.spotId]} onStatus={onStatus} onRide={onRide} onOpen={onOpen} />
           )} />
@@ -252,7 +252,7 @@ const s = StyleSheet.create({
   btnPrimaryText: { fontFamily: F.semibold, fontSize: T.small, color: C.onAccent },
   btnQuiet: { flex: 1, backgroundColor: C.fill, borderWidth: StyleSheet.hairlineWidth, borderColor: C.d4 },
   btnQuietText: { fontFamily: F.semibold, fontSize: T.small, color: C.ink2 },
-  start: { flexDirection: "row", alignItems: "center", gap: 16, padding: 16, marginTop: 8, borderRadius: R.lg, backgroundColor: C.surface,
+  start: { flexDirection: "row", alignItems: "center", gap: 16, padding: 16, marginTop: 20, borderRadius: R.lg, backgroundColor: C.surface,
     borderWidth: StyleSheet.hairlineWidth, borderColor: C.d4 },
   startTitle: { fontFamily: F.semibold, fontSize: T.body, color: C.ink },
   startSub: { fontFamily: F.regular, fontSize: T.meta, lineHeight: 17, color: C.ink3, marginTop: 2 },

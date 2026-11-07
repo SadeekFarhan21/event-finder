@@ -145,12 +145,6 @@ export function SpotSheet({ spot, city, me, unlocked, canAskLocation, onAskLocat
                 <View style={s.plainHead}>{titleBlock}</View>
               )}
               <View style={s.grabber} />
-              <View style={s.heroTop}>
-                <Tap style={s.glass} onPress={close} accessibilityLabel="Close"><Feather name="chevron-down" size={18} color={C.ink} /></Tap>
-                <Tap style={s.glass} onPress={share} accessibilityLabel={crew ? "Invite friends to your crew" : "Send this spot to a friend"}>
-                  <Feather name="share" size={17} color={C.ink} />
-                </Tap>
-              </View>
             </View>
           </GestureDetector>
 
@@ -294,6 +288,14 @@ export function SpotSheet({ spot, city, me, unlocked, canAskLocation, onAskLocat
             <Text style={s.source}>{source}</Text>
           </View>
         </ScrollView>
+
+        {/* Close and share stay pinned to the sheet; inside the scroll they slid up and were sliced at its edge. */}
+        <View pointerEvents="box-none" style={s.heroTop}>
+          <Tap style={s.glass} onPress={close} accessibilityLabel="Close"><Feather name="chevron-down" size={18} color={C.ink} /></Tap>
+          <Tap style={s.glass} onPress={share} accessibilityLabel={crew ? "Invite friends to your crew" : "Send this spot to a friend"}>
+            <Feather name="share" size={17} color={C.ink} />
+          </Tap>
+        </View>
 
         {/* The one place for actions */}
         <View pointerEvents="box-none" style={[s.dock, { paddingBottom: Math.max(insets.bottom, 12) + 12 }]}>
