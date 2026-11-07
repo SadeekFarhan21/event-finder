@@ -83,7 +83,7 @@
   .qr { display: flex; align-items: center; gap: 16px; margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--line); }
   .qr-box { background: #FFFFFF; padding: 8px; border-radius: 8px; border: 1px solid var(--line); width: 104px; height: 104px; flex: none; }
   .qr-box img, .qr-box canvas { width: 100% !important; height: 100% !important; display: block; }
-  @media (max-width: 860px) { .qr { display: none; } }
+  @media (max-width: 860px) { .qr, .wide-only { display: none; } } /* no QR on phones, so no mention of it */
   .qr p { margin: 0; font-size: 16px; color: var(--ink-2); max-width: 22em; }
 
   .phone { justify-self: center; width: min(300px, 78vw); border-radius: 36px; padding: 8px; background: #0E0E0D; }
@@ -190,7 +190,7 @@
       <p>Android blocks apps from outside the Play Store by default, so it asks once.</p>
     </div>
     <ol class="steps">
-      <li><b>Download</b><span>Tap “Download for Android” on your phone, or scan the code above.</span></li>
+      <li><b>Download</b><span>Tap “Download for Android” on your phone<span class="wide-only">, or scan the code above</span>.</span></li>
       <li><b>Allow the install</b><span>When Android asks, allow installs from your browser for this one file.</span></li>
       <li><b>Open Scout</b><span>It opens on what's on tonight. Tap Show price on any spot for a ride estimate; that's the only time Scout asks for your location.</span></li>
     </ol>
