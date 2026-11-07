@@ -1,6 +1,6 @@
 // The chips under the search bar, and the order spots appear in.
 import { CATEGORY } from "../theme";
-import { isRecurring, nightEnd, nowWord } from "./time";
+import { dealRank, isRecurring, nightEnd, nowWord } from "./time";
 import type { Category, Spot } from "./types";
 
 export type Filter = Category | "all" | "tonight" | "saved"; // "saved": the rider's shortlist (matched by id on the map screen)
@@ -32,5 +32,7 @@ export function sortSpots(spots: Spot[]) {
   // Standing deals (happy hours) go after dated events even for partners: at 11 PM a 3-7 PM happy hour
   // shouldn't lead the night. Among dated events, Yelo partners still come first.
   const deal = (e: Spot) => Number(stage(e) === 2);
-  return [...spots].sort((a, b) => deal(a) - deal(b) || Number(!!b.partner) - Number(!!a.partner) || shaky(a) - shaky(b) || stage(a) - stage(b) || t(a) - t(b));
+  // Among standing deals: on now first, then the soonest to start; then partners, as for events.
+  const dr = (e: Spot) => (deal(e) ? dealRank(e, now) : 0);
+  return [...spots].sort((a, b) => deal(a) - deal(b) || dr(a) - dr(b) || Number(!!b.partner) - Number(!!a.partner) || shaky(a) - shaky(b) || stage(a) - stage(b) || t(a) - t(b));
 }
