@@ -119,7 +119,8 @@ export function ScoutScreen() {
   // Near me: within 2 miles of the rider, nearest first (only offered once location is shared).
   const dist = useCallback((e: Spot) => (me ? km(me, { lat: e.lat, lng: e.lng }) : Infinity), [me]);
   // Plan my night: tonight's spots chained into two or three stops (lib/plan), in route order.
-  const plan = useMemo(() => (filter === "plan" && minute ? planNight(spots, minute, me) : []), [filter, spots, minute, me]);
+  // A search narrows what goes in it: "jazz" + Plan my night plans a jazz night.
+  const plan = useMemo(() => (filter === "plan" && minute ? planNight(spots.filter((e) => matchesQuery(e, parsed)), minute, me) : []), [filter, spots, minute, me, parsed]);
   const steps = useMemo(() => Object.fromEntries(plan.map((p) => [p.spot.id, p])), [plan]);
   const shown = useMemo(() => {
     if (filter === "plan") return plan.map((p) => p.spot);
@@ -287,7 +288,7 @@ export function ScoutScreen() {
     setFilter(f);
     setActive(null);
     carousel.current?.scrollTo(0, false);
-    fit(f === "plan" ? planNight(spots, Date.now(), me).map((p) => p.spot) : f === "saved" ? spots.filter((e) => saved.has(e.id)) : f === "near" ? spots.filter((e) => dist(e) <= 3.2) : spots.filter((e) => matches(e, f)), f === "saved" || f === "plan"); // a short list: frame every stop
+    fit(f === "plan" ? planNight(spots.filter((e) => matchesQuery(e, parsed)), Date.now(), me).map((p) => p.spot) : f === "saved" ? spots.filter((e) => saved.has(e.id)) : f === "near" ? spots.filter((e) => dist(e) <= 3.2) : spots.filter((e) => matches(e, f)), f === "saved" || f === "plan"); // a short list: frame every stop
   };
 
   const cityName = cityInput.split(",")[0];
@@ -316,7 +317,7 @@ export function ScoutScreen() {
         <EmptyCard
           title={loadFailed ? "Couldn't load spots" : filter === "plan" && spots.length ? "Not enough on tonight to plan" : query.trim() && spots.length ? `Nothing matches "${query.trim()}"` : spots.length ? "Nothing here yet" : `No spots in ${cityName} yet`}
           body={loadFailed ? "Check your connection. Scout will try again as soon as you're back online."
-            : filter === "plan" && spots.length ? "A plan needs two spots close together, still to come tonight. Try Today or This week."
+            : filter === "plan" && spots.length ? (query.trim() ? `Not enough "${query.trim()}" tonight for two stops close together. Try fewer words.` : "A plan needs two spots close together, still to come tonight. Try Today or This week.")
             : query.trim() && spots.length ? (filter === "all" ? "Try another word, like a venue, a genre or a neighbourhood." : "Try This week, or another word.")
             : spots.length ? "Try This week, or another filter."
             : scoutable ? `Open the ${cityName} menu and choose "Look for new spots".` : "New spots usually appear within the hour."} />
