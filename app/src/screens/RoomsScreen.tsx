@@ -1,12 +1,13 @@
 // "Rooms": the partner-team view. Yelo's playbook is to take a venue's quiet night,
 // build an event there and fill it with riders, so this lists rooms worth pitching.
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, FlatList, Linking, Modal, Platform, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Tap } from "../components/Tap";
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { roomInterest, runLeads } from "../data/api";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { pitchEmail } from "../lib/pitch";
 import type { Lead } from "../lib/types";
 import { color as C, font as F, radius as R, text as T } from "../theme";
@@ -22,6 +23,13 @@ function shortKind(kind?: string | null) {
 function inBrief(capacity?: string | null) {
   const n = Number((capacity ?? "").match(/\d+/)?.[0]);
   return !n || (n >= 50 && n <= 400);
+}
+
+const CONTACTED_KEY = "scout.roomsContacted";
+// "today", "yesterday", or "Nov 4".
+function contactedWhen(t: number) {
+  const days = Math.floor((new Date().setHours(0, 0, 0, 0) - new Date(t).setHours(0, 0, 0, 0)) / 864e5);
+  return days <= 0 ? "today" : days === 1 ? "yesterday" : new Date(t).toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
 
 export function RoomsScreen({ visible, city, leads, setLeads, canSearch, onClose }: {
@@ -47,7 +55,17 @@ export function RoomsScreen({ visible, city, leads, setLeads, canSearch, onClose
     }
   };
 
+  // Rooms the team already reached out to (kept on this phone): marked and moved below the rest.
+  const [contacted, setContacted] = useState<Record<string, number>>({});
+  useEffect(() => { AsyncStorage.getItem(CONTACTED_KEY).then((r) => r && setContacted(JSON.parse(r))).catch(() => {}); }, []);
+  const markContacted = useCallback((id: string) => {
+    setContacted((cur) => ({ ...cur, [id]: Date.now() })); // tap time
+  }, []);
+  // Persist after the state settles (side effects stay out of the updater).
+  useEffect(() => { if (Object.keys(contacted).length) AsyncStorage.setItem(CONTACTED_KEY, JSON.stringify(contacted)).catch(() => {}); }, [contacted]);
+
   const contact = (l: Lead) => {
+    markContacted(l.id);
     const c = l.contact ?? "";
     if (c.includes("@") && !c.startsWith("@")) {
       const { subject, body } = pitchEmail(l, city, interest[l.venue] ?? 0);
@@ -81,7 +99,7 @@ export function RoomsScreen({ visible, city, leads, setLeads, canSearch, onClose
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
       <View style={[s.root, Platform.OS === "android" && { paddingTop: insets.top }]}>
-        <FlatList data={leads.filter((l) => inBrief(l.capacity)).sort((a, b) => (interest[b.venue] ?? 0) - (interest[a.venue] ?? 0))} keyExtractor={(l) => l.id} ListHeaderComponent={header}
+        <FlatList data={leads.filter((l) => inBrief(l.capacity)).sort((a, b) => Number(!!contacted[a.id]) - Number(!!contacted[b.id]) || (interest[b.venue] ?? 0) - (interest[a.venue] ?? 0))} keyExtractor={(l) => l.id} ListHeaderComponent={header}
           contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: Math.max(insets.bottom, 16) + 32 }}
           ListEmptyComponent={busy ? undefined : <Text style={s.empty}>No rooms yet. Tap Find rooms to search this city.</Text>}
           ItemSeparatorComponent={() => <View style={s.rule} />}
@@ -91,6 +109,9 @@ export function RoomsScreen({ visible, city, leads, setLeads, canSearch, onClose
                 <Text style={s.name} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75}>{l.venue}</Text>
                 <Text style={s.meta} numberOfLines={1}>{[l.area?.replace(/\s*\([^)]*(\)|$)/g, ""), shortKind(l.kind)].filter(Boolean).join("  ·  ")}</Text>
                 <Text style={s.fit} numberOfLines={2}>{l.fit}</Text>
+                {contacted[l.id] ? (
+                  <Text style={s.contacted} numberOfLines={1}>Contacted {contactedWhen(contacted[l.id])}</Text>
+                ) : null}
                 {interest[l.venue] ? (
                   <Text style={s.warm} numberOfLines={1}>Riders opened it {interest[l.venue] === 1 ? "once" : `${interest[l.venue]} times`} this week</Text>
                 ) : null}
@@ -138,6 +159,7 @@ const s = StyleSheet.create({
   contactText: { fontFamily: F.semibold, fontSize: T.small, color: C.ink },
   rule: { height: StyleSheet.hairlineWidth, backgroundColor: C.hairline },
   item: { flexDirection: "row", alignItems: "flex-start", gap: 16, paddingVertical: 20 },
+  contacted: { fontFamily: F.medium, fontSize: T.meta, color: C.ink3, marginTop: 10 },
   warm: { fontFamily: F.medium, fontSize: T.meta, color: C.ink, marginTop: 10 },
   facts: { fontFamily: F.medium, fontSize: T.meta, color: C.ink2, marginTop: 10 },
   go: { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center", borderWidth: StyleSheet.hairlineWidth, borderColor: C.d4, marginTop: 2 },
