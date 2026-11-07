@@ -68,6 +68,16 @@
   .empty { margin-top: 48px; }
   .empty .sub { font-size: 16px; color: var(--ink-2); margin-top: 12px; }
   @media (max-width: 360px) { .stop { grid-template-columns: 60px 16px 1fr; column-gap: 8px; } .time b { font-size: 24px; } }
+
+  /* Opened on a laptop (a link from Messages on a Mac): hand the page to the phone, where directions and
+     the ride live. Wide screens only, beside the column; never on a phone. */
+  .handoff { display: none; }
+  @media (min-width: 1000px) {
+    .handoff:not([hidden]) { display: block; position: fixed; top: 112px; left: calc(50% + 312px); width: 168px; }
+  }
+  .handoff .qr-box { background: #FFFFFF; padding: 8px; border-radius: 12px; width: 152px; height: 152px; }
+  .handoff .qr-box img, .handoff .qr-box canvas { width: 100% !important; height: 100% !important; display: block; }
+  .handoff p { margin: 12px 0 0; font-size: 14px; line-height: 1.45; color: var(--ink-3); }
 </style>
 </head>
 <body>
@@ -75,6 +85,11 @@
   <a class="mark" href="./">Scout<i aria-hidden="true"></i></a>
   <main id="app"><p class="note" style="margin-top:32px">Loading the plan…</p></main>
 </div>
+<aside class="handoff" id="handoff" hidden aria-label="Open on your phone">
+  <div class="qr-box" id="qr" role="img" aria-label="QR code that opens this page on your phone"></div>
+  <p>Scan to open this plan on your phone, with directions and the ride.</p>
+</aside>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.0/dist/umd/supabase.js"></script>
 <script>
   // Publishable key: read-only access to public listings.
@@ -125,6 +140,18 @@
         : `<a class="btn ${isAndroid ? "primary" : "quiet"}" href="./">${isAndroid ? "Get Scout for Android" : "See what Scout is"}</a>`}</div></section>`;
   }
 
+
+  // Show the phone handoff once the page has something worth opening (never on an error state).
+  function handoff() {
+    if (!window.matchMedia("(min-width: 1000px)").matches || typeof QRCode === "undefined") return;
+    const box = document.getElementById("qr");
+    if (box.childElementCount) return; // drawn once; the crew page re-renders every 20 s
+    try {
+      new QRCode(box, { text: location.href, width: 256, height: 256, colorDark: "#111111", colorLight: "#FFFFFF", correctLevel: QRCode.CorrectLevel.M });
+      document.getElementById("handoff").hidden = false;
+    } catch { /* no QR, no panel */ }
+  }
+
   async function render() {
     const shorts = (new URLSearchParams(location.search).get("s") || "").toLowerCase().split(",").filter(Boolean).slice(0, 4);
     if (!shorts.length || !shorts.every((s) => /^[a-f0-9]{8}$/.test(s))) return gone("missing");
@@ -172,6 +199,7 @@
         ${isAndroid ? `<a class="btn quiet" href="${esc(appLink(stops))}">Open in Scout</a>` : ""}
       </div>
       <p class="note">Scout finds what's on tonight in New York and Los Angeles and shows the ride there. An independent prototype, not an official Yelo app.</p>`;
+    handoff();
   }
   render().catch(() => gone("offline"));
 </script>
