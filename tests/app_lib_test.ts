@@ -324,6 +324,12 @@ Deno.test("planNight: happy hour now, a show close by later, then somewhere late
     const msg = planMessage(plan, (e) => `https://x/${e.id}`);
     expect(msg.split("\n")).toEqual(["Tonight's plan:", "1. Bar A · happy hour, until 7 PM", "https://x/hh",
       "2. Club B · 8 PM", "https://x/show", "3. Room D · 11 PM", "https://x/late"]);
+    // Shouting titles calmed, a billing that names the venue kept, a deal without hours says what it is.
+    const loud = spot("loud", "Nublu", "music", at(20), 40.724, { title: "NUBLU PRESENTS JAZZ NIGHT" });
+    const deal = spot("deal", "Bar H", "deal", null, 40.72, { title: "Bar H Specials", deal: "$5 drafts all night" });
+    const m2 = planMessage([{ spot: deal, step: "Start here", hop: null }, { spot: loud, step: "Then", hop: null }], () => "L").split("\n");
+    expect(m2[1]).toBe("1. Bar H · $5 drafts all night");
+    expect(m2[3]).toMatch(/^2\. Nublu · 8 PM, Nublu Presents Jazz Night$/);
   } finally { t.restore(); }
   setCityZone(null);
 });
