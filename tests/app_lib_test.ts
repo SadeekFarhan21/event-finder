@@ -7,7 +7,7 @@ import type { Spot } from "../app/src/lib/types";
 import { clock, shortTitle, dealDays, dealHours, dealStatus, isRecurring, nightEnd, otherDayPrefix, setCityZone, whenLabel } from "../app/src/lib/time";
 import { matches, sortSpots } from "../app/src/lib/filters";
 import { clusterEvents, coreOf } from "../app/src/lib/cluster";
-import { estimateFare, km } from "../app/src/lib/fare";
+import { estimateFare, km, milesLabel } from "../app/src/lib/fare";
 import { canonicalCity, cityKey } from "../app/src/lib/cities";
 import { similar } from "../app/src/lib/case";
 import { inviteBill, withBill } from "../app/src/lib/invite";
@@ -403,4 +403,10 @@ Deno.test("goingLine: going on your own says you", () => {
   expect(goingLine(3, { others: [], me: true })).toBe("You and 2 more");
   expect(goingLine(1, { others: [], me: true })).toBe("You're going");
   expect(goingLine(4)).toBe("4 going");
+});
+
+Deno.test("milesLabel: no 0.0 mi", () => {
+  expect(milesLabel(0.02)).toBe("Under 0.1 mi");
+  expect(milesLabel(0.4)).toBe("0.4 mi");
+  expect(milesLabel(2.6)).toBe("3 mi");
 });
