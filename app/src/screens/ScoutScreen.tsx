@@ -258,7 +258,7 @@ export function ScoutScreen() {
       setFilter("all");
       setActive(null);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      show(added ? `${added} new spots` : "Up to date. No new spots this time.");
+      show(added ? (added === 1 ? "1 new spot" : `${added} new spots`) : "Up to date. No new spots this time.");
       fit(list);
     } catch (err) {
       show(friendlyError(err, "Couldn't start the search. Try again in a moment."));
@@ -321,17 +321,18 @@ export function ScoutScreen() {
         <EmptyCard
           title={loadFailed ? "Couldn't load spots" : filter === "plan" && spots.length ? "Not enough on tonight to plan" : query.trim() && spots.length ? `Nothing matches "${query.trim()}"` : spots.length ? "Nothing here yet" : `No spots in ${cityName} yet`}
           body={loadFailed ? "Check your connection. Scout will try again as soon as you're back online."
-            : filter === "plan" && spots.length ? (query.trim() ? `Not enough "${query.trim()}" tonight for two stops close together. Try fewer words.` : "A plan needs two spots close together, still to come tonight. Try Today or This week.")
-            : query.trim() && spots.length ? (filter === "all" ? "Try another word, like a venue, a genre or a neighbourhood." : "Try This week, or another word.")
+            : filter === "plan" && spots.length ? (query.trim() ? `Not enough "${query.trim()}" tonight for two stops close together. Try fewer words.` : `A plan needs two spots close together, still to come tonight. Try ${nowWord()} or This week.`)
+            : query.trim() && spots.length ? (filter === "all" ? "Try another word, like a venue, a genre or a neighborhood." : "Try This week, or another word.")
             : spots.length ? "Try This week, or another filter."
             : scoutable ? `Open the ${cityName} menu and choose "Look for new spots".` : "New spots usually appear within the hour."} />
       ) : (
         <>
           <Animated.View entering={FadeIn.delay(150)} style={s.roomsWrap}>
             {crewsApi.available && (
-              <Tap hitSlop={4} style={[s.rooms, liveCrews.length > 0 && s.crewsOn]} onPress={() => { Haptics.selectionAsync(); setCrewsOpen(true); }}>
+              <Tap hitSlop={4} style={[s.rooms, liveCrews.length > 0 && s.crewsOn]} onPress={() => { Haptics.selectionAsync(); setCrewsOpen(true); }}
+                accessibilityLabel={soon ? `Your crew leaves for ${soon.crew.venue} ${soon.mins <= 1 ? "now" : `in ${soon.mins} minutes`}. Open crews` : `Crews${liveCrews.length ? `, ${liveCrews.length} on` : ""}`}>
                 <Text numberOfLines={1} style={[s.roomsText, liveCrews.length > 0 && s.crewsOnText]}>
-                  {soon ? `${soon.crew.venue} ${soon.mins <= 1 ? "now" : `in ${soon.mins} min`}` : `Crews${liveCrews.length ? `  ·  ${liveCrews.length}` : ""}`}
+                  {soon ? `Leave for ${soon.crew.venue} ${soon.mins <= 1 ? "now" : `in ${soon.mins} min`}` : `Crews${liveCrews.length ? `  ·  ${liveCrews.length}` : ""}`}
                 </Text>
               </Tap>
             )}
@@ -360,7 +361,7 @@ export function ScoutScreen() {
         onOpen={(c) => {
           const spot = spots.find((e) => e.id === c.spotId);
           setCrewsOpen(false);
-          if (!spot) { show(`${c.venue} is in another city's map`); return; }
+          if (!spot) { show(`${c.venue} is on another city's map. Switch cities from the title to open it.`); return; }
           focus(spot, true);
           setTimeout(() => setDetail(spot), 350);
         }} />
