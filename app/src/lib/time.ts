@@ -37,13 +37,17 @@ export const otherDayPrefix = (d: Date) => (nightDay(d.getTime()) === nightDay(D
 
 const fmt = (d: Date, o: Intl.DateTimeFormatOptions) => (o.hour ? d.toLocaleTimeString : d.toLocaleDateString).call(d, undefined, { ...o, timeZone: ZONE });
 
+// "Tonight" for the evening, "Today" for daytime starts (a 10 AM flea market isn't tonight).
+// A start between 6 AM and 5 PM in the city reads Today; after midnight still belongs to tonight.
+const todayWord = (d: Date) => { const h = +parts(d.getTime()).hour; return h >= 6 && h < 17 ? "Today" : "Tonight"; };
+
 export function whenLabel(e: WhenFields) {
   if (isRecurring(e)) return /happy hour/i.test(`${e.title} ${e.deal ?? ""}`) ? "Happy hour" : "Recurring deal";
   if (!e.start) return "Ongoing";
   const d = new Date(e.start);
   const days = nightDay(d.getTime()) - nightDay(Date.now());
   // Already under way: say so, rather than "Tonight" for a set that began hours ago.
-  const day = d.getTime() <= Date.now() ? "Started" : days === 0 ? "Tonight" : days === 1 ? "Tomorrow" : fmt(d, { weekday: "short", month: "short", day: "numeric" });
+  const day = d.getTime() <= Date.now() ? "Started" : days === 0 ? todayWord(d) : days === 1 ? "Tomorrow" : fmt(d, { weekday: "short", month: "short", day: "numeric" });
   return `${day} · ${fmt(d, { hour: "numeric", minute: "2-digit" })}`;
 }
 
@@ -56,7 +60,7 @@ export function whenPhrase(e: WhenFields) {
   if (!e.start) return "this week";
   const d = new Date(e.start);
   const days = nightDay(d.getTime()) - nightDay(Date.now());
-  const day = days === 0 ? "tonight" : days === 1 ? "tomorrow" : fmt(d, { weekday: "short", month: "short", day: "numeric" });
+  const day = days === 0 ? todayWord(d).toLowerCase() : days === 1 ? "tomorrow" : fmt(d, { weekday: "short", month: "short", day: "numeric" });
   return `${day} at ${clock(d)}`;
 }
 

@@ -197,3 +197,14 @@ Deno.test("search ranks the named venue first, otherwise keeps order", () => {
   expect(rankByVenue([a, b, c], parseQuery("nublu")).map((e) => e.venue)).toEqual(["Nublu", "Blue Note", "Smalls"]);
   expect(rankByVenue([a, b, c], parseQuery("jazz")).map((e) => e.venue)).toEqual(["Blue Note", "Nublu", "Smalls"]);
 });
+
+Deno.test("daytime starts read Today, evening ones Tonight", () => {
+  const t = new FakeTime(new Date("2026-11-07T13:30:00Z")); // 8:30 AM in New York
+  try {
+    setCityZone("New York, NY");
+    const at = (iso: string) => ({ start: iso, category: "community", title: "x", deal: null }) as never;
+    expect(whenLabel(at("2026-11-07T15:00:00Z"))).toBe("Today · 10:00 AM");
+    expect(whenLabel(at("2026-11-08T00:00:00Z"))).toBe("Tonight · 7:00 PM");
+    expect(whenLabel(at("2026-11-08T06:00:00Z"))).toBe("Tonight · 1:00 AM"); // after midnight, same night
+  } finally { setCityZone(null); t.restore(); }
+});
