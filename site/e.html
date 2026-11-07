@@ -280,7 +280,13 @@
       const name = document.getElementById("nm").value.trim(), btn = ev.target.querySelector("button");
       btn.disabled = true;
       const { error } = await db.rpc("join_crew", { p_code: code, p_device_id: deviceId(), p_name: name });
-      if (error) { btn.disabled = false; document.getElementById("msg").textContent = error.message; return; }
+      if (error) {
+        btn.disabled = false;
+        // Our own messages ("Crew not found") are written for people; anything else gets a plain sentence.
+        document.getElementById("msg").textContent = !navigator.onLine ? "No connection. Try again when you're back online."
+          : error.code === "P0001" ? error.message : "Couldn't join just now. Try again in a moment.";
+        return;
+      }
       render();
     });
     document.querySelectorAll("[data-status]").forEach((b) => b.addEventListener("click", async () => {
