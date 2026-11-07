@@ -247,7 +247,7 @@ export function ScoutScreen() {
     setFilter(f);
     setActive(null);
     carousel.current?.scrollTo(0, false);
-    fit(spots.filter((e) => matches(e, f)));
+    fit(f === "saved" ? spots.filter((e) => saved.has(e.id)) : spots.filter((e) => matches(e, f)), f === "saved"); // a short list: frame every saved spot
   };
 
   const cityName = cityInput.split(",")[0];
