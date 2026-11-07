@@ -23,7 +23,7 @@ import { useMyLocation } from "../hooks/useMyLocation";
 import { useGoing } from "../hooks/useGoing";
 import { useCrews } from "../hooks/useCrews";
 import { leavingSoon, type CrewPeople } from "../lib/friends";
-import { planAhead, planMessage } from "../lib/plan";
+import { planAhead, planFromShorts, planMessage } from "../lib/plan";
 import { openRide } from "../lib/ride";
 import { newIds, newSince } from "../lib/fresh";
 import { isOffline, onNetworkChange } from "../lib/net";
@@ -72,11 +72,18 @@ export function ScoutScreen() {
   const [crewsOpen, setCrewsOpen] = useState(false);
   const [linkCode, setLinkCode] = useState<string | null>(null);
 
+  // A friend's shared plan (scout://plan/<short>,<short>,…), shown as Plan my night until the rider moves on.
+  const [sharedPlan, setSharedPlan] = useState<string[] | null>(null);
+  const sharedPending = useRef(false); // read by open(): a city loading at launch mustn't switch the plan off
+  useEffect(() => { sharedPending.current = !!sharedPlan; }, [sharedPlan]);
+
   // A crew link opened on a phone with Scout (scout://crew/<code>) lands on Crews, code filled in.
   useEffect(() => {
     const handle = (url?: string | null) => {
       const m = url && /^scout:\/\/crew\/([a-f0-9]{8,16})/i.exec(url);
       if (m) { setLinkCode(m[1].toLowerCase()); setCrewsOpen(true); }
+      const p = url && /^scout:\/\/plan\/([a-f0-9]{8}(?:,[a-f0-9]{8}){1,3})/i.exec(url);
+      if (p) setSharedPlan(p[1].toLowerCase().split(",")); // the filter follows in an effect below
     };
     Linking.getInitialURL().then(handle).catch(() => {});
     const sub = Linking.addEventListener("url", (e) => handle(e.url));
@@ -96,6 +103,7 @@ export function ScoutScreen() {
 
   const [cityInput, setCityInput] = useState("New York, NY");
   const [filter, setFilter] = useState<Filter>("tonight"); // Principle 1: open on tonight
+  useEffect(() => { if (sharedPlan) setFilter("plan"); }, [sharedPlan]); // a friend's plan opens in Plan my night
   const [region, setRegion] = useState<Region>(START);
   const [active, setActive] = useState<Spot | null>(null); // highlighted on map + carousel
   const [detail, setDetail] = useState<Spot | null>(null); // open in the sheet
@@ -126,7 +134,9 @@ export function ScoutScreen() {
   // Stops the rider swapped out of tonight's plan; forgotten when they leave the plan or the city.
   const [skipped, setSkipped] = useState<Set<string>>(new Set());
   const planFrom = useCallback((skip: Set<string>) => spots.filter((e) => matchesQuery(e, parsed) && !skip.has(e.id)), [spots, parsed]);
-  const plan = useMemo(() => (filter === "plan" && minute ? planAhead(planFrom(skipped), minute, me) : []), [filter, planFrom, skipped, minute, me]);
+  const shared = useMemo(() => (sharedPlan && minute ? planFromShorts(spots, sharedPlan, minute) : []), [sharedPlan, spots, minute]);
+  const plan = useMemo(() => (filter !== "plan" || !minute ? [] : shared.length ? shared : planAhead(planFrom(skipped), minute, me)),
+    [filter, shared, planFrom, skipped, minute, me]);
   const steps = useMemo(() => Object.fromEntries(plan.map((p) => [p.spot.id, p])), [plan]);
   const route = useMemo(() => (plan.length > 1 ? plan.map((p) => ({ latitude: p.spot.lat, longitude: p.spot.lng })) : undefined), [plan]);
   const shown = useMemo(() => {
@@ -177,6 +187,21 @@ export function ScoutScreen() {
     map.current?.fitTo(core.map((e) => ({ latitude: e.lat, longitude: e.lng })), FIT_PADDING);
   }, []);
 
+  // Once a shared plan's stops are on the map, frame them and say whose plan it is; if they never are
+  // (another city's map, or the night has passed), say so and drop the link.
+  const sharedShown = useRef(false);
+  useEffect(() => {
+    if (!sharedPlan || loading) return;
+    if (shared.length && !sharedShown.current) {
+      sharedShown.current = true;
+      show("A friend's plan. Swap a stop or change filters to make your own.", false, 4000);
+      setTimeout(() => fit(shared.map((p) => p.spot), true), 300);
+    } else if (!shared.length && spots.length) {
+      show("That plan isn't on this map. It may be another city's, or its night has passed.");
+      setSharedPlan(null);
+    }
+  }, [sharedPlan, shared, loading, spots.length, show, fit]);
+
   // Searching: once typing pauses, frame the matches. A handful are all framed; dozens get the dense
   // core, like the city view ("under $20" in New York zoomed out to a speck otherwise). The first
   // match is always in the frame: it's the card on screen, and its pin was left off the map when it
@@ -187,6 +212,14 @@ export function ScoutScreen() {
     const t = setTimeout(() => fit(frame, true), 450);
     return () => clearTimeout(t);
   }, [query, shown, fit]);
+
+  // Switching from one city to another leaves a friend's plan behind (not the first load: a link opened
+  // at launch arrives before any city is on the map).
+  const lastCity = useRef(mapCity);
+  useEffect(() => {
+    if (lastCity.current && mapCity && mapCity !== lastCity.current) { setSharedPlan(null); sharedShown.current = false; }
+    lastCity.current = mapCity;
+  }, [mapCity]);
 
   // A new city or a new search starts at the first card (the carousel kept its old position, so after
   // switching city it opened mid-list on a standing deal), with nothing selected.
@@ -220,7 +253,7 @@ export function ScoutScreen() {
       AsyncStorage.setItem(CITY_KEY, city).catch(() => {});
       // Open on tonight; on a quiet night (fewer than 3 things on), show the week instead.
       const tonight = list.filter((e) => matches(e, "tonight")).length;
-      setFilter(tonight >= 3 ? "tonight" : "all");
+      setFilter(sharedPending.current ? "plan" : tonight >= 3 ? "tonight" : "all");
       const found = newIds(list);
       setFresh(found);
       const lead = tonight >= 3 ? `${tonight} things on ${nowWord().toLowerCase()}` : `${list.length} spots this week`;
@@ -301,6 +334,7 @@ export function ScoutScreen() {
     const skip = new Set(skipped).add(e.id);
     const next = planAhead(planFrom(skip), Date.now(), me);
     if (!next.length) { show("Nothing else close enough to swap in"); return; }
+    setSharedPlan(null); sharedShown.current = false; // swapping makes it your own plan
     Haptics.selectionAsync();
     setSkipped(skip);
     setActive(null);
@@ -311,6 +345,7 @@ export function ScoutScreen() {
 
   const pickFilter = (f: Filter) => {
     if (f !== "plan") setSkipped(new Set());
+    setSharedPlan(null); sharedShown.current = false; // any filter choice leaves a friend's plan
     Haptics.selectionAsync();
     setFilter(f);
     setActive(null);
