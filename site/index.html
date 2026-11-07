@@ -110,7 +110,7 @@
 
   .note { margin: 16px 0 0; font-size: 16px; color: var(--ink-2); max-width: 65ch; }
   footer { margin-top: 64px; padding-top: 16px; border-top: 1px solid var(--line); font-size: 14px; color: var(--ink-3);
-    display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 24px; }
+    display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px 24px; } /* the link keeps a 44px tap height; centre both lines on it */
   .venue-cta { max-width: 680px; display: flex; align-items: center; justify-content: space-between; gap: 16px 32px; flex-wrap: wrap; padding: 24px; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); }
   .venue-cta h2 { margin-top: 0; }
   .venue-cta .note { margin: 8px 0 0; max-width: 46ch; }
@@ -208,7 +208,7 @@
   </section>
 
   <footer>
-    <span>Scout is an independent prototype. It is not an official Yelo app.</span>
+    <span>Scout is an independent prototype. It is not an official Yelo app. · <a href="rooms.html">Rooms for Yelo's partner team</a></span>
     <span id="fresh">Spots refreshed every few minutes</span>
   </footer>
 </div>
