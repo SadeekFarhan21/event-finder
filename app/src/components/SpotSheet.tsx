@@ -95,6 +95,7 @@ export function SpotSheet({ spot, city, me, unlocked, canAskLocation, onAskLocat
   const backdropStyle = useAnimatedStyle(() => ({ opacity: interpolate(y.value, [0, 400], [1, 0], "clamp") }));
 
   const insets = useSafeAreaInsets();
+  const scroll = useRef<React.ComponentRef<typeof ScrollView>>(null); // hooks stay above the early return
   if (!shown) return null;
   const e = shown;
   const fare = me ? estimateFare(me, { lat: e.lat, lng: e.lng }) : null;
@@ -106,7 +107,6 @@ export function SpotSheet({ spot, city, me, unlocked, canAskLocation, onAskLocat
     const r = await Share.share({ message: crew ? crewInvite(crew) : inviteMessage(e, isGoing) }).catch(() => null);
     if (r?.action === Share.sharedAction) track(e, "share", city);
   };
-  const scroll = useRef<React.ComponentRef<typeof ScrollView>>(null);
   // The unlocked deal appears at the end of the sheet, under the fold; bring it into view.
   const unlock = () => {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); track(e, "unlock", city); onUnlock(e);
