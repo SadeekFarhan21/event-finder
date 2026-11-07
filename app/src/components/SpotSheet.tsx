@@ -38,7 +38,7 @@ type Props = {
   onUnGo?: (spot: Spot) => void; // take it back (absent when you're going via a crew)
   crew?: Crew; canCrew: boolean; // my crew for this spot, if any
   onStartCrew: (spot: Spot, leaveAt: Date, name: string) => Promise<string>;
-  onCrewStatus: (code: string, s: CrewStatus) => void;
+  onCrewStatus: (code: string, s: CrewStatus) => Promise<boolean>;
 };
 
 // "151 Avenue C, East Village, New York, NY 10009" -> street "151 Avenue C", rest, area "East Village".
@@ -55,6 +55,7 @@ export function SpotSheet({ spot, city, me, unlocked, canAskLocation, locationRe
   const [shown, setShown] = useState<Spot | null>(null); // stays mounted while sliding out
   const [composing, setComposing] = useState(false); // the "Go with friends" sheet is open
   const [more, setMore] = useState(false); // full description
+  const [crewFailed, setCrewFailed] = useState(false); // last crew update couldn't be saved
 
   useEffect(() => {
     if (!spot) return;
@@ -225,20 +226,21 @@ export function SpotSheet({ spot, city, me, unlocked, canAskLocation, locationRe
                 </View>
                 <View style={s.crewActions}>
                   {meInCrew?.status === "out" ? (
-                    <Tap style={[s.crewBtn, s.crewBtnMain]} onPress={() => onCrewStatus(crew.code, "in")}>
+                    <Tap style={[s.crewBtn, s.crewBtnMain]} onPress={async () => setCrewFailed(!(await onCrewStatus(crew.code, "in")))}>
                       <Text style={s.crewBtnMainText}>I'm back in</Text>
                     </Tap>
                   ) : meInCrew?.status === "on_way" ? null : (
-                    <Tap style={[s.crewBtn, s.crewBtnMain]} onPress={() => { Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); onCrewStatus(crew.code, "on_way"); }}>
+                    <Tap style={[s.crewBtn, s.crewBtnMain]} onPress={() => { Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); onCrewStatus(crew.code, "on_way").then((ok) => setCrewFailed(!ok)); }}>
                       <Text style={s.crewBtnMainText}>I'm on my way</Text>
                     </Tap>
                   )}
                   {meInCrew?.status !== "out" && (
-                    <Tap style={s.crewBtn} onPress={() => onCrewStatus(crew.code, "out")}>
+                    <Tap style={s.crewBtn} onPress={async () => setCrewFailed(!(await onCrewStatus(crew.code, "out")))}>
                       <Text style={s.crewBtnText}>Can't make it</Text>
                     </Tap>
                   )}
                 </View>
+                {crewFailed && <Text style={s.crewErr}>{"No connection. Your crew didn't get that, try again."}</Text>}
               </Animated.View>
             ) : canCrew ? (
               <Tap style={s.friends} onPress={() => { Haptics.selectionAsync(); setComposing(true); }}>
@@ -395,6 +397,7 @@ const s = StyleSheet.create({
   memberDotOn: { backgroundColor: C.ink, borderColor: C.ink },
   memberName: { flex: 1, fontFamily: F.medium, fontSize: T.small, color: C.ink },
   memberState: { fontFamily: F.regular, fontSize: T.meta, color: C.ink3 },
+  crewErr: { fontFamily: F.medium, fontSize: T.small, color: C.red, marginTop: 10 },
   crewActions: { flexDirection: "row", gap: 8, alignItems: "center" },
   crewBtn: { flex: 1, height: 44, borderRadius: R.pill, alignItems: "center", justifyContent: "center", borderWidth: StyleSheet.hairlineWidth, borderColor: C.d4 },
   crewBtnMain: { backgroundColor: C.ink, borderColor: C.ink },

@@ -20,7 +20,7 @@ export function CrewsScreen({ visible, crews, photos, linkCode, onJoin, onStatus
   photos: Record<string, string | null | undefined>; // spot id -> photo, for the crew cards
   linkCode?: string | null; // a crew code from a scout://crew/<code> link, ready to join
   onJoin: (code: string, name: string) => Promise<string>;
-  onStatus: (code: string, s: CrewStatus) => void;
+  onStatus: (code: string, s: CrewStatus) => Promise<boolean>;
   onRide: (crew: Crew) => void;
   onOpen: (crew: Crew) => void;
   onClose: () => void;
@@ -145,12 +145,14 @@ function Field({ label, children }: { icon?: string; label: string; children: Re
 // One crew: the spot's photo, when you're leaving, who's in, and the one action that matters.
 function CrewTile({ crew, photo, onStatus, onRide, onOpen }: {
   crew: Crew; photo?: string | null;
-  onStatus: (code: string, s: CrewStatus) => void; onRide: (c: Crew) => void; onOpen: (c: Crew) => void;
+  onStatus: (code: string, s: CrewStatus) => Promise<boolean>; onRide: (c: Crew) => void; onOpen: (c: Crew) => void;
 }) {
   const me = crew.members.find((m) => m.me);
   const coming = crew.members.filter((m) => m.status !== "out");
   const onWay = crew.members.filter((m) => m.status === "on_way").length;
   const out = me?.status === "out";
+  const [failed, setFailed] = useState(false);
+  const set = async (st: CrewStatus) => setFailed(!(await onStatus(crew.code, st)));
   return (
     <View style={[s.tile, out && { opacity: 0.6 }]}>
       <Tap pressedScale={0.99} onPress={() => onOpen(crew)} accessibilityLabel={`Open ${crew.venue}`}>
@@ -190,17 +192,18 @@ function CrewTile({ crew, photo, onStatus, onRide, onOpen }: {
       </View>
 
       <View style={s.actions}>
-        <Tap style={[s.btn, s.btnQuiet]} onPress={() => onStatus(crew.code, out ? "in" : "out")}>
+        <Tap style={[s.btn, s.btnQuiet]} onPress={() => set(out ? "in" : "out")}>
           <Text style={s.btnQuietText}>{out ? "I'm back in" : "Can't make it"}</Text>
         </Tap>
         <Tap style={[s.btn, s.btnPrimary]} onPress={() => {
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-          if (me?.status !== "on_way") onStatus(crew.code, "on_way");
+          if (me?.status !== "on_way") set("on_way");
           onRide(crew);
         }}>
           <Text style={s.btnPrimaryText}>{me?.status === "on_way" ? "Open ride" : "I'm on my way"}</Text>
         </Tap>
       </View>
+      {failed && <Text style={s.statusErr}>{"No connection. Your crew didn't get that, try again."}</Text>}
     </View>
   );
 }
@@ -253,6 +256,7 @@ const s = StyleSheet.create({
   peopleTitle: { fontFamily: F.semibold, fontSize: T.small, color: C.ink },
   peopleSub: { fontFamily: F.regular, fontSize: T.meta, color: C.ink3, marginTop: 1 },
   round: { width: 36, height: 36, borderRadius: 18, alignItems: "center", justifyContent: "center", backgroundColor: C.fill },
+  statusErr: { fontFamily: F.medium, fontSize: T.small, color: C.red, paddingHorizontal: 4 },
   actions: { flexDirection: "row", gap: 8 },
   btn: { height: 46, borderRadius: R.pill, flexDirection: "row", gap: 6, alignItems: "center", justifyContent: "center" },
   btnPrimary: { flex: 1.3, backgroundColor: C.accent },
