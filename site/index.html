@@ -68,7 +68,10 @@
   h1 em { color: inherit; }
   .lede { color: var(--ink-2); font-size: 16px; max-width: 34em; margin: 16px 0 0; }
 
-  .get { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; margin-top: 32px; }
+  /* The button, then one quiet line under it: nothing competes beside the main action. */
+  .get { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; margin-top: 32px; }
+  .get .meta { display: block; margin: 0; font-size: 14px; color: var(--ink-3); }
+  .get .meta a { display: inline; min-height: 0; padding: 12px 0; color: var(--ink-2); } /* padding keeps a finger-sized target */
   .btn { display: inline-flex; align-items: center; gap: 8px; min-height: 48px; background: var(--yellow); color: var(--on-yellow);
     text-decoration: none; font: 600 16px var(--body); padding: 12px 24px; border-radius: 999px; }
   .btn:hover { background: var(--yellow-hover); }
@@ -83,7 +86,7 @@
   .qr p { margin: 0; font-size: 16px; color: var(--ink-2); max-width: 22em; }
 
   .phone { justify-self: center; width: min(300px, 78vw); border-radius: 36px; padding: 8px; background: #0E0E0D; }
-  .phone img { display: block; width: 100%; border-radius: 28px; }
+  .phone img { display: block; width: 100%; border-radius: 28px; box-sizing: border-box; padding-top: 14px; background: #0C0C0A; } /* the rounded corners clip empty space, not the status bar */
 
   h2 { font: 400 clamp(32px, 4vw, 40px)/1.1 var(--display); margin: 0; text-wrap: balance; }
   section { margin-top: 64px; }
@@ -105,7 +108,7 @@
   .note { margin: 16px 0 0; font-size: 16px; color: var(--ink-2); max-width: 65ch; }
   footer { margin-top: 64px; padding-top: 16px; border-top: 1px solid var(--line); font-size: 14px; color: var(--ink-3);
     display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 24px; }
-  .venue-cta { display: flex; align-items: center; justify-content: space-between; gap: 16px 32px; flex-wrap: wrap; padding: 24px; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); }
+  .venue-cta { max-width: 680px; display: flex; align-items: center; justify-content: space-between; gap: 16px 32px; flex-wrap: wrap; padding: 24px; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); }
   .venue-cta h2 { margin-top: 0; }
   .venue-cta .note { margin: 8px 0 0; max-width: 46ch; }
   .btn.venue-btn { background: transparent; color: var(--ink); border: 1px solid var(--ink); }
@@ -149,10 +152,7 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11"/><path d="m7 10 5 5 5-5"/><path d="M5 20h14"/></svg>
           Download for Android
         </a>
-        <div class="meta">
-          <span>APK, installs directly. No Play Store needed.</span>
-          <a href="https://expo.dev/accounts/fsadeek/projects/scout/builds/26fb2201-a817-44ef-9214-6a2c1f0c370a" target="_blank" rel="noopener">Or open the install page</a>
-        </div>
+        <p class="meta">Android APK, no Play Store needed · <a href="https://expo.dev/accounts/fsadeek/projects/scout/builds/26fb2201-a817-44ef-9214-6a2c1f0c370a" target="_blank" rel="noopener">Install page</a></p>
       </div>
 
       <div class="qr">
