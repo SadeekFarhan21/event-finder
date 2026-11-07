@@ -240,7 +240,7 @@
       if (!run) return;
       const mins = Math.max(0, Math.round((Date.now() - Date.parse(run.ran_at)) / 60000));
       if (mins > 180) return; // overnight pause: keep the general line
-      document.getElementById("fresh").textContent = `Scout last searched the web ${mins < 1 ? "just now" : `${mins} min ago`}`;
+      document.getElementById("fresh").textContent = `Scout last searched the web ${mins < 1 ? "just now" : mins < 60 ? `${mins} min ago` : `${Math.round(mins / 60)} h ago`}`;
     })
     .catch(() => {});
 </script>
