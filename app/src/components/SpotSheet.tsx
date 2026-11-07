@@ -62,12 +62,16 @@ export function SpotSheet({ spot, city, me, unlocked, canAskLocation, locationRe
   const [composing, setComposing] = useState(false); // the "Go with friends" sheet is open
   const [more, setMore] = useState(false); // full description
   const [crewFailed, setCrewFailed] = useState(false); // last crew update couldn't be saved
+  // How far the sheet has scrolled: once the photo has gone by, the pinned buttons need the top fade.
+  const scrollY = useSharedValue(0);
+  const topFade = useAnimatedStyle(() => ({ opacity: interpolate(scrollY.value, [HERO_H - 120, HERO_H - 60], [0, 1], "clamp") }));
 
   useEffect(() => {
     if (!spot) return;
     setShown(spot);
     setComposing(false);
     setMore(false);
+    scrollY.value = 0;
     track(spot, "view", city);
     y.value = OFFSCREEN;
     y.value = withSpring(0, OPEN);
@@ -147,7 +151,8 @@ export function SpotSheet({ spot, city, me, unlocked, canAskLocation, locationRe
 
       <Animated.View style={[s.sheet, sheetStyle]}>
         <ScrollView ref={scroll} style={{ flexShrink: 1 }} contentContainerStyle={{ paddingBottom: 112 + insets.bottom }}
-          showsVerticalScrollIndicator={false} bounces={false}>
+          showsVerticalScrollIndicator={false} bounces={false} scrollEventThrottle={16}
+          onScroll={(ev) => { scrollY.value = ev.nativeEvent.contentOffset.y; }}>
           {/* The photo is the header: name and neighborhood set on it, like a magazine cover. */}
           <GestureDetector gesture={drag}>
             <View>
@@ -333,13 +338,13 @@ export function SpotSheet({ spot, city, me, unlocked, canAskLocation, locationRe
         </ScrollView>
 
         {/* Close and share stay pinned to the sheet; inside the scroll they slid up and were sliced at its edge. */}
-        {/* Without a photo nothing sits behind the pinned buttons, so scrolled text ran under them; fade it out first. */}
-        {!e.image && (
-          <LinearGradient pointerEvents="none" colors={[C.bg, C.bg, "rgba(12,12,10,0)"]} locations={[0, 0.55, 1]}
-            style={{ position: "absolute", top: 0, left: 0, right: 0, height: 88, borderTopLeftRadius: R.sheet, borderTopRightRadius: R.sheet }} />
-        )}
-        {/* The fade covers the handle; draw it again on top (the one underneath still takes the drag). */}
-        {!e.image && <View pointerEvents="none" style={s.grabber} />}
+        {/* Scrolled text must not run under the pinned buttons. Without a photo nothing sits behind them, so the
+            fade is always on; with one, it comes in as the photo scrolls past (the photo was their backdrop). */}
+        <Animated.View pointerEvents="none" style={[s.topFade, e.image ? topFade : null]}>
+          <LinearGradient colors={[C.bg, C.bg, "rgba(12,12,10,0)"]} locations={[0, 0.55, 1]} style={StyleSheet.absoluteFill} />
+          {/* The fade covers the handle; draw it again on top (the one underneath still takes the drag). */}
+          <View style={s.grabber} />
+        </Animated.View>
         <View pointerEvents="box-none" style={s.heroTop}>
           <Tap style={s.glass} hitSlop={4} onPress={close} accessibilityLabel="Close"><Feather name="chevron-down" size={18} color={C.ink} /></Tap>
           <View style={{ flexDirection: "row", gap: 8 }}>
@@ -386,6 +391,7 @@ const s = StyleSheet.create({
   sheet: { position: "absolute", left: 0, right: 0, bottom: 0, maxHeight: SCREEN_H * 0.92, backgroundColor: C.bg,
     borderTopLeftRadius: R.sheet, borderTopRightRadius: R.sheet, overflow: "hidden", ...shadow, shadowOffset: { width: 0, height: -2 } },
   grabber: { position: "absolute", top: 8, alignSelf: "center", width: 36, height: 4, borderRadius: 2, backgroundColor: "rgba(255,255,255,0.35)" },
+  topFade: { position: "absolute", top: 0, left: 0, right: 0, height: 88, borderTopLeftRadius: R.sheet, borderTopRightRadius: R.sheet, overflow: "hidden" },
   heroTop: { position: "absolute", top: 20, left: 16, right: 16, flexDirection: "row", justifyContent: "space-between" },
   glassOn: { backgroundColor: C.ink, borderColor: C.ink },
   glass: { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center",
