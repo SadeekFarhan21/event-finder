@@ -199,6 +199,15 @@
     const q = new URLSearchParams(location.search);
     const code = (q.get("crew") || "").toLowerCase();
     let crew = null, id = q.get("id");
+    // Short share links (?s=3f9a1c2e) name a spot by its code; look up the full id.
+    const short = (q.get("s") || "").toLowerCase();
+    if (short && !id && !code) {
+      if (!/^[a-f0-9]{8}$/.test(short)) return gone("missing");
+      const { data: hit, error: e1 } = await db.from("upcoming_events").select("id").eq("short", short).limit(1).maybeSingle();
+      if (e1) return gone("offline");
+      if (!hit) return gone("expired");
+      id = hit.id;
+    }
     if (code) {
       if (!/^[a-f0-9]{8,16}$/.test(code)) return gone("missing");
       const { data, error } = await db.rpc("get_crews", { p_codes: [code], p_device_id: deviceId() });
