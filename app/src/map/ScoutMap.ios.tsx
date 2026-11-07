@@ -3,7 +3,6 @@ import { useImperativeHandle, useRef } from "react";
 import { StyleSheet } from "react-native";
 import MapView, { Marker, Polygon, Polyline } from "react-native-maps";
 import type { ScoutMapProps, ScoutMarkerProps } from "./types";
-import { color as C } from "../theme";
 
 // Apple's dark map is navy and can't be restyled. A world-sized warm near-black wash, drawn as a map
 // overlay (below every pin), pulls it toward Scout's palette and quiets the labels.
@@ -24,7 +23,7 @@ export function ScoutMap({ ref, initialRegion, showsUserLocation, onRegionChange
       mapType="mutedStandard" showsPointsOfInterests={false} showsCompass={false} toolbarEnabled={false}
       showsUserLocation={showsUserLocation} onRegionChangeComplete={onRegionChange} onPress={onPress}>
       <Polygon coordinates={WORLD} fillColor="rgba(12,12,10,0.55)" strokeWidth={0} tappable={false} zIndex={-1} />
-      {route && route.length > 1 && <Polyline coordinates={route} strokeColor={C.ink} strokeWidth={2} lineDashPattern={[3, 5]} lineCap="round" zIndex={0} />}
+      {route && route.length > 1 && <Polyline coordinates={route} strokeColor="rgba(242,240,233,0.7)" strokeWidth={2} lineDashPattern={[2, 5]} lineCap="round" zIndex={0} />}
       {children}
     </MapView>
   );
