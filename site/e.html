@@ -133,13 +133,26 @@
   const nightKey = (t) => Date.parse(ymd(t - 6 * 3600e3)) / 864e5; // a night runs until 6am
 
   // Same rule as the app: a night runs until 6am, so a 1am set still reads "Tonight".
+  // Read a deal the way the app does: only the clause about the happy hour ("Happy Hour Tue-Fri open-7pm;
+  // Saturday open 12pm-4am": the second half is opening hours), with the days it names.
+  const hhClause = (t) => String(t).split(/[;\n]|\s[–—]\s/).find((c) => /happy hour/i.test(c)) ?? String(t);
+  const RANGE = /\b\d{1,2}(:\d\d)?\s*(am|pm)?\s*(-|–|to)\s*\d{1,2}(:\d\d)?\s*(am|pm)\b/i;
+  const DAYSPAN = /\b(mon|tue|wed|thu|fri|sat|sun)[a-z]*\.?\s*(-|–|to|through)\s*(mon|tue|wed|thu|fri|sat|sun)[a-z]*\b|\bweekdays\b|\bweekends\b/i;
+  const dealWhen = (t) => {
+    const c = hhClause(t), cap = (w) => w[0].toUpperCase() + w.slice(1, 3).toLowerCase();
+    const span = c.match(DAYSPAN), hrs = c.match(RANGE)?.[0]?.replace(/\s*(-|–|to)\s*/i, "–");
+    const days = span ? (span[1] ? `${cap(span[1])}–${cap(span[3])}` : span[0].toLowerCase() === "weekdays" ? "Weekdays" : "Weekends") : "";
+    return [days, hrs].filter(Boolean).join(" · ");
+  };
+  // A standing deal (happy hour, weekly night): its scraped start is a placeholder, not when it begins.
+  const recurring = (e) => e.category === "deal" || /happy hour|every (mon|tue|wed|thu|fri|sat|sun)|daily|weekly|nightly/i.test(`${e.title} ${e.deal ?? ""} ${e.description ?? ""}`);
   function when(e) {
-    const text = `${e.title} ${e.deal ?? ""} ${e.description ?? ""}`;
-    if (e.category === "deal" || /happy hour|every (mon|tue|wed|thu|fri|sat|sun)|daily|weekly|nightly/i.test(text)) {
-      // Keep the hours the listing states ("4-7pm", "5 to 8 PM"); never invent them.
-      const hours = text.match(/\b\d{1,2}(:\d\d)?\s*(am|pm)?\s*(-|–|to)\s*\d{1,2}(:\d\d)?\s*(am|pm)\b/i)?.[0];
+    if (recurring(e)) {
+      const text = `${e.title} ${e.deal ?? ""} ${e.description ?? ""}`;
+      // Keep the days and hours the listing states ("Tue–Fri · 4–7pm"); never invent them.
       const label = /happy hour/i.test(text) ? "Happy hour" : "Every night this week";
-      return hours ? `${label} · ${hours.replace(/\s*(-|–|to)\s*/i, "–")}` : label;
+      const hw = dealWhen(`${e.deal ?? ""} ${e.title}`);
+      return hw ? `${label} · ${hw}` : label;
     }
     if (!e.start) return "Ongoing";
     const d = new Date(e.start);
@@ -208,7 +221,7 @@
   // Google Calendar's new-event link, as in the app: dated nights only, 3 hours long (listings rarely give an end).
   function calLink(e) {
     const t = e.start ? Date.parse(e.start) : NaN;
-    if (Number.isNaN(t) || e.category === "deal") return "";
+    if (Number.isNaN(t) || recurring(e)) return ""; // a standing deal has no one start to put in a calendar
     const stamp = (x) => new Date(x).toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
     const q = new URLSearchParams({ action: "TEMPLATE", text: `${e.title} at ${e.venue}`, dates: `${stamp(t)}/${stamp(t + 3 * 3600e3)}`,
       location: `${e.venue}, ${e.address}`, details: "Found on Scout." });
@@ -216,7 +229,7 @@
   }
 
   function band(e) {
-    if (!e.start) return "";
+    if (!e.start || recurring(e)) return ""; // no "12 PM · Started" for a Tue–Fri happy hour
     const d = new Date(e.start);
     const time = fmtT(d, { hour: "numeric", minute: "2-digit" }).replace(":00", "");
     const day = d.getTime() <= Date.now() ? "Started" : nightKey(d.getTime()) === nightKey(Date.now()) ? todayWord(d) : fmtD(d, { weekday: "long", month: "short", day: "numeric" });
@@ -244,7 +257,9 @@
     const km = (a) => { const x = (a.lng - e.lng) * r * Math.cos(e.lat * r), y = (a.lat - e.lat) * r; return Math.hypot(x, y) * 6371; };
     const near = (data ?? []).filter((x) => x.short && norm(x.venue) !== norm(e.venue) && x.category !== "deal"
         && nightKey(Date.parse(x.start)) === nightKey(ref) && Date.parse(x.start) > Date.now() - 30 * 60000 && km(x) <= 1.2)
-      .sort((a, b) => km(a) - km(b)).slice(0, 3) // the three nearest
+      .sort((a, b) => km(a) - km(b))
+      .filter((x, i, all) => all.findIndex((y) => norm(y.venue) === norm(x.venue)) === i) // one row per venue
+      .slice(0, 3) // the three nearest
       .sort((a, b) => Date.parse(a.start) - Date.parse(b.start)); // listed in the order the night runs
     const box = document.getElementById("nearby");
     if (!box || !near.length) return;
