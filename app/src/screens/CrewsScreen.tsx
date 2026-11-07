@@ -145,19 +145,19 @@ function CrewTile({ crew, photo, onStatus, onRide, onOpen }: {
   const [failed, setFailed] = useState(false);
   const set = async (st: CrewStatus) => setFailed(!(await onStatus(crew.code, st)));
   return (
-    <View style={[s.tile, out && { opacity: 0.6 }]}>
+    <View style={s.tile}>
       <Tap pressedScale={0.99} onPress={() => onOpen(crew)} accessibilityLabel={`Open ${crew.venue}`}>
         {/* No photo (common for scraped spots): no empty block, just the leave time above the name. */}
         {photo ? (
           <View style={s.strip}>
-            <Image source={photo} style={StyleSheet.absoluteFill} contentFit="cover" transition={200} />
+            <Image source={photo} style={[StyleSheet.absoluteFill, out && s.photoOut]} contentFit="cover" transition={200} />
             <LinearGradient pointerEvents="none" colors={["rgba(21,21,19,0)", C.surface]} style={StyleSheet.absoluteFill} />
             <View style={s.stripChip}><View style={s.dot} /><Text style={s.stripChipText}>{leaveLabel(crew.leaveAt)}</Text></View>
           </View>
         ) : (
           <View style={[s.stripChip, s.chipInline]}><View style={s.dot} /><Text style={s.stripChipText}>{leaveLabel(crew.leaveAt)}</Text></View>
         )}
-        <Text style={s.venue} numberOfLines={1}>{crew.venue}</Text>
+        <Text style={[s.venue, out && s.venueOut]} numberOfLines={1}>{crew.venue}</Text>
         <View style={s.addrRow}>
           <Feather name="map-pin" size={13} color={C.ink3} />
           <Text style={s.addr} numberOfLines={1}>{crew.address.split(",")[0]}  ·  {crew.title}</Text>
@@ -230,6 +230,10 @@ const s = StyleSheet.create({
   dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: C.ink },
   stripChipText: { fontFamily: F.semibold, fontSize: T.meta, color: C.ink },
   venue: { fontFamily: F.display, fontSize: T.title, lineHeight: 32, color: C.ink, marginTop: 8, paddingHorizontal: 4 },
+  // A crew you said you can't make: the name and photo step back, text stays above the contrast
+  // floor (fading the whole tile took the address under 4.5:1).
+  venueOut: { color: C.ink2 },
+  photoOut: { opacity: 0.5 },
   addrRow: { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 4 },
   addr: { flex: 1, fontFamily: F.regular, fontSize: T.small, color: C.ink3 },
   people: { flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 4 },

@@ -45,9 +45,9 @@ export function Fallback({ title, body, action, onAction }: { title: string; bod
 }
 
 const s = StyleSheet.create({
-  root: { flex: 1, backgroundColor: C.bg, justifyContent: "center", paddingHorizontal: 24, gap: 12 },
+  root: { flex: 1, backgroundColor: C.bg, justifyContent: "center", paddingHorizontal: 20, gap: 12 }, // the 20 gutter of every full screen
   title: { fontFamily: F.display, fontSize: T.title, lineHeight: 32, color: C.ink },
-  body: { fontFamily: F.regular, fontSize: T.body, lineHeight: 24, color: C.ink2 },
+  body: { fontFamily: F.regular, fontSize: T.body, lineHeight: 22, color: C.ink2 },
   btn: { alignSelf: "flex-start", height: 44, paddingHorizontal: 20, borderRadius: R.pill, backgroundColor: C.ink, justifyContent: "center", marginTop: 8 },
   btnText: { fontFamily: F.semibold, fontSize: T.small, color: C.surface },
 });
