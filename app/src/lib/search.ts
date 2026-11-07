@@ -47,7 +47,9 @@ export function matchesQuery(e: Spot, q: Query, now = Date.now()): boolean {
     const t = Date.parse(e.start), d = nightOffset(t, now);
     if (q.when === "tonight" && d !== 0) return false;
     if (q.when === "tomorrow" && d !== 1) return false;
-    if (q.when === "weekend" && (d < 0 || d > 6 || ![5, 6, 0].includes(nightWeekday(t)))) return false; // Fri, Sat, Sun nights
+    // This weekend: Fri, Sat and Sun nights up to this coming Sunday (on a Saturday, not next Friday).
+    const toSunday = (7 - nightWeekday(now)) % 7;
+    if (q.when === "weekend" && (d < 0 || d > toSunday || ![5, 6, 0].includes(nightWeekday(t)))) return false;
   }
   if (q.maxPrice !== null) {
     const p = priceOf(e);
