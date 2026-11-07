@@ -65,12 +65,17 @@ export function dedupeEvents(events: YeloEvent[]): YeloEvent[] {
     }
     // "New" means first found: a re-found listing keeps the earliest discovery time.
     const first = twin.discoveredAt < e.discoveredAt ? twin.discoveredAt : e.discoveredAt;
+    // ...and keeps the earliest id: the share code (events.short) is derived from it, so links friends
+    // already sent keep working. A standing deal's id includes the placeholder start the scrape gave it,
+    // so every re-find used to mint a new id and break every link to it.
+    const firstId = twin.discoveredAt <= e.discoveredAt ? twin.id : e.id;
     if (RANK[e.confidence] > RANK[twin.confidence]) Object.assign(twin, { ...e, venue: cleanVenue(e.venue), title: cleanTitle(e.title, e.venue), deal: e.deal ?? twin.deal, image: e.image ?? twin.image });
     else {
       if (!twin.deal && e.deal) twin.deal = e.deal;
       if (!twin.image && e.image) twin.image = e.image;
     }
     twin.discoveredAt = first;
+    twin.id = firstId;
   }
   return kept;
 }
