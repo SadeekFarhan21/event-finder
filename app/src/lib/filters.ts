@@ -1,6 +1,6 @@
 // The chips under the search bar, and the order spots appear in.
 import { CATEGORY } from "../theme";
-import { isRecurring, nightEnd } from "./time";
+import { isRecurring, nightEnd, nowWord } from "./time";
 import type { Category, Spot } from "./types";
 
 export type Filter = Category | "all" | "tonight";
@@ -8,7 +8,7 @@ export type Filter = Category | "all" | "tonight";
 // Five, all on screen at once: when, then the three things people go out for.
 export const FILTERS: Filter[] = ["tonight", "all", "music", "nightlife", "deal"];
 
-export const filterLabel = (f: Filter) => (f === "all" ? "This week" : f === "tonight" ? "Tonight" : f === "music" ? "Music" : CATEGORY[f].label);
+export const filterLabel = (f: Filter) => (f === "all" ? "This week" : f === "tonight" ? nowWord() : f === "music" ? "Music" : CATEGORY[f].label);
 
 // "Tonight" = dated events from now until 6am, plus standing deals (happy hours run every day).
 export function matches(e: Spot, f: Filter) {

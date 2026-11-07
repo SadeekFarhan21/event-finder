@@ -40,6 +40,8 @@ const fmt = (d: Date, o: Intl.DateTimeFormatOptions) => (o.hour ? d.toLocaleTime
 // "Tonight" for the evening, "Today" for daytime starts (a 10 AM flea market isn't tonight).
 // A start between 6 AM and 5 PM in the city reads Today; after midnight still belongs to tonight.
 const todayWord = (d: Date) => { const h = +parts(d.getTime()).hour; return h >= 6 && h < 17 ? "Today" : "Tonight"; };
+// The same word for right now, in the city on the map: the first filter chip reads Today until 5 PM.
+export const nowWord = () => todayWord(new Date());
 
 export function whenLabel(e: WhenFields) {
   if (isRecurring(e)) return /happy hour/i.test(`${e.title} ${e.deal ?? ""}`) ? "Happy hour" : "Recurring deal";

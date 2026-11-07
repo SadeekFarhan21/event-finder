@@ -1,7 +1,7 @@
 // The main screen: map of spots, search + filters on top, cards along the bottom.
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { setCityZone } from "../lib/time";
+import { nowWord, setCityZone } from "../lib/time";
 import { matchesQuery, parseQuery, rankByVenue } from "../lib/search";
 import type { CrewPeople } from "../lib/friends";
 import { Linking, StyleSheet, Text, View } from "react-native";
@@ -168,7 +168,7 @@ export function ScoutScreen() {
       setFilter(tonight >= 3 ? "tonight" : "all");
       const found = newIds(list);
       setFresh(found);
-      const lead = tonight >= 3 ? `${tonight} things on tonight` : `${list.length} spots this week`;
+      const lead = tonight >= 3 ? `${tonight} things on ${nowWord().toLowerCase()}` : `${list.length} spots this week`;
       // Count new only within what the toast names ("158 tonight · 280 new" read as nonsense).
       const fresh = tonight >= 3 ? list.filter((e) => found.has(e.id) && matches(e, "tonight")).length : found.size;
       if (list.length) show(fresh ? `${lead}  ·  ${fresh} new` : lead);
