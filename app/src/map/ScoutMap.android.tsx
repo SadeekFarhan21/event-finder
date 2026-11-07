@@ -1,7 +1,8 @@
 // Android: MapLibre with OpenFreeMap's Positron style (OpenStreetMap data). No API key needed,
 // unlike Google Maps, which react-native-maps uses on Android and which crashes a release
 // build without one.
-import { useImperativeHandle, useRef } from "react";
+import { useEffect, useImperativeHandle, useRef, useState } from "react";
+import Animated, { FadeOut } from "react-native-reanimated";
 import { Linking, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { HEADER_GAP, HEADER_H } from "../layout";
@@ -28,11 +29,16 @@ export function ScoutMap({ ref, initialRegion, showsUserLocation, onRegionChange
   }), []);
 
   const insets = useSafeAreaInsets();
+  // Until the dark style arrives MapLibre paints its default cream background, a bright flash at night.
+  // Cover the map in the night colour until the style has loaded (or 4 s, so it can never stick).
+  const [styled, setStyled] = useState(false);
+  useEffect(() => { const t = setTimeout(() => setStyled(true), 4000); return () => clearTimeout(t); }, []);
   // MapLibre's own attribution button is a bright blue "i"; credit OpenStreetMap in the palette instead.
   return (
     <View style={StyleSheet.absoluteFill}>
     <Map style={StyleSheet.absoluteFill} mapStyle={STYLE} logo={false} compass={false} attribution={false}
       onPress={() => onPress?.()}
+      onDidFinishLoadingStyle={() => setStyled(true)} onDidFailLoadingMap={() => setStyled(true)}
       onRegionDidChange={(ev) => {
         const [west, south, east, north] = ev.nativeEvent.bounds;
         onRegionChange?.({
@@ -56,6 +62,7 @@ export function ScoutMap({ ref, initialRegion, showsUserLocation, onRegionChange
       )}
       {children}
     </Map>
+    {!styled && <Animated.View pointerEvents="none" exiting={FadeOut.duration(250)} style={[StyleSheet.absoluteFill, { backgroundColor: C.bg }]} />}
     <Text style={[s.credit, { top: insets.top + HEADER_GAP + HEADER_H + 6 }]} onPress={() => Linking.openURL("https://www.openstreetmap.org/copyright")}
       accessibilityRole="link">© OpenStreetMap · OpenFreeMap</Text>
     </View>
