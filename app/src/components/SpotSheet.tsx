@@ -18,7 +18,8 @@ import { track } from "../data/activity";
 import { inviteMessage } from "../data/social";
 import { crewInvite, leaveLabel, type Crew, type CrewStatus } from "../data/crews";
 import { HeadingOutSheet } from "./HeadingOutSheet";
-import { whenLabel } from "../lib/time";
+import { isRecurring, whenLabel } from "../lib/time";
+import { calendarUrl } from "../lib/calendar";
 import { calmCaps, similar } from "../lib/case";
 import { goingLine, initials } from "../lib/friends";
 import type { Spot } from "../lib/types";
@@ -254,6 +255,13 @@ export function SpotSheet({ spot, city, me, unlocked, canAskLocation, locationRe
                 <Feather name="chevron-right" size={16} color={C.ink3} />
               </Tap>
             ) : null}
+            {calendarUrl(e) && !isRecurring(e) && (
+              <Tap style={s.friends} onPress={() => { Haptics.selectionAsync(); Linking.openURL(calendarUrl(e)!); }} accessibilityLabel="Add to calendar">
+                <Feather name="calendar" size={18} color={C.ink2} />
+                <Text style={s.friendsText}>Add to calendar</Text>
+                <Feather name="arrow-up-right" size={16} color={C.ink3} />
+              </Tap>
+            )}
 
             <View style={s.rule} />
 
