@@ -51,6 +51,9 @@ function splitAddress(address: string) {
 }
 
 
+// "Mon, Nov 9 · 10:00 PM" -> "Mon · 10 PM": the More nights list is a narrow column.
+const shortWhen = (n: Spot) => whenLabel(n).replace(/,\s\w{3}\s\d+/, "").replace(":00", "");
+
 export function SpotSheet({ spot, city, me, unlocked, canAskLocation, locationRefused, onAskLocation, onUnlock, onClose, going, isGoing, onGo, onUnGo,
   crew, canCrew, onStartCrew, onCrewStatus, isSaved, onToggleSave, moreNights, onOpenSpot }: Props) {
   const y = useSharedValue(OFFSCREEN);
@@ -309,7 +312,7 @@ export function SpotSheet({ spot, city, me, unlocked, canAskLocation, locationRe
                 <Text style={s.moreLabel}>More nights at {e.venue}</Text>
                 {moreNights.slice(0, 3).map((n) => (
                   <Tap key={n.id} pressedScale={0.99} style={s.moreRow} onPress={() => onOpenSpot?.(n)} accessibilityLabel={`${whenLabel(n)}, ${n.title}`}>
-                    <Text style={s.moreWhen} numberOfLines={1}>{whenLabel(n)}</Text>
+                    <Text style={s.moreWhen} numberOfLines={1}>{shortWhen(n)}</Text>
                     <Text style={s.moreTitle} numberOfLines={1}>{calmCaps(n.title)}</Text>
                     <Feather name="chevron-right" size={16} color={C.ink3} />
                   </Tap>
@@ -400,7 +403,7 @@ const s = StyleSheet.create({
   more: { marginTop: 24, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: C.hairline, paddingTop: 16 },
   moreLabel: { fontFamily: F.medium, fontSize: T.small, color: C.ink3, marginBottom: 4 },
   moreRow: { flexDirection: "row", alignItems: "center", gap: 12, minHeight: 48 },
-  moreWhen: { width: 132, fontFamily: F.semibold, fontSize: T.small, color: C.ink },
+  moreWhen: { width: 124, fontFamily: F.semibold, fontSize: T.small, color: C.ink },
   moreTitle: { flex: 1, fontFamily: F.regular, fontSize: T.small, color: C.ink2 },
   rowText: { flex: 1, fontFamily: F.semibold, fontSize: T.small, color: C.ink },
   rowSub: { fontFamily: F.regular, fontSize: T.meta, color: C.ink3, marginTop: 2 },
