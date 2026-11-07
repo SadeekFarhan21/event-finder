@@ -78,6 +78,8 @@
   .joinrow input { flex: 1 1 160px; min-width: 0; font: inherit; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 0 12px; height: 48px; }
   .joinrow .btn, .statusrow .btn { flex: 1 1 140px; border: 0; cursor: pointer; }
   .statusrow { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
+  /* Labels never break inside a button; each sizes to its label, and on a very narrow phone they stack. */
+  .statusrow .btn { flex: 1 1 auto; white-space: nowrap; padding: 0 14px; }
   .crew .btn.quiet { border: 1px solid var(--line); }
   .msg { font-size: 14px; color: var(--red); margin: 8px 0 0; min-height: 1em; }
 
