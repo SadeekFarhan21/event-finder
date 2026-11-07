@@ -84,6 +84,7 @@
   input:disabled, select:disabled, textarea:disabled { background: var(--fill); color: var(--ink-3); }
   .subject { margin: 24px 0 0; font-size: 16px; color: var(--ink-2); }
   .subject b { color: var(--ink); font-weight: 600; }
+  .subject .nb { white-space: nowrap; }
   .trend { margin-top: 24px; padding: 16px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
   .trend-head { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin: 0 0 12px; font-size: 14px; color: var(--ink-2); font-weight: 500; }
   .trend-change { color: var(--ink); }
@@ -272,7 +273,7 @@
     const name = list.find((s) => s.venue)?.venue ?? venue, anyPartner = list.some((s) => s.partner);
     const joinWords = (w) => w.length < 2 ? w.join("") : `${w.slice(0, -1).join(", ")} or ${w[w.length - 1]}`;
     $("result").innerHTML = `
-      <p class="subject"><b>${esc(name)}</b>${anyPartner ? '<span class="tag">Yelo partner</span>' : ""} · ${esc(cityName)} · last 7 days</p>
+      <p class="subject"><span class="nb"><b>${esc(name)}</b>${anyPartner ? '<span class="tag">Yelo partner</span>' : ""}</span> <span class="nb">· ${esc(cityName)} · last 7 days</span></p>
       ${shown.length ? `<div class="stats n${shown.length}">${shown.map(([v, label]) =>
         `<div class="stat"><b>${v.toLocaleString()}</b><span>${label}</span></div>`).join("")}</div>` : ""}
       ${trend(daily.data ?? [])}
