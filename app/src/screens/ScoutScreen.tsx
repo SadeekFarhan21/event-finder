@@ -60,7 +60,8 @@ export function ScoutScreen() {
   const { me, canAsk: canAskLocation, refused: locationRefused, ask: askLocation } = useMyLocation();
   const { toast, show } = useToast();
   const { counts: going, mine: myGoing, go, unGo } = useGoing(spots, mapCity);
-  const crewsApi = useCrews();
+  // A friend joined or is on the way: say so on the map, with a light tap.
+  const crewsApi = useCrews((line) => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); show(line); });
   const insets = useSafeAreaInsets();
   const [crewsOpen, setCrewsOpen] = useState(false);
   const [linkCode, setLinkCode] = useState<string | null>(null);
