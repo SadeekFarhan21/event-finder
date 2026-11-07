@@ -126,6 +126,7 @@ export function ScoutScreen() {
   const planFrom = useCallback((skip: Set<string>) => spots.filter((e) => matchesQuery(e, parsed) && !skip.has(e.id)), [spots, parsed]);
   const plan = useMemo(() => (filter === "plan" && minute ? planNight(planFrom(skipped), minute, me) : []), [filter, planFrom, skipped, minute, me]);
   const steps = useMemo(() => Object.fromEntries(plan.map((p) => [p.spot.id, p])), [plan]);
+  const route = useMemo(() => (plan.length > 1 ? plan.map((p) => ({ latitude: p.spot.lat, longitude: p.spot.lng })) : undefined), [plan]);
   const shown = useMemo(() => {
     if (filter === "plan") return plan.map((p) => p.spot);
     const list = spots.filter((e) => matches(e, filter) && matchesQuery(e, parsed)
@@ -320,7 +321,7 @@ export function ScoutScreen() {
   return (
     <View style={s.root}>
       <StatusBar style="light" />
-      <ScoutMap ref={map} initialRegion={START} showsUserLocation={!!me} onRegionChange={setRegion} onPress={() => setActive(null)}>
+      <ScoutMap ref={map} initialRegion={START} showsUserLocation={!!me} onRegionChange={setRegion} onPress={() => setActive(null)} route={route}>
         <SpotPins clusters={settling ? [] : clusters} active={settling ? null : active}
           onSpot={(e) => focus(e, true)} onCluster={openCluster} onActive={setDetail} />
       </ScoutMap>
