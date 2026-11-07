@@ -166,7 +166,7 @@
   .stats { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 1px; background: var(--line); overflow: hidden; }
   .stats .stat { grid-column: span 2; }
   .stats.n1 .stat { grid-column: span 6; } .stats.n2 .stat { grid-column: span 3; }
-  .stats.n4 .stat { grid-column: span 3; } .stats.n5 .stat:nth-child(n+4) { grid-column: span 3; }
+  .stats.n4 .stat { grid-column: span 3; } .stats.n5 .stat:nth-child(n+4) { grid-column: span 3; } .stats.n7 .stat:last-child { grid-column: 1 / -1; }
   .stats .stat { background: var(--surface); border: 0 !important; }
   .stat b { font: 600 28px/1.1 var(--body) !important; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
   .pband b { font-variant-numeric: tabular-nums; }
@@ -394,7 +394,7 @@
       const { data: st } = await db.rpc("listing_stats", { p_token: token });
       const n = st?.[0] ?? {};
       const tiles = [[n.views, "Views"], [n.people, "People reached"], [n.going, "Said they're going"], [n.rides, "Ride taps"],
-        [n.unlocks, "Deals unlocked"], [n.crews, "Crews heading here"]].map(([v, label]) => [Number(v ?? 0), label]).filter(([v]) => v > 0);
+        [n.unlocks, "Deals unlocked"], [n.saves, "Saved for later"], [n.crews, "Crews heading here"]].map(([v, label]) => [Number(v ?? 0), label]).filter(([v]) => v > 0);
       $("preview").insertAdjacentHTML("beforeend", `<p class="preview-label" style="margin-top:24px">This night so far</p>
         ${tiles.length ? `<div class="stats n${tiles.length}">${tiles.map(([v, label]) => `<div class="stat"><b>${v.toLocaleString()}</b><span>${label}</span></div>`).join("")}</div>`
           : `<p class="zeros">No rider activity yet. Views, ride taps and crews show up here as riders find your night.</p>`}`);
