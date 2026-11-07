@@ -12,6 +12,7 @@ import Animated, {
 import { clock, isRecurring, whenLabel, dealStatus } from "../lib/time";
 import { calmCaps, similar } from "../lib/case";
 import { goingLine, type CrewPeople } from "../lib/friends";
+import { estimateFare, type Point } from "../lib/fare";
 import type { Spot } from "../lib/types";
 import { CARD_GAP, CARD_INSET, CARD_STEP, CARD_W, CAROUSEL_BOTTOM, MEDIA_H } from "../layout";
 import { CATEGORY, color as C, font as F, radius as R, shadow, text as T } from "../theme";
@@ -24,6 +25,7 @@ type Props = {
   spots: Spot[];
   going: Record<string, number>; // spot id -> people going
   crewPeople?: Record<string, CrewPeople>; // spot id -> your crew heading there
+  me?: Point | null; // the rider's location, if shared
   fresh?: Set<string>; // ids found since the last visit
   activeId: string | null;
   onSettle: (spot: Spot) => void; // a swipe came to rest on this card
@@ -31,7 +33,7 @@ type Props = {
   onRide: (spot: Spot) => void;
 };
 
-export function SpotCarousel({ ref, spots, fresh, going, crewPeople, activeId, onSettle, onPress, onRide }: Props) {
+export function SpotCarousel({ ref, spots, fresh, going, crewPeople, me, activeId, onSettle, onPress, onRide }: Props) {
   const list = useAnimatedRef<Animated.FlatList<Spot>>();
   const x = useSharedValue(0);
   const onScroll = useAnimatedScrollHandler((e) => { x.value = e.contentOffset.x; });
@@ -52,7 +54,7 @@ export function SpotCarousel({ ref, spots, fresh, going, crewPeople, activeId, o
         snapToInterval={CARD_STEP} decelerationRate="fast" disableIntervalMomentum
         contentContainerStyle={{ gap: CARD_GAP, paddingHorizontal: CARD_INSET }}
         onScroll={onScroll} scrollEventThrottle={16} onMomentumScrollEnd={onEnd}
-        renderItem={({ item, index }) => <Card spot={item} isNew={!!fresh?.has(item.id)} going={going[item.id] ?? 0} crew={crewPeople?.[item.id]} index={index} x={x} onPress={() => onPress(item, index)} onRide={() => onRide(item)} />} />
+        renderItem={({ item, index }) => <Card spot={item} isNew={!!fresh?.has(item.id)} going={going[item.id] ?? 0} crew={crewPeople?.[item.id]} me={me} index={index} x={x} onPress={() => onPress(item, index)} onRide={() => onRide(item)} />} />
     </Animated.View>
   );
 }
@@ -73,9 +75,11 @@ function cardLine(e: Spot) {
 
 // Photo first: the place, then when, then who's going and the ride. Most listings have no photo
 // (the web rarely has a good one), so the fallback is a designed panel, not an empty box.
-function Card({ spot: e, isNew, going, crew, index, x, onPress, onRide }: {
-  spot: Spot; isNew: boolean; going: number; crew?: CrewPeople; index: number; x: SharedValue<number>; onPress: () => void; onRide: () => void;
+function Card({ spot: e, isNew, going, crew, me, index, x, onPress, onRide }: {
+  spot: Spot; isNew: boolean; going: number; crew?: CrewPeople; me?: Point | null; index: number; x: SharedValue<number>; onPress: () => void; onRide: () => void;
 }) {
+  // Distance once the rider has shared location (same figure as the sheet's "mi away").
+  const miles = me ? (estimateFare(me, { lat: e.lat, lng: e.lng })?.miles ?? null) : null;
   const style = useAnimatedStyle(() => {
     const d = (x.value - index * CARD_STEP) / CARD_STEP; // 0 = centered, ±1 = one card away
     return {
@@ -117,6 +121,8 @@ function Card({ spot: e, isNew, going, crew, index, x, onPress, onRide }: {
           </Text>
           <View style={s.footer}>
             <View style={s.going}>
+              {miles !== null && <Text style={s.dist}>{miles < 0.95 ? miles.toFixed(1) : Math.round(miles)} mi</Text>}
+              {miles !== null && <View style={s.distDot} />}
               {goingLine(going, crew) ? (
                 <Text style={[s.goingText, crew?.others.length ? s.goingFriends : null]} numberOfLines={1}>{goingLine(going, crew)}</Text>
               ) : e.deal ? (
@@ -159,6 +165,8 @@ const s = StyleSheet.create({
   sub: { fontFamily: F.regular, fontSize: T.small, color: C.ink2, marginTop: 2 },
   footer: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 12, gap: 12 },
   goingFriends: { color: C.ink },
+  dist: { fontFamily: F.semibold, fontSize: T.small, color: C.ink },
+  distDot: { width: 3, height: 3, borderRadius: 2, backgroundColor: C.ink3 },
   going: { flexDirection: "row", alignItems: "center", gap: 8, flexShrink: 1 },
   faces: { flexDirection: "row" },
   face: { width: 24, height: 24, borderRadius: 12, backgroundColor: C.d3, borderWidth: 2, borderColor: C.surface, alignItems: "center", justifyContent: "center" },

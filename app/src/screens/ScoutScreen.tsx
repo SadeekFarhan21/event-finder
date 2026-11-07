@@ -303,7 +303,7 @@ export function ScoutScreen() {
               </Tap>
             )}
           </Animated.View>
-          <SpotCarousel ref={carousel} spots={shown} fresh={fresh} going={going} crewPeople={crewPeople} activeId={active?.id ?? null}
+          <SpotCarousel ref={carousel} spots={shown} fresh={fresh} going={going} crewPeople={crewPeople} me={me} activeId={active?.id ?? null}
             onSettle={(e) => { Haptics.selectionAsync(); focus(e); }}
             onPress={(e) => (active?.id === e.id ? setDetail(e) : focus(e, true))}
             onRide={(e) => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); track(e, "ride", mapCity ?? cityInput); openRide(e); }} />
