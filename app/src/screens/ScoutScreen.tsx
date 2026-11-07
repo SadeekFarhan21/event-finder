@@ -5,7 +5,6 @@ import { nowWord, setCityZone } from "../lib/time";
 import { matchesQuery, parseQuery, rankByVenue } from "../lib/search";
 import { useSaved } from "../hooks/useSaved";
 import { km } from "../lib/fare";
-import type { CrewPeople } from "../lib/friends";
 import { Linking, StyleSheet, Text, View } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { LinearGradient } from "expo-linear-gradient";
@@ -23,6 +22,7 @@ import { useLeads } from "../hooks/useLeads";
 import { useMyLocation } from "../hooks/useMyLocation";
 import { useGoing } from "../hooks/useGoing";
 import { useCrews } from "../hooks/useCrews";
+import { leavingSoon, type CrewPeople } from "../lib/friends";
 import { openRide } from "../lib/ride";
 import { newIds, newSince } from "../lib/fresh";
 import { isOffline, onNetworkChange } from "../lib/net";
@@ -83,6 +83,14 @@ export function ScoutScreen() {
   // Crews still on (anyone not out), for the pill count.
   const spotPhotos = useMemo(() => Object.fromEntries(spots.map((e) => [e.id, e.image])), [spots]);
   const liveCrews = crewsApi.crews.filter((c) => c.members.some((m) => m.me && m.status !== "out"));
+  // A minute clock for the pill's "leaves in" countdown (read in an effect, never during render).
+  const [minute, setMinute] = useState(0);
+  useEffect(() => {
+    setMinute(Date.now());
+    const t = setInterval(() => setMinute(Date.now()), 30000);
+    return () => clearInterval(t);
+  }, []);
+  const soon = useMemo(() => (minute ? leavingSoon(crewsApi.crews, minute) : null), [crewsApi.crews, minute]);
 
   const [cityInput, setCityInput] = useState("New York, NY");
   const [filter, setFilter] = useState<Filter>("tonight"); // Principle 1: open on tonight
@@ -311,7 +319,9 @@ export function ScoutScreen() {
           <Animated.View entering={FadeIn.delay(150)} style={s.roomsWrap}>
             {crewsApi.available && (
               <Tap hitSlop={4} style={[s.rooms, liveCrews.length > 0 && s.crewsOn]} onPress={() => { Haptics.selectionAsync(); setCrewsOpen(true); }}>
-                <Text style={[s.roomsText, liveCrews.length > 0 && s.crewsOnText]}>Crews{liveCrews.length ? `  ·  ${liveCrews.length}` : ""}</Text>
+                <Text numberOfLines={1} style={[s.roomsText, liveCrews.length > 0 && s.crewsOnText]}>
+                  {soon ? `${soon.crew.venue} ${soon.mins <= 1 ? "now" : `in ${soon.mins} min`}` : `Crews${liveCrews.length ? `  ·  ${liveCrews.length}` : ""}`}
+                </Text>
               </Tap>
             )}
           </Animated.View>
@@ -352,6 +362,6 @@ const s = StyleSheet.create({
   roomsWrap: { position: "absolute", left: CARD_INSET, bottom: CAROUSEL_BOTTOM + CARD_H, flexDirection: "row", gap: 8 },
   crewsOn: { backgroundColor: C.ink },
   crewsOnText: { color: C.surface },
-  rooms: { flexDirection: "row", alignItems: "center", gap: 6, height: 40, paddingHorizontal: 12, borderRadius: R.pill, backgroundColor: C.surface, ...shadow },
+  rooms: { flexDirection: "row", alignItems: "center", gap: 6, height: 40, maxWidth: 260, paddingHorizontal: 12, borderRadius: R.pill, backgroundColor: C.surface, ...shadow },
   roomsText: { fontFamily: F.semibold, fontSize: T.small, color: C.ink },
 });
