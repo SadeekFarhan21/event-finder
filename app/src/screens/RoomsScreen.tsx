@@ -88,7 +88,7 @@ export function RoomsScreen({ visible, city, leads, setLeads, canSearch, onClose
                 <Text style={s.meta} numberOfLines={1}>{[l.area?.replace(/\s*\([^)]*(\)|$)/g, ""), shortKind(l.kind)].filter(Boolean).join("  ·  ")}</Text>
                 <Text style={s.fit} numberOfLines={2}>{l.fit}</Text>
                 {interest[l.venue] ? (
-                  <Text style={s.warm} numberOfLines={1}>Riders opened it {interest[l.venue]} time{interest[l.venue] === 1 ? "" : "s"} this week</Text>
+                  <Text style={s.warm} numberOfLines={1}>Riders opened it {interest[l.venue] === 1 ? "once" : `${interest[l.venue]} times`} this week</Text>
                 ) : null}
                 {(l.quietNight || l.capacity) && (
                   <Text style={s.facts} numberOfLines={1}>
