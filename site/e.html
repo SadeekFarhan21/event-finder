@@ -91,6 +91,16 @@
     --yellow: #FFE14A; --on-yellow: #14130F; --yellow-hover: #F5D63E; --blue: #F2F0E9; --red: #FF7A6B;
     color-scheme: dark;
   }
+  .nearby { margin-top: 32px; }
+  .near-head { font: 400 26px/1.15 var(--display); margin: 0 0 8px; }
+  .near-list { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+  .near-list a { display: grid; grid-template-columns: 76px 1fr auto; gap: 12px; align-items: baseline; padding: 14px 0; border-bottom: 1px solid var(--line); text-decoration: none; }
+  .near-list a:hover strong { text-decoration: underline; text-underline-offset: 3px; }
+  .near-list b { font: 400 22px/1 var(--display); }
+  .near-list span { min-width: 0; }
+  .near-list strong { display: block; font-weight: 600; }
+  .near-list small { display: block; font-size: 14px; color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .near-list em { font-style: normal; font-size: 13px; color: var(--ink-3); white-space: nowrap; }
   .actions .link { align-self: flex-start; padding: 12px 0; color: var(--ink-2); font-size: 16px; text-decoration: underline; text-underline-offset: 3px; }
   .actions .link:hover { color: var(--ink); }
 </style>
@@ -221,6 +231,32 @@
     lastComing = n;
   }
 
+  // Close by, same night: up to three other spots within about a kilometre, so a friend opening one
+  // link can make a night of it. Nothing nearby: the section stays hidden.
+  const calm = (t) => (t && t === t.toUpperCase() && /[A-Z]{4}/.test(t) ? t.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase()) : t); // "ILHAN SELECTS" -> "Ilhan Selects"
+  async function nearby(e) {
+    if (!e?.lat || !e?.lng || !e.city) return;
+    const ref = e.start && e.category !== "deal" ? Date.parse(e.start) : Date.now();
+    const { data } = await db.from("upcoming_events").select("short,venue,title,start,category,lat,lng")
+      .eq("city", e.city).not("start", "is", null)
+      .gte("lat", e.lat - 0.012).lte("lat", e.lat + 0.012).gte("lng", e.lng - 0.016).lte("lng", e.lng + 0.016).limit(80);
+    const r = Math.PI / 180;
+    const km = (a) => { const x = (a.lng - e.lng) * r * Math.cos(e.lat * r), y = (a.lat - e.lat) * r; return Math.hypot(x, y) * 6371; };
+    const near = (data ?? []).filter((x) => x.short && norm(x.venue) !== norm(e.venue) && x.category !== "deal"
+        && nightKey(Date.parse(x.start)) === nightKey(ref) && Date.parse(x.start) > Date.now() - 30 * 60000 && km(x) <= 1.2)
+      .sort((a, b) => km(a) - km(b)).slice(0, 3) // the three nearest
+      .sort((a, b) => Date.parse(a.start) - Date.parse(b.start)); // listed in the order the night runs
+    const box = document.getElementById("nearby");
+    if (!box || !near.length) return;
+    const tonight = nightKey(ref) === nightKey(Date.now());
+    box.innerHTML = `<h2 class="near-head">Close by${tonight ? " tonight" : ", same night"}</h2><ul class="near-list">${near.map((x) => {
+      const d = km(x);
+      return `<li><a href="e.html?s=${esc(x.short)}"><b>${esc(fmtT(new Date(x.start), { hour: "numeric", minute: "2-digit" }).replace(":00", ""))}</b>
+        <span><strong>${esc(x.venue)}</strong><small>${esc(calm(x.title))}</small></span><em>${d < 0.4 ? "Short walk" : `${(d * 0.621).toFixed(1)} mi`}</em></a></li>`;
+    }).join("")}</ul>`;
+    box.hidden = false;
+  }
+
   async function render() {
     const q = new URLSearchParams(location.search);
     const code = (q.get("crew") || "").toLowerCase();
@@ -284,9 +320,10 @@
           </div>
         </div>
       </article>
+      ${crew ? "" : '<section id="nearby" class="nearby" hidden></section>'}
       <p class="note">Scout finds what's on tonight in New York and Los Angeles and shows the ride there. An independent prototype, not an official Yelo app.</p>`;
 
-    if (!crew) return;
+    if (!crew) { nearby(e).catch(() => {}); return; } // extras never block or break the page
     announce(crew);
     document.getElementById("join")?.addEventListener("submit", async (ev) => {
       ev.preventDefault();
