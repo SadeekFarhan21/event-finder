@@ -186,7 +186,7 @@
 
   <section aria-labelledby="stats-h">
     <h2 id="stats-h">How riders engage with you</h2>
-    <p class="note">Last 7 days. Counts come from the Scout app: people who opened your spot, tapped Ride, or unlocked your deal, and crews of friends heading to you together.</p>
+    <p class="note">Last 7 days. Counts come from the Scout app: people who opened your spot, saved it, tapped Ride, or unlocked your deal, and crews of friends heading to you together.</p>
     <form class="lookup" id="lookup">
       <label class="lk-city">City
         <select id="city"><option>New York, NY</option><option>Los Angeles, CA</option></select>
@@ -300,6 +300,7 @@
       [people, "People reached", "people reached"],
       [Number(by.ride?.total ?? 0), "Ride taps", "ride taps"],
       [Number(by.unlock?.total ?? 0), "Deals unlocked", "deal unlocks"],
+      [Number(by.save?.people ?? 0), "Saved for later", "saves"],
       [Number(m.crews), "Crews heading here", "crews"],
       [Number(m.on_way), "Riders on the way", "riders on the way"],
     ];
