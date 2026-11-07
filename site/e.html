@@ -183,7 +183,7 @@
       : `<div class="statusrow">
            <button class="btn ${me.status === "on_way" ? "quiet" : "primary"}" data-status="on_way">${me.status === "on_way" ? "You're on the way" : "I'm on my way"}</button>
            <button class="btn quiet" data-status="${me.status === "out" ? "in" : "out"}">${me.status === "out" ? "I'm back in" : "Can't make it"}</button></div>`;
-    return `<section class="crew" aria-label="Crew"><p class="crewhead"><b>Leaving ${esc(leaveLabel(c.leave_at))}</b> · ${coming} coming</p>
+    return `<section class="crew" aria-label="Crew"><p class="crewhead"><b>${Date.parse(c.leave_at) - Date.now() <= -90 * 60000 ? "Left" : "Leaving"} ${esc(leaveLabel(c.leave_at))}</b> · ${coming} coming</p>
       <div class="members">${chips}</div>${action}</section>`;
   }
 
