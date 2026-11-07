@@ -1,7 +1,7 @@
 // One quiet hint on first launch: the two things to try. Shown once per
 // install, dismissed with "Got it" (or by opening any spot).
 import { useEffect, useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Animated, { FadeInUp, FadeOutUp } from "react-native-reanimated";
 import { HEADER_GAP, HEADER_H } from "../layout";
