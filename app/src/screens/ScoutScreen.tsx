@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { nowWord, setCityZone } from "../lib/time";
 import { matchesQuery, parseQuery, rankByVenue } from "../lib/search";
+import { useSaved } from "../hooks/useSaved";
 import type { CrewPeople } from "../lib/friends";
 import { Linking, StyleSheet, Text, View } from "react-native";
 import { StatusBar } from "expo-status-bar";
@@ -104,7 +105,13 @@ export function ScoutScreen() {
   }, [crewsApi.crews]);
   const [query, setQuery] = useState("");
   const parsed = useMemo(() => parseQuery(query), [query]);
-  const shown = useMemo(() => rankByVenue(sortSpots(spots.filter((e) => matches(e, filter) && matchesQuery(e, parsed))), parsed), [spots, filter, parsed]);
+  const { saved, toggle: toggleSave } = useSaved();
+  const shown = useMemo(() => rankByVenue(sortSpots(spots.filter((e) => matches(e, filter) && matchesQuery(e, parsed)
+    && (filter !== "saved" || saved.has(e.id)))), parsed), [spots, filter, parsed, saved]);
+  // Saved spots in this city (the chip count); the shortlist only shows what's still on the map.
+  const savedHere = useMemo(() => spots.filter((e) => saved.has(e.id)).length, [spots, saved]);
+  // The Saved chip disappears with the last saved spot (or in a city with none); don't leave it selected.
+  useEffect(() => { if (filter === "saved" && !savedHere) setFilter("tonight"); }, [filter, savedHere]);
   // The active pin never folds into a cluster. Partners do (a lone partner pin used to sit on top of
   // neighbouring bubbles); a bubble holding one gets the partner's ink ring instead.
   const clusters = useMemo(() => {
@@ -259,7 +266,7 @@ export function ScoutScreen() {
 
       <SearchHeader city={cityInput} onCityChange={setCityInput} onSubmitCity={open}
         onScout={runScout} scouting={scouting} scoutable={scoutable} filter={filter} onFilter={pickFilter}
-        onRooms={() => { Haptics.selectionAsync(); setRoomsOpen(true); }} query={query} onQuery={setQuery} />
+        onRooms={() => { Haptics.selectionAsync(); setRoomsOpen(true); }} query={query} onQuery={setQuery} savedCount={savedHere} />
 
       <OfflineBanner top={insets.top} />
       <FirstRunHint top={insets.top} city={cityInput} dismissed={!!detail || !!active} />
@@ -307,7 +314,7 @@ export function ScoutScreen() {
         onUnGo={detail && myGoing.has(detail.id) && !crewsApi.crews.some((c) => c.spotId === detail.id && c.members.some((m) => m.me && m.status !== "out"))
           ? (e) => { unGo(e); show("You're no longer going"); } : undefined}
         crew={detail ? crewsApi.crews.find((c) => c.spotId === detail.id) : undefined} canCrew={crewsApi.available}
-        onStartCrew={(e, leaveAt, name) => crewsApi.start(e, leaveAt, name)} onCrewStatus={crewsApi.status} onClose={() => setDetail(null)} />
+        onStartCrew={(e, leaveAt, name) => crewsApi.start(e, leaveAt, name)} onCrewStatus={crewsApi.status} isSaved={!!detail && saved.has(detail.id)} onToggleSave={toggleSave} onClose={() => setDetail(null)} />
     </View>
   );
 }

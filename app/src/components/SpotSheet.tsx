@@ -39,6 +39,7 @@ type Props = {
   crew?: Crew; canCrew: boolean; // my crew for this spot, if any
   onStartCrew: (spot: Spot, leaveAt: Date, name: string) => Promise<string>;
   onCrewStatus: (code: string, s: CrewStatus) => Promise<boolean>;
+  isSaved?: boolean; onToggleSave?: (id: string) => void;
 };
 
 // "151 Avenue C, East Village, New York, NY 10009" -> street "151 Avenue C", rest, area "East Village".
@@ -50,7 +51,7 @@ function splitAddress(address: string) {
 
 
 export function SpotSheet({ spot, city, me, unlocked, canAskLocation, locationRefused, onAskLocation, onUnlock, onClose, going, isGoing, onGo, onUnGo,
-  crew, canCrew, onStartCrew, onCrewStatus }: Props) {
+  crew, canCrew, onStartCrew, onCrewStatus, isSaved, onToggleSave }: Props) {
   const y = useSharedValue(OFFSCREEN);
   const [shown, setShown] = useState<Spot | null>(null); // stays mounted while sliding out
   const [composing, setComposing] = useState(false); // the "Go with friends" sheet is open
@@ -315,9 +316,15 @@ export function SpotSheet({ spot, city, me, unlocked, canAskLocation, locationRe
         {!e.image && <View pointerEvents="none" style={s.grabber} />}
         <View pointerEvents="box-none" style={s.heroTop}>
           <Tap style={s.glass} onPress={close} accessibilityLabel="Close"><Feather name="chevron-down" size={18} color={C.ink} /></Tap>
-          <Tap style={s.glass} onPress={share} accessibilityLabel={crew ? "Invite friends to your crew" : "Send this spot to a friend"}>
-            <Feather name="share" size={17} color={C.ink} />
-          </Tap>
+          <View style={{ flexDirection: "row", gap: 8 }}>
+            <Tap style={[s.glass, isSaved && s.glassOn]} onPress={() => { Haptics.selectionAsync(); onToggleSave?.(e.id); }}
+              accessibilityLabel={isSaved ? "Remove from saved" : "Save for later"} accessibilityState={{ selected: !!isSaved }}>
+              <Feather name="bookmark" size={17} color={isSaved ? C.bg : C.ink} />
+            </Tap>
+            <Tap style={s.glass} onPress={share} accessibilityLabel={crew ? "Invite friends to your crew" : "Send this spot to a friend"}>
+              <Feather name="share" size={17} color={C.ink} />
+            </Tap>
+          </View>
         </View>
 
         {/* The one place for actions */}
@@ -354,6 +361,7 @@ const s = StyleSheet.create({
     borderTopLeftRadius: R.sheet, borderTopRightRadius: R.sheet, overflow: "hidden", ...shadow, shadowOffset: { width: 0, height: -2 } },
   grabber: { position: "absolute", top: 8, alignSelf: "center", width: 36, height: 4, borderRadius: 2, backgroundColor: "rgba(255,255,255,0.35)" },
   heroTop: { position: "absolute", top: 20, left: 16, right: 16, flexDirection: "row", justifyContent: "space-between" },
+  glassOn: { backgroundColor: C.ink, borderColor: C.ink },
   glass: { width: 38, height: 38, borderRadius: 19, alignItems: "center", justifyContent: "center",
     backgroundColor: "rgba(21,21,19,0.7)", borderWidth: StyleSheet.hairlineWidth, borderColor: "rgba(255,255,255,0.14)" },
   heroText: { position: "absolute", left: 20, right: 20, bottom: 4 },
