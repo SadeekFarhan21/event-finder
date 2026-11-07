@@ -126,12 +126,20 @@ export function ScoutScreen() {
     if (core.length) map.current?.fitTo(core.map((e) => ({ latitude: e.lat, longitude: e.lng })), FIT_PADDING);
   }, []);
 
-  // Searching: once typing pauses, frame every match so none sit off-screen.
+  // Searching: once typing pauses, frame the matches. A handful are all framed; dozens get the dense
+  // core, like the city view ("under $20" in New York zoomed out to a speck otherwise).
   useEffect(() => {
     if (!query.trim() || !shown.length) return;
-    const t = setTimeout(() => fit(shown, true), 450);
+    const t = setTimeout(() => fit(shown, shown.length <= 12), 450);
     return () => clearTimeout(t);
   }, [query, shown, fit]);
+
+  // A new city or a new search starts at the first card (the carousel kept its old position, so after
+  // switching city it opened mid-list on a standing deal), with nothing selected.
+  useEffect(() => {
+    setActive(null);
+    carousel.current?.scrollTo(0, false);
+  }, [mapCity, query]);
 
   // While the camera flies to a new city, its tiles are still loading: hold the pins so they
   // don't float on a black map, then bring them in once the ground is drawn.
