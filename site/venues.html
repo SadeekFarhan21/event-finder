@@ -130,6 +130,12 @@
     --yellow: #FFE14A; --on-yellow: #14130F; --yellow-hover: #F5D63E; --blue: #F2F0E9; --red: #FF7A6B;
     color-scheme: dark;
   }
+  /* An empty date field reads like a placeholder, not like filled-in text. */
+  input[type="datetime-local"].empty::-webkit-datetime-edit { color: var(--placeholder); }
+  input[type="datetime-local"]::-webkit-calendar-picker-indicator { opacity: .6; cursor: pointer; }
+  footer { margin-top: 64px; padding-top: 16px; border-top: 1px solid var(--line); font-size: 14px; color: var(--ink-3);
+    display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 24px; }
+  footer a { color: var(--ink-2); }
   [hidden] { display: none !important; }
   /* Stat grid: hairlines drawn by the gap, so any number of tiles lines up cleanly. Data in Inter, even-width digits. */
   /* One layout per tile count so no row ends in an empty cell: 5 tiles = 3 over 2, 6 = 3 over 3. */
@@ -187,10 +193,14 @@
       <label class="full">Deal for Scout riders (optional)<input name="deal" maxlength="200" placeholder="e.g. Free entry before 11pm"></label>
       <label class="full">Description (optional)<textarea name="description" rows="2" maxlength="400"></textarea></label>
       <label>Link (optional)<input name="url" type="url" maxlength="300" placeholder="https://"></label>
-      <label>Your email<input name="contact_email" type="email" required maxlength="200"></label>
+      <label>Your email<input name="contact_email" type="email" required maxlength="200" placeholder="For questions about your listing" autocomplete="email"></label>
       <div class="full"><button class="btn primary" type="submit">Submit for review</button> <button class="btn ghost" type="button" id="withdraw" hidden>Take it down</button><div class="msg" id="submit-msg" role="status"></div></div>
     </form>
   </section>
+  <footer>
+    <span>Scout is an independent prototype. It is not an official Yelo app.</span>
+    <a href="./">Get the app</a>
+  </footer>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.0/dist/umd/supabase.js"></script>
@@ -231,6 +241,12 @@
       }).join("")}</div>
     </div>`;
   }
+
+  // Dim every empty date field like a placeholder (browsers show "mm/dd/yyyy" in full text colour).
+  document.querySelectorAll('input[type="datetime-local"]').forEach((el) => {
+    const sync = () => el.classList.toggle("empty", !el.value);
+    sync(); el.addEventListener("input", sync); el.addEventListener("change", sync);
+  });
 
   $("lookup").addEventListener("submit", async (ev) => {
     ev.preventDefault();
@@ -338,7 +354,7 @@
       url: l.url, contact_email: "on file" })) {
       if (form.elements[k]) form.elements[k].value = v ?? "";
     }
-    if (l.start) { const d = new Date(l.start); form.elements.start.value = new Date(d - d.getTimezoneOffset() * 6e4).toISOString().slice(0, 16); }
+    if (l.start) { const d = new Date(l.start); form.elements.start.value = new Date(d - d.getTimezoneOffset() * 6e4).toISOString().slice(0, 16); form.elements.start.dispatchEvent(new Event("change")); }
     for (const k of ["city", "venue", "contact_email"]) form.elements[k].disabled = true;
     form.querySelector("button[type=submit]").textContent = "Save changes";
     $("withdraw").hidden = l.status === "withdrawn";
