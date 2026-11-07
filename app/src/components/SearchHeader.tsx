@@ -10,8 +10,10 @@ import { color as C, font as F, radius as R, shadow, text as T } from "../theme"
 import { HEADER_GAP, HEADER_H } from "../layout";
 import { Tap } from "./Tap";
 import { lastRun } from "../data/api";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const SUGGESTIONS = ["Free", "Live music", "Under $20", "Dance", "Drinks"];
+const RECENT_KEY = "scout.recentSearches";
 
 // Yelo's live markets (joinyelo.com/partner lists venues in both).
 const CITIES = ["New York, NY", "Los Angeles, CA"];
@@ -36,7 +38,19 @@ type Props = {
 export function SearchHeader({ city, onCityChange, onSubmitCity, onScout, scouting, scoutable, filter, onFilter, onRooms, query, onQuery, savedCount = 0, canNear = false }: Props) {
   const [open, setOpen] = useState(false);
   const [searching, setSearching] = useState(!!query);
-  const endSearch = () => { onQuery(""); setSearching(false); };
+  // Recent searches (kept on the phone) come before the fixed suggestions, so repeats are one tap.
+  const [recent, setRecent] = useState<string[]>([]);
+  useEffect(() => { AsyncStorage.getItem(RECENT_KEY).then((r) => r && setRecent(JSON.parse(r))).catch(() => {}); }, []);
+  const remember = (q: string) => {
+    const t = q.trim().toLowerCase();
+    if (t.length < 2) return;
+    setRecent((cur) => {
+      const next = [t, ...cur.filter((x) => x !== t)].slice(0, 3);
+      AsyncStorage.setItem(RECENT_KEY, JSON.stringify(next)).catch(() => {});
+      return next;
+    });
+  };
+  const endSearch = () => { remember(query); onQuery(""); setSearching(false); };
   // Shows the agent at work: when Scout last searched this city on its own.
   const [last, setLast] = useState<{ ranAt: string; added: number } | null>(null);
   useEffect(() => { if (open) lastRun(city).then(setLast); }, [open, city]);
@@ -96,16 +110,16 @@ export function SearchHeader({ city, onCityChange, onSubmitCity, onScout, scouti
           <View style={[s.searchBox, open && { opacity: 0 }]}>
             <Feather name="search" size={16} color={C.ink3} />
             <TextInput value={query} onChangeText={onQuery} autoFocus placeholder={`Jazz, free, rooftop, under $20`}
-              placeholderTextColor={C.placeholder} style={s.searchInput} returnKeyType="search" autoCorrect={false}
+              placeholderTextColor={C.placeholder} style={s.searchInput} returnKeyType="search" onSubmitEditing={() => remember(query)} autoCorrect={false}
               selectionColor={C.selection} cursorColor={C.accent} accessibilityLabel="Search spots" />
             {!!query && <Tap onPress={() => onQuery("")} hitSlop={10} accessibilityLabel="Clear search"><Feather name="x-circle" size={16} color={C.ink3} /></Tap>}
           </View>
         {!query && !open && (
           // One tap for the searches people make most; they also show what search understands.
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.chips} keyboardShouldPersistTaps="handled">
-            {SUGGESTIONS.map((q) => (
+            {[...recent, ...SUGGESTIONS.filter((x) => !recent.includes(x.toLowerCase()))].map((q) => (
               <Tap key={q} onPress={() => onQuery(q.toLowerCase())} style={s.chip} accessibilityLabel={`Search ${q}`}>
-                <Text style={s.chipText}>{q}</Text>
+                <Text style={s.chipText}>{q.charAt(0).toUpperCase() + q.slice(1)}</Text>
               </Tap>
             ))}
           </ScrollView>
