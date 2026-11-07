@@ -398,3 +398,9 @@ Deno.test("deal hours come from the happy-hour clause, on its days", () => {
     expect([...dealDays("Happy Hour Fri-Mon 3-6")!].sort()).toEqual([0, 1, 5, 6]);
   } finally { setCityZone(null); }
 });
+
+Deno.test("goingLine: going on your own says you", () => {
+  expect(goingLine(3, { others: [], me: true })).toBe("You and 2 more");
+  expect(goingLine(1, { others: [], me: true })).toBe("You're going");
+  expect(goingLine(4)).toBe("4 going");
+});

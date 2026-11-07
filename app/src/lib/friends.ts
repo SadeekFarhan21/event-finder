@@ -1,10 +1,12 @@
 // Who's going, said the way a friend would: names from your crews first, then everyone else as a
-// count. "Maya and you", "Maya, Jo and you · 3 more", "Maya and 1 more", or "4 going" with no crew.
+// count. "Maya and you", "Maya, Jo and you · 3 more", "Maya and 1 more", "You and 2 more", or "4 going".
 export type CrewPeople = { others: string[]; me: boolean }; // crew members heading to this spot (not dropped out)
 
 export function goingLine(total: number, crew?: CrewPeople): string | null {
   const others = crew?.others ?? [];
   const me = !!crew?.me;
+  // Going on your own (no crew yet): say so, as the sheet does ("3 going, including you").
+  if (!others.length && me) return total > 1 ? `You and ${total - 1} more` : "You're going";
   if (!others.length) return total > 0 ? `${total} going` : null;
   const named = others.slice(0, 2), hidden = others.length - named.length;
   const people = me ? [...named, "you"] : named;
