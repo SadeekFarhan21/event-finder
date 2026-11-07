@@ -42,5 +42,9 @@ export const saveMine = (mine: Set<string>) =>
 // Short links (?s=3f9a1c2e) when the spot has a code; the long id link still works too.
 export const spotLink = (e: Spot) => (e.short ? `${SITE}/e.html?s=${e.short}` : `${SITE}/e.html?id=${encodeURIComponent(e.id)}`);
 
+// One link for a whole plan (site/p.html shows it as a route), when every stop has a share code.
+export const planLink = (spots: Spot[]) =>
+  spots.length > 1 && spots.every((e) => e.short) ? `${SITE}/p.html?s=${spots.map((e) => e.short).join(",")}` : null;
+
 export const inviteMessage = (e: Spot, going: boolean) =>
   `${going ? "I'm going to" : "Come to"} ${e.venue} ${whenPhrase(e)}: ${shortTitle(e.title)}.\n${spotLink(e)}`;
