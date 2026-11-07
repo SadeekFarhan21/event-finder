@@ -127,7 +127,7 @@ export function SpotSheet({ spot, city, me, unlocked, canAskLocation, locationRe
   // Each fact stays whole when the line wraps ("3 mi away" never splits).
   const facts = [whenLabel(e), e.price && !similar(e.price, e.title) ? e.price : null, fare && `${fare.miles < 0.95 ? fare.miles.toFixed(1) : Math.round(fare.miles)} mi away`].filter(Boolean) as string[];
   const eyebrow = [(e.category === "deal" ? "Deal" : CATEGORY[e.category].label), addr.area].filter(Boolean).join("  ·  ");
-  const source = e.source === "venue" ? "Listed by the venue" : e.confidence === "low" ? "Unconfirmed listing, check before you go" : "Found on the web";
+  const source = e.source === "venue" ? "Listed by the venue" : e.confidence === "low" ? "Unconfirmed listing. Check the details before you go." : "Found on the web";
 
   const titleBlock = (
     <>

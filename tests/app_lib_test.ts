@@ -10,6 +10,7 @@ import { clusterEvents, coreOf } from "../app/src/lib/cluster";
 import { estimateFare, km } from "../app/src/lib/fare";
 import { canonicalCity, cityKey } from "../app/src/lib/cities";
 import { similar } from "../app/src/lib/case";
+import { inviteBill, withBill } from "../app/src/lib/invite";
 import { goingLine, initials, leavingSoon } from "../app/src/lib/friends";
 import { planMessage, planNight } from "../app/src/lib/plan";
 import { newSince } from "../app/src/lib/fresh";
@@ -337,4 +338,16 @@ Deno.test("planNight: happy hour now, a show close by later, then somewhere late
 Deno.test("shortTitle never ends on a joiner", () => {
   expect(shortTitle("Reggaeton on Houston – Latin & Caribbean Nights", 40)).toBe("Reggaeton on Houston – Latin…");
   expect(shortTitle("Short title")).toBe("Short title");
+});
+
+Deno.test("inviteBill: shared messages never repeat the venue or the time", () => {
+  expect(inviteBill("Nublu", "Nublu")).toBe("");
+  expect(inviteBill("Happy Hour", "Rocco's Tavern")).toBe("");
+  expect(inviteBill("JAZZ NIGHT WITH THE COUNCIL", "Nublu")).toBe("Jazz Night with the Council");
+  const long = inviteBill("Producer Mondays with Ray Angry & The Council of Elders and Friends", "Nublu");
+  expect(long.endsWith("…")).toBe(true);
+  expect(long.length).toBeLessThanOrEqual(49);
+  expect(withBill("Come to Nublu tonight at 8 PM", "Jazz Night")).toBe("Come to Nublu tonight at 8 PM: Jazz Night.");
+  expect(withBill("Come to Nublu tonight at 8 PM", "")).toBe("Come to Nublu tonight at 8 PM.");
+  expect(withBill("Come to Nublu tonight at 8 PM", long)).not.toContain("….");
 });

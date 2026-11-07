@@ -177,7 +177,7 @@ function CrewTile({ crew, photo, onStatus, onRide, onOpen }: {
         </View>
         <View style={{ flex: 1 }}>
           <Text style={s.peopleTitle}>{coming.length} coming</Text>
-          <Text style={s.peopleSub}>{onWay && onWay === coming.length ? "Everyone's on the way" : onWay ? `${onWay} on the way` : "Nobody's left yet"}</Text>
+          <Text style={s.peopleSub}>{onWay && onWay === coming.length ? "Everyone's on the way" : onWay ? `${onWay} on the way` : "No one's on the way yet"}</Text>
         </View>
         <Tap style={s.round} hitSlop={6} accessibilityLabel="Invite to crew" onPress={() => Share.share({ message: crewInvite(crew) }).catch(() => {})}>
           <Feather name="user-plus" size={16} color={C.ink} />
@@ -193,7 +193,7 @@ function CrewTile({ crew, photo, onStatus, onRide, onOpen }: {
           if (me?.status !== "on_way") set("on_way");
           onRide(crew);
         }}>
-          <Text style={s.btnPrimaryText}>{me?.status === "on_way" ? "Open ride" : "I'm on my way"}</Text>
+          <Text style={s.btnPrimaryText}>{me?.status === "on_way" ? "Ride there" : "I'm on my way"}</Text>
         </Tap>
       </View>
       {failed && <Text style={s.statusErr} accessibilityLiveRegion="polite">{"Your crew didn't get that. Check your connection and try again."}</Text>}

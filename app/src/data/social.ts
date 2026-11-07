@@ -2,7 +2,8 @@
 // spot_activity (kind 'going', unique devices), and what this device said lives on the device.
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import type { Spot } from "../lib/types";
-import { shortTitle, whenPhrase } from "../lib/time";
+import { whenPhrase } from "../lib/time";
+import { inviteBill, withBill } from "../lib/invite";
 import { supabase } from "./supabase";
 import { getDeviceId } from "./activity";
 
@@ -43,4 +44,4 @@ export const saveMine = (mine: Set<string>) =>
 export const spotLink = (e: Spot) => (e.short ? `${SITE}/e.html?s=${e.short}` : `${SITE}/e.html?id=${encodeURIComponent(e.id)}`);
 
 export const inviteMessage = (e: Spot, going: boolean) =>
-  `${going ? "I'm going to" : "Come to"} ${e.venue} ${whenPhrase(e)}: ${shortTitle(e.title)}.\n${spotLink(e)}`;
+  `${withBill(`${going ? "I'm going to" : "Come to"} ${e.venue} ${whenPhrase(e)}`, inviteBill(e.title, e.venue))}\n${spotLink(e)}`;

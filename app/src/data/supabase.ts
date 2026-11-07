@@ -6,7 +6,7 @@ import type { Lead, Spot } from "../lib/types";
 import { cityKey } from "../lib/cities";
 
 import { config } from "../config";
-import { fetchWithTimeout } from "../lib/net";
+import { fetchWithTimeout, isOffline } from "../lib/net";
 
 // No sign-in in this prototype, so no session storage. Every request gets the shared timeout.
 export const supabase = config.supabase
@@ -35,15 +35,17 @@ export async function sbRooms(city: string): Promise<Lead[]> {
 export async function sbRun(task: "events" | "rooms", city: string) {
   const { data, error } = await supabase!.functions.invoke("scout", { body: { task, city } });
   if (error) {
+    // The function answers { error: "<sentence>" } written for people; anything else (a timeout, a
+    // dropped connection) gets a plain sentence instead of "non-2xx status code".
     const body = await (error as { context?: Response }).context?.json?.().catch(() => null);
-    throw new Error(body?.error ?? error.message);
+    throw new Error(body?.error ?? (isOffline() ? "No connection. Try again when you're back online." : "Couldn't reach Scout's search. Try again in a moment."));
   }
   const runId = (data as { runId: number }).runId;
   const started = Date.now();
   while (Date.now() - started < 170_000) {
     await sleep(5000);
     const { data: run } = await supabase!.from("scout_runs").select("added,ms,error").eq("id", runId).single();
-    if (run?.error) throw new Error(run.error);
+    if (run?.error) throw new Error("The search stopped before it finished. Try again in a few minutes."); // run.error is the agent's log line
     if (run?.ms != null) return { added: run.added ?? 0, ms: run.ms, pending: false };
   }
   return { added: 0, ms: Date.now() - started, pending: true }; // still running server-side

@@ -38,9 +38,9 @@ export const getLeads = async (city: string) =>
   supabase ? sbRooms(city) : (await call<{ leads: Lead[] }>(`/leads${q(city)}`)).leads;
 
 export const runLeads = async (city: string) => {
-  if (!supabase) return (await post<{ leads: Lead[] }>("/leads", { city })).leads;
-  await sbRun("rooms", city);
-  return sbRooms(city);
+  if (!supabase) return { leads: (await post<{ leads: Lead[] }>("/leads", { city })).leads, pending: false };
+  const run = await sbRun("rooms", city);
+  return { leads: await sbRooms(city), pending: run.pending };
 };
 
 // The agent's last search for this city (Supabase only; the local server has no schedule).
