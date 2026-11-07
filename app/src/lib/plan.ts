@@ -4,7 +4,7 @@
 import { calmCaps } from "./case";
 import { inviteBill } from "./invite";
 import { km } from "./fare";
-import { cityHour, clock, dealRank, dealStatus, eveningAfter, isRecurring, nightEnd, shortTitle } from "./time";
+import { cityHour, clock, dealRank, dealStatus, eveningAfter, isRecurring, nightEnd, nightOffset, shortTitle } from "./time";
 import type { Spot } from "./types";
 
 // step: "Start here" / "Then" / "Late"; hop: how far from the stop before ("0.4 mi", "a short walk").
@@ -97,4 +97,19 @@ export function planAhead(spots: Spot[], now = Date.now(), me?: { lat: number; l
   const tonight = planNight(spots, now, me);
   if (tonight.length) return tonight;
   return planNight(spots, eveningAfter(now), me).map((s) => ({ ...s, day: "Tomorrow" }));
+}
+
+// A plan a friend shared (scout://plan/<short>,<short>,…): the same stops in their order, labelled the
+// way the planner would. Stops no longer on the map drop out; fewer than two isn't a plan.
+export function planFromShorts(spots: Spot[], shorts: string[], now = Date.now()): Stop[] {
+  const list = shorts.map((s) => spots.find((e) => e.short === s)).filter((e): e is Spot => !!e);
+  if (list.length < 2) return [];
+  const timed = list.find((e) => e.start && !isRecurring(e));
+  const day = timed && nightOffset(Date.parse(timed.start!), now) === 1 ? "Tomorrow" : undefined;
+  return list.map((spot, i) => {
+    const d = i ? km(list[i - 1], spot) : null;
+    const h = spot.start && !isRecurring(spot) ? cityHour(Date.parse(spot.start)) : 12;
+    const step = i === 0 ? "Start here" : (h >= 21 || h < 6) && i === list.length - 1 ? "Late" : "Then";
+    return { spot, step, hop: d === null ? null : d < 0.5 ? "a short walk" : `${(d * 0.621).toFixed(1)} mi`, day };
+  });
 }

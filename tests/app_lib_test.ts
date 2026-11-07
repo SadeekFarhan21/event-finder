@@ -12,7 +12,7 @@ import { canonicalCity, cityKey } from "../app/src/lib/cities";
 import { similar } from "../app/src/lib/case";
 import { inviteBill, withBill } from "../app/src/lib/invite";
 import { goingLine, initials, leavingSoon } from "../app/src/lib/friends";
-import { planAhead, planMessage, planNight } from "../app/src/lib/plan";
+import { planAhead, planFromShorts, planMessage, planNight } from "../app/src/lib/plan";
 import { newSince } from "../app/src/lib/fresh";
 import { pitchEmail } from "../app/src/lib/pitch";
 import { calendarUrl } from "../app/src/lib/calendar";
@@ -424,5 +424,21 @@ Deno.test("planAhead: tonight's plan, else tomorrow evening's, marked as such", 
     const plan = planAhead([a, b], late);
     expect(plan.map((p) => [p.spot.id, p.day])).toEqual([["a", "Tomorrow"], ["b", "Tomorrow"]]);
     expect(planMessage(plan, () => "L", "W").split("\n")[0]).toBe("Tomorrow's plan:");
+  } finally { setCityZone(null); }
+});
+
+Deno.test("planFromShorts: a friend's plan, in their order", () => {
+  setCityZone("New York, NY");
+  try {
+    const now = Date.parse("2026-11-07T22:30:00Z"); // 5:30 PM
+    const base = { address: "", price: null, description: "", url: null, confidence: "high" as const, source: "exa" as const, lng: -73.98 };
+    const hh = { ...base, id: "hh", short: "aaaa1111", title: "Happy Hour", venue: "Bar A", category: "deal" as const, start: null, deal: "Happy Hour 4-7pm", lat: 40.72 };
+    const set = { ...base, id: "s", short: "bbbb2222", title: "Set", venue: "Club B", category: "music" as const, start: "2026-11-08T01:00:00Z", deal: null, lat: 40.724 };
+    const late = { ...base, id: "l", short: "cccc3333", title: "Late", venue: "Room C", category: "nightlife" as const, start: "2026-11-08T04:00:00Z", deal: null, lat: 40.75 };
+    const p = planFromShorts([late, set, hh], ["aaaa1111", "bbbb2222", "cccc3333"], now);
+    expect(p.map((s) => [s.spot.id, s.step])).toEqual([["hh", "Start here"], ["s", "Then"], ["l", "Late"]]);
+    expect(p[1].hop).toBe("a short walk");
+    expect(p[2].hop).toBe("1.8 mi");
+    expect(planFromShorts([hh, set], ["aaaa1111", "zzzz9999"], now)).toEqual([]); // one stop left isn't a plan
   } finally { setCityZone(null); }
 });
