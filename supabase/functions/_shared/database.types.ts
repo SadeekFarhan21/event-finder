@@ -101,6 +101,7 @@ export type Database = {
           partner: boolean
           photo_checked_at: string | null
           price: string | null
+          short: string | null
           source: string
           start: string | null
           title: string
@@ -122,6 +123,7 @@ export type Database = {
           partner?: boolean
           photo_checked_at?: string | null
           price?: string | null
+          short?: string | null
           source?: string
           start?: string | null
           title: string
@@ -143,6 +145,7 @@ export type Database = {
           partner?: boolean
           photo_checked_at?: string | null
           price?: string | null
+          short?: string | null
           source?: string
           start?: string | null
           title?: string
@@ -365,7 +368,9 @@ export type Database = {
           lat: number | null
           lng: number | null
           partner: boolean | null
+          photo_checked_at: string | null
           price: string | null
+          short: string | null
           source: string | null
           start: string | null
           title: string | null
@@ -385,7 +390,9 @@ export type Database = {
           lat?: number | null
           lng?: number | null
           partner?: boolean | null
+          photo_checked_at?: string | null
           price?: string | null
+          short?: string | null
           source?: string | null
           start?: string | null
           title?: string | null
@@ -405,7 +412,9 @@ export type Database = {
           lat?: number | null
           lng?: number | null
           partner?: boolean | null
+          photo_checked_at?: string | null
           price?: string | null
+          short?: string | null
           source?: string | null
           start?: string | null
           title?: string | null
@@ -467,6 +476,7 @@ export type Database = {
         Args: { p_code: string; p_device_id: string; p_name: string }
         Returns: undefined
       }
+      listing_short: { Args: { p_token: string }; Returns: string }
       listing_stats: {
         Args: { p_token: string }
         Returns: {
