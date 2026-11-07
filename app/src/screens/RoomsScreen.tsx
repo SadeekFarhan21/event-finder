@@ -1,12 +1,12 @@
 // "Rooms": the partner-team view. Yelo's playbook is to take a venue's quiet night,
 // build an event there and fill it with riders, so this lists rooms worth pitching.
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ActivityIndicator, FlatList, Linking, Modal, Platform, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Tap } from "../components/Tap";
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
-import { runLeads } from "../data/api";
+import { roomInterest, runLeads } from "../data/api";
 import type { Lead } from "../lib/types";
 import { color as C, font as F, radius as R, text as T } from "../theme";
 
@@ -28,6 +28,9 @@ export function RoomsScreen({ visible, city, leads, setLeads, canSearch, onClose
 }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Warm leads: rooms Scout riders already open. Shown on the row and sorted first.
+  const [interest, setInterest] = useState<Record<string, number>>({});
+  useEffect(() => { if (visible) roomInterest(city).then(setInterest); }, [visible, city]);
 
   const find = async () => {
     setBusy(true);
@@ -74,7 +77,7 @@ export function RoomsScreen({ visible, city, leads, setLeads, canSearch, onClose
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
       <View style={[s.root, Platform.OS === "android" && { paddingTop: insets.top }]}>
-        <FlatList data={leads.filter((l) => inBrief(l.capacity))} keyExtractor={(l) => l.id} ListHeaderComponent={header}
+        <FlatList data={leads.filter((l) => inBrief(l.capacity)).sort((a, b) => (interest[b.venue] ?? 0) - (interest[a.venue] ?? 0))} keyExtractor={(l) => l.id} ListHeaderComponent={header}
           contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: Math.max(insets.bottom, 16) + 32 }}
           ListEmptyComponent={busy ? undefined : <Text style={s.empty}>No rooms yet. Tap Find rooms to search this city.</Text>}
           ItemSeparatorComponent={() => <View style={s.rule} />}
@@ -84,6 +87,9 @@ export function RoomsScreen({ visible, city, leads, setLeads, canSearch, onClose
                 <Text style={s.name} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75}>{l.venue}</Text>
                 <Text style={s.meta} numberOfLines={1}>{[l.area?.replace(/\s*\([^)]*(\)|$)/g, ""), shortKind(l.kind)].filter(Boolean).join("  ·  ")}</Text>
                 <Text style={s.fit} numberOfLines={2}>{l.fit}</Text>
+                {interest[l.venue] ? (
+                  <Text style={s.warm} numberOfLines={1}>Riders opened it {interest[l.venue]} time{interest[l.venue] === 1 ? "" : "s"} this week</Text>
+                ) : null}
                 {(l.quietNight || l.capacity) && (
                   <Text style={s.facts} numberOfLines={1}>
                     {[l.quietNight && `Quiet ${l.quietNight}s`, l.capacity].filter(Boolean).join("   ·   ")}
@@ -128,6 +134,7 @@ const s = StyleSheet.create({
   contactText: { fontFamily: F.semibold, fontSize: T.small, color: C.ink },
   rule: { height: StyleSheet.hairlineWidth, backgroundColor: C.hairline },
   item: { flexDirection: "row", alignItems: "flex-start", gap: 16, paddingVertical: 20 },
+  warm: { fontFamily: F.medium, fontSize: T.meta, color: C.ink, marginTop: 10 },
   facts: { fontFamily: F.medium, fontSize: T.meta, color: C.ink2, marginTop: 10 },
   go: { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center", borderWidth: StyleSheet.hairlineWidth, borderColor: C.d4, marginTop: 2 },
 });

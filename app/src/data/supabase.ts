@@ -55,3 +55,9 @@ export async function sbLastRun(city: string): Promise<{ ranAt: string; added: n
     .eq("city", cityKey(city)).is("error", null).order("ran_at", { ascending: false }).limit(1).maybeSingle();
   return data ? { ranAt: data.ran_at, added: data.added ?? 0 } : null;
 }
+
+// Rooms riders already open on Scout (last 7 days): venue name -> spot views.
+export async function sbRoomInterest(city: string): Promise<Record<string, number>> {
+  const { data } = await supabase!.rpc("room_interest", { p_city: city });
+  return Object.fromEntries((data ?? []).map((r: { venue: string; views: number }) => [r.venue, Number(r.views)]));
+}
