@@ -47,7 +47,10 @@
   .venue { font: 400 28px/1.2 var(--display); margin: 4px 0 0; }
   .title { font-weight: 600; margin: 4px 0 0; }
   dl { display: grid; grid-template-columns: 80px minmax(0, 1fr); gap: 4px 12px; margin: 12px 0 0; }
-  dt { color: var(--ink-3); font-size: 14px; padding-top: 2px; } dd { margin: 0; overflow-wrap: anywhere; }
+  dt { color: var(--ink-3); font-size: 14px; padding-top: 2px; } dd { margin: 0; overflow-wrap: break-word; }
+  dd a { overflow-wrap: anywhere; } /* only long links may break anywhere; emails and times stay whole */
+  /* Narrow phones: each label sits above its value, so values get the full width. */
+  @media (max-width: 400px) { dl { grid-template-columns: minmax(0, 1fr); gap: 0; } dt { margin-top: 8px; padding: 0; } }
   dd a { color: var(--blue); }
   .actions { display: flex; gap: 8px; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--line); flex-wrap: wrap; align-items: center; }
   .actions input { flex: 1 1 200px; }
@@ -123,7 +126,7 @@
         <dt>Contact</dt><dd>${esc(s.contact_email)}</dd>
         ${s.status === "rejected" && s.review_note ? `<dt>Reason</dt><dd>${esc(s.review_note)}</dd>` : ""}</dl>
       ${s.status === "pending" ? `<div class="actions"><button class="approve" data-act="approve">Approve</button>
-        <input placeholder="Note to the venue if rejecting (optional)" maxlength="300" aria-label="Rejection note">
+        <input placeholder="Why, if rejecting (optional)" maxlength="300" aria-label="Rejection note">
         <button class="reject" data-act="reject">Reject</button></div>` : ""}
     </article>`;
   }
