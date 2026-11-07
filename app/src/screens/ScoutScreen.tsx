@@ -131,7 +131,9 @@ export function ScoutScreen() {
       const found = newIds(list);
       setFresh(found);
       const lead = tonight >= 3 ? `${tonight} things on tonight` : `${list.length} spots this week`;
-      if (list.length) show(found.size ? `${lead}  ·  ${found.size} new` : lead);
+      // Count new only within what the toast names ("158 tonight · 280 new" read as nonsense).
+      const fresh = tonight >= 3 ? list.filter((e) => found.has(e.id) && matches(e, "tonight")).length : found.size;
+      if (list.length) show(fresh ? `${lead}  ·  ${fresh} new` : lead);
       if (city !== mapCity) settle(1800);
       setTimeout(() => fit(list), 300);
     } catch (err) {
