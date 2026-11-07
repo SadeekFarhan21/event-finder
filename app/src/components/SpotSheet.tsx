@@ -159,13 +159,17 @@ export function SpotSheet({ spot, city, me, unlocked, canAskLocation, locationRe
           </GestureDetector>
 
           <View style={s.content}>
-            <View style={s.factsRow}>
-              {facts.map((f, i) => (
-                <View key={i} style={s.fact}>
-                  {i > 0 && <View style={s.factDot} />}
-                  <Text style={s.facts} numberOfLines={1}>{f}</Text>
-                </View>
-              ))}
+            {/* Every fact has a leading dot; the row is shifted left one dot and clipped, so the first dot on
+                each line (including a wrapped one, at large text sizes) falls outside and never leads a line. */}
+            <View style={s.factsClip}>
+              <View style={s.factsRow}>
+                {facts.map((f, i) => (
+                  <View key={i} style={s.fact}>
+                    <View style={s.factDot} />
+                    <Text style={s.facts} numberOfLines={1}>{f}</Text>
+                  </View>
+                ))}
+              </View>
             </View>
 
             {calmCaps(e.title).toLowerCase() !== whenLabel(e).toLowerCase() && (
@@ -359,7 +363,8 @@ const s = StyleSheet.create({
   partnerText: { fontFamily: F.semibold, fontSize: 11, color: C.ink, letterSpacing: 0.2 },
   title: { fontFamily: F.display, fontSize: 48, lineHeight: 52, color: C.ink, marginBottom: 6 },
   content: { paddingHorizontal: 20, paddingTop: 12 },
-  factsRow: { flexDirection: "row", flexWrap: "wrap", rowGap: 4 },
+  factsClip: { overflow: "hidden" },
+  factsRow: { flexDirection: "row", flexWrap: "wrap", rowGap: 4, marginLeft: -23 }, // 23 = dot 3 + margins 10 + 10
   fact: { flexDirection: "row", alignItems: "center", maxWidth: "100%" },
   factDot: { width: 3, height: 3, borderRadius: 2, backgroundColor: C.ink3, marginHorizontal: 10 },
   facts: { flexShrink: 1, fontFamily: F.medium, fontSize: T.small, color: C.ink2 },
