@@ -12,6 +12,7 @@ import { canonicalCity, cityKey } from "../app/src/lib/cities";
 import { similar } from "../app/src/lib/case";
 import { goingLine, initials } from "../app/src/lib/friends";
 import { newSince } from "../app/src/lib/fresh";
+import { pitchEmail } from "../app/src/lib/pitch";
 import { matchesQuery, parseQuery, priceOf, rankByVenue } from "../app/src/lib/search";
 
 const spot = (over: Partial<Spot>): Spot => ({
@@ -239,4 +240,13 @@ Deno.test("newSince counts spots first found after the last visit", () => {
   const at = (id: string, d: string | null) => ({ id, discovered_at: d }) as unknown as Spot;
   const list = [at("a", "2026-11-07T10:00:00Z"), at("b", "2026-11-07T15:00:00Z"), at("c", null)];
   expect(newSince(list, Date.parse("2026-11-07T12:00:00Z")).map((e) => e.id)).toEqual(["b"]);
+});
+
+Deno.test("pitch email uses what Scout knows about the room", () => {
+  const p = pitchEmail({ venue: "Pete's Candy Store", quietNight: "Monday", capacity: "Up to 125" }, "New York, NY", 3);
+  expect(p.subject).toBe("A Yelo night at Pete's Candy Store");
+  expect(p.body).toContain("(up to 125 people)");
+  expect(p.body).toContain("Mondays could be a good night to start");
+  expect(p.body).toContain("3 times this week");
+  expect(pitchEmail({ venue: "X", quietNight: null, capacity: null }, "Los Angeles, CA").body).not.toContain("Scout, our discovery app");
 });
