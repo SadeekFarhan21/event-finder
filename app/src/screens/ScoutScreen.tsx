@@ -121,7 +121,10 @@ export function ScoutScreen() {
   const dist = useCallback((e: Spot) => (me ? km(me, { lat: e.lat, lng: e.lng }) : Infinity), [me]);
   // Plan my night: tonight's spots chained into two or three stops (lib/plan), in route order.
   // A search narrows what goes in it: "jazz" + Plan my night plans a jazz night.
-  const plan = useMemo(() => (filter === "plan" && minute ? planNight(spots.filter((e) => matchesQuery(e, parsed)), minute, me) : []), [filter, spots, minute, me, parsed]);
+  // Stops the rider swapped out of tonight's plan; forgotten when they leave the plan or the city.
+  const [skipped, setSkipped] = useState<Set<string>>(new Set());
+  const planFrom = useCallback((skip: Set<string>) => spots.filter((e) => matchesQuery(e, parsed) && !skip.has(e.id)), [spots, parsed]);
+  const plan = useMemo(() => (filter === "plan" && minute ? planNight(planFrom(skipped), minute, me) : []), [filter, planFrom, skipped, minute, me]);
   const steps = useMemo(() => Object.fromEntries(plan.map((p) => [p.spot.id, p])), [plan]);
   const shown = useMemo(() => {
     if (filter === "plan") return plan.map((p) => p.spot);
@@ -207,6 +210,7 @@ export function ScoutScreen() {
     if (!city) { setCityInput(mapCity ?? "New York, NY"); return; } // empty search: keep the current city
     setCityInput(city);
     setActive(null);
+    setSkipped(new Set()); // swapped-out stops belong to the last city's plan
     try {
       const list = await load(city);
       setLoadFailed(false);
@@ -289,7 +293,21 @@ export function ScoutScreen() {
     if (list.length > 1) show(`${list.length} spots here · tap again for the next`);
   };
 
+  // Swap one stop: plan again without it. If nothing else fits, keep the plan and say so.
+  const swapStop = (e: Spot) => {
+    const skip = new Set(skipped).add(e.id);
+    const next = planNight(planFrom(skip), Date.now(), me);
+    if (!next.length) { show("Nothing else close enough to swap in"); return; }
+    Haptics.selectionAsync();
+    setSkipped(skip);
+    setActive(null);
+    const at = Math.max(0, next.findIndex((p) => !plan.some((q) => q.spot.id === p.spot.id)));
+    setTimeout(() => carousel.current?.scrollTo(at, true), 50); // land on the new stop
+    fit(next.map((p) => p.spot), true);
+  };
+
   const pickFilter = (f: Filter) => {
+    if (f !== "plan") setSkipped(new Set());
     Haptics.selectionAsync();
     setFilter(f);
     setActive(null);
@@ -351,7 +369,7 @@ export function ScoutScreen() {
               </Tap>
             )}
           </Animated.View>
-          <SpotCarousel ref={carousel} spots={shown} fresh={fresh} steps={filter === "plan" ? steps : undefined} going={going} crewPeople={crewPeople} me={me} activeId={active?.id ?? null}
+          <SpotCarousel ref={carousel} spots={shown} fresh={fresh} steps={filter === "plan" ? steps : undefined} onSwap={filter === "plan" ? swapStop : undefined} going={going} crewPeople={crewPeople} me={me} activeId={active?.id ?? null}
             onSettle={(e) => { Haptics.selectionAsync(); focus(e); }}
             onPress={(e) => (active?.id === e.id ? setDetail(e) : focus(e, true))}
             onRide={(e) => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); track(e, "ride", mapCity ?? cityInput); openRide(e); }} />

@@ -34,9 +34,10 @@ type Props = {
   onSettle: (spot: Spot) => void; // a swipe came to rest on this card
   onPress: (spot: Spot, index: number) => void;
   onRide: (spot: Spot) => void;
+  onSwap?: (spot: Spot) => void; // Plan my night: replace this stop with the next best one
 };
 
-export function SpotCarousel({ ref, spots, fresh, steps, going, crewPeople, me, activeId, onSettle, onPress, onRide }: Props) {
+export function SpotCarousel({ ref, spots, fresh, steps, onSwap, going, crewPeople, me, activeId, onSettle, onPress, onRide }: Props) {
   const list = useAnimatedRef<Animated.FlatList<Spot>>();
   const x = useSharedValue(0);
   const onScroll = useAnimatedScrollHandler((e) => { x.value = e.contentOffset.x; });
@@ -57,7 +58,7 @@ export function SpotCarousel({ ref, spots, fresh, steps, going, crewPeople, me, 
         snapToInterval={CARD_STEP} decelerationRate="fast" disableIntervalMomentum
         contentContainerStyle={{ gap: CARD_GAP, paddingHorizontal: CARD_INSET }}
         onScroll={onScroll} scrollEventThrottle={16} onMomentumScrollEnd={onEnd}
-        renderItem={({ item, index }) => <Card spot={item} step={steps?.[item.id]} isNew={!!fresh?.has(item.id)} going={going[item.id] ?? 0} crew={crewPeople?.[item.id]} me={me} index={index} x={x} onPress={() => onPress(item, index)} onRide={() => onRide(item)} />} />
+        renderItem={({ item, index }) => <Card spot={item} step={steps?.[item.id]} isNew={!!fresh?.has(item.id)} going={going[item.id] ?? 0} crew={crewPeople?.[item.id]} me={me} index={index} x={x} onPress={() => onPress(item, index)} onRide={() => onRide(item)} onSwap={onSwap && (() => onSwap(item))} />} />
     </Animated.View>
   );
 }
@@ -81,8 +82,8 @@ function cardLine(e: Spot) {
 
 // Photo first: the place, then when, then who's going and the ride. Most listings have no photo
 // (the web rarely has a good one), so the fallback is a designed panel, not an empty box.
-function Card({ spot: e, step, isNew, going, crew, me, index, x, onPress, onRide }: {
-  spot: Spot; step?: Step; isNew: boolean; going: number; crew?: CrewPeople; me?: Point | null; index: number; x: SharedValue<number>; onPress: () => void; onRide: () => void;
+function Card({ spot: e, step, onSwap, isNew, going, crew, me, index, x, onPress, onRide }: {
+  spot: Spot; step?: Step; isNew: boolean; going: number; crew?: CrewPeople; me?: Point | null; index: number; x: SharedValue<number>; onPress: () => void; onRide: () => void; onSwap?: () => void;
 }) {
   // Distance once the rider has shared location (same figure as the sheet's "mi away").
   const miles = me ? (estimateFare(me, { lat: e.lat, lng: e.lng })?.miles ?? null) : null;
@@ -137,6 +138,11 @@ function Card({ spot: e, step, isNew, going, crew, me, index, x, onPress, onRide
                 <Text style={s.goingText}>Be the first to go</Text>
               )}
             </View>
+            {onSwap && (
+              <Tap onPress={onSwap} style={s.swap} accessibilityLabel={`Swap ${e.venue} for another stop`} hitSlop={6}>
+                <Feather name="refresh-cw" size={15} color={C.ink} />
+              </Tap>
+            )}
             <Tap onPress={onRide} style={s.ride} accessibilityLabel={`Ride to ${e.venue}`} hitSlop={6}>
               <Text style={s.rideText}>Ride</Text>
             </Tap>
@@ -179,6 +185,7 @@ const s = StyleSheet.create({
   goingText: { fontFamily: F.medium, fontSize: T.small, color: C.ink2 },
   deal: { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 8, height: 24, borderRadius: R.pill, borderWidth: 1, borderColor: C.strong },
   dealText: { fontFamily: F.semibold, fontSize: T.meta, color: C.ink2 },
+  swap: { width: 36, height: 36, borderRadius: 18, alignItems: "center", justifyContent: "center", borderWidth: StyleSheet.hairlineWidth, borderColor: C.d4, marginLeft: "auto" },
   ride: { flexDirection: "row", alignItems: "center", gap: 6, height: 36, paddingHorizontal: 16, borderRadius: R.pill, backgroundColor: C.accent },
   rideText: { fontFamily: F.semibold, fontSize: T.small, color: C.onAccent },
 });
