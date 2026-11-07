@@ -90,7 +90,18 @@
   const fmtT = (d) => new Date(d).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit", timeZone: ZONE }).replace(":00", "");
   const hourOf = (d) => Number(new Date(d).toLocaleTimeString("en-US", { hour: "numeric", hourCycle: "h23", timeZone: ZONE }));
   const isDeal = (e) => e.category === "deal" || /happy hour|daily|every (day|night)|nightly/i.test(`${e.title} ${e.deal ?? ""}`);
-  const hours = (e) => `${e.deal ?? ""} ${e.title}`.match(/\b\d{1,2}(:\d\d)?\s*(am|pm)?\s*(-|–|to)\s*\d{1,2}(:\d\d)?\s*(am|pm)\b/i)?.[0]?.replace(/\s*(-|–|to)\s*/i, "–");
+  // Read a deal the way the app does: only the clause about the happy hour ("Happy Hour Tue-Fri open-7pm;
+  // Saturday open 12pm-4am": the second half is opening hours), with the days it names.
+  const hhClause = (t) => String(t).split(/[;\n]|\s[–—]\s/).find((c) => /happy hour/i.test(c)) ?? String(t);
+  const RANGE = /\b\d{1,2}(:\d\d)?\s*(am|pm)?\s*(-|–|to)\s*\d{1,2}(:\d\d)?\s*(am|pm)\b/i;
+  const DAYSPAN = /\b(mon|tue|wed|thu|fri|sat|sun)[a-z]*\.?\s*(-|–|to|through)\s*(mon|tue|wed|thu|fri|sat|sun)[a-z]*\b|\bweekdays\b|\bweekends\b/i;
+  const dealWhen = (t) => {
+    const c = hhClause(t), cap = (w) => w[0].toUpperCase() + w.slice(1, 3).toLowerCase();
+    const span = c.match(DAYSPAN), hrs = c.match(RANGE)?.[0]?.replace(/\s*(-|–|to)\s*/i, "–");
+    const days = span ? (span[1] ? `${cap(span[1])}–${cap(span[3])}` : span[0].toLowerCase() === "weekdays" ? "Weekdays" : "Weekends") : "";
+    return [days, hrs].filter(Boolean).join(" · ");
+  };
+  const hours = (e) => dealWhen(`${e.deal ?? ""} ${e.title}`) || null;
   const calm = (t) => (t && t === t.toUpperCase() && /[A-Z]{4}/.test(t) ? t.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase()) : t);
   const same = (a, b) => String(a).toLowerCase().replace(/[^a-z0-9]/g, "") === String(b).toLowerCase().replace(/[^a-z0-9]/g, "");
   const km = (a, b) => {

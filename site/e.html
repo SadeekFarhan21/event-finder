@@ -133,13 +133,24 @@
   const nightKey = (t) => Date.parse(ymd(t - 6 * 3600e3)) / 864e5; // a night runs until 6am
 
   // Same rule as the app: a night runs until 6am, so a 1am set still reads "Tonight".
+  // Read a deal the way the app does: only the clause about the happy hour ("Happy Hour Tue-Fri open-7pm;
+  // Saturday open 12pm-4am": the second half is opening hours), with the days it names.
+  const hhClause = (t) => String(t).split(/[;\n]|\s[–—]\s/).find((c) => /happy hour/i.test(c)) ?? String(t);
+  const RANGE = /\b\d{1,2}(:\d\d)?\s*(am|pm)?\s*(-|–|to)\s*\d{1,2}(:\d\d)?\s*(am|pm)\b/i;
+  const DAYSPAN = /\b(mon|tue|wed|thu|fri|sat|sun)[a-z]*\.?\s*(-|–|to|through)\s*(mon|tue|wed|thu|fri|sat|sun)[a-z]*\b|\bweekdays\b|\bweekends\b/i;
+  const dealWhen = (t) => {
+    const c = hhClause(t), cap = (w) => w[0].toUpperCase() + w.slice(1, 3).toLowerCase();
+    const span = c.match(DAYSPAN), hrs = c.match(RANGE)?.[0]?.replace(/\s*(-|–|to)\s*/i, "–");
+    const days = span ? (span[1] ? `${cap(span[1])}–${cap(span[3])}` : span[0].toLowerCase() === "weekdays" ? "Weekdays" : "Weekends") : "";
+    return [days, hrs].filter(Boolean).join(" · ");
+  };
   function when(e) {
     const text = `${e.title} ${e.deal ?? ""} ${e.description ?? ""}`;
     if (e.category === "deal" || /happy hour|every (mon|tue|wed|thu|fri|sat|sun)|daily|weekly|nightly/i.test(text)) {
-      // Keep the hours the listing states ("4-7pm", "5 to 8 PM"); never invent them.
-      const hours = text.match(/\b\d{1,2}(:\d\d)?\s*(am|pm)?\s*(-|–|to)\s*\d{1,2}(:\d\d)?\s*(am|pm)\b/i)?.[0];
+      // Keep the days and hours the listing states ("Tue–Fri · 4–7pm"); never invent them.
       const label = /happy hour/i.test(text) ? "Happy hour" : "Every night this week";
-      return hours ? `${label} · ${hours.replace(/\s*(-|–|to)\s*/i, "–")}` : label;
+      const hw = dealWhen(`${e.deal ?? ""} ${e.title}`);
+      return hw ? `${label} · ${hw}` : label;
     }
     if (!e.start) return "Ongoing";
     const d = new Date(e.start);
