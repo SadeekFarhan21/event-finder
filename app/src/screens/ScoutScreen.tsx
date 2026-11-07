@@ -29,6 +29,7 @@ import { newIds, newSince } from "../lib/fresh";
 import { isOffline, onNetworkChange } from "../lib/net";
 import { friendlyError } from "../lib/report";
 import { track } from "../data/activity";
+import { cityOfShorts } from "../data/api";
 import { planLink, spotLink } from "../data/social";
 import { useToast } from "../hooks/useToast";
 import { SearchHeader } from "../components/SearchHeader";
@@ -75,6 +76,9 @@ export function ScoutScreen() {
   // A friend's shared plan (scout://plan/<short>,<short>,…), shown as Plan my night until the rider moves on.
   const [sharedPlan, setSharedPlan] = useState<string[] | null>(null);
   const sharedPending = useRef(false); // read by open(): a city loading at launch mustn't switch the plan off
+  const sharedShown = useRef(false); // its "A friend's plan" toast and framing happened
+  const sharedLookedUp = useRef(false); // its stops weren't on this map, and we asked which city they're in
+  const switchingForShared = useRef(false); // set while the map moves to a friend's plan's city
   useEffect(() => { sharedPending.current = !!sharedPlan; }, [sharedPlan]);
 
   // A crew link opened on a phone with Scout (scout://crew/<code>) lands on Crews, code filled in.
@@ -83,7 +87,7 @@ export function ScoutScreen() {
       const m = url && /^scout:\/\/crew\/([a-f0-9]{8,16})/i.exec(url);
       if (m) { setLinkCode(m[1].toLowerCase()); setCrewsOpen(true); }
       const p = url && /^scout:\/\/plan\/([a-f0-9]{8}(?:,[a-f0-9]{8}){1,3})/i.exec(url);
-      if (p) setSharedPlan(p[1].toLowerCase().split(",")); // the filter follows in an effect below
+      if (p) { sharedShown.current = false; sharedLookedUp.current = false; setSharedPlan(p[1].toLowerCase().split(",")); } // the filter follows below
     };
     Linking.getInitialURL().then(handle).catch(() => {});
     const sub = Linking.addEventListener("url", (e) => handle(e.url));
@@ -189,20 +193,6 @@ export function ScoutScreen() {
     map.current?.fitTo(core.map((e) => ({ latitude: e.lat, longitude: e.lng })), FIT_PADDING);
   }, []);
 
-  // Once a shared plan's stops are on the map, frame them and say whose plan it is; if they never are
-  // (another city's map, or the night has passed), say so and drop the link.
-  const sharedShown = useRef(false);
-  useEffect(() => {
-    if (!sharedPlan || loading) return;
-    if (shared.length && !sharedShown.current) {
-      sharedShown.current = true;
-      show("A friend's plan. Swap a stop or change filters to make your own.", false, 4000);
-      setTimeout(() => fit(shared.map((p) => p.spot), true), 300);
-    } else if (!shared.length && spots.length) {
-      show("That plan isn't on this map. It may be another city's, or its night has passed.");
-      setSharedPlan(null);
-    }
-  }, [sharedPlan, shared, loading, spots.length, show, fit]);
 
   // Searching: once typing pauses, frame the matches. A handful are all framed; dozens get the dense
   // core, like the city view ("under $20" in New York zoomed out to a speck otherwise). The first
@@ -219,7 +209,8 @@ export function ScoutScreen() {
   // at launch arrives before any city is on the map).
   const lastCity = useRef(mapCity);
   useEffect(() => {
-    if (lastCity.current && mapCity && mapCity !== lastCity.current) { setSharedPlan(null); sharedShown.current = false; }
+    if (lastCity.current && mapCity && mapCity !== lastCity.current && !switchingForShared.current) { setSharedPlan(null); sharedShown.current = false; }
+    if (mapCity !== lastCity.current) switchingForShared.current = false; // the switch for a friend's plan has landed
     lastCity.current = mapCity;
   }, [mapCity]);
 
@@ -276,6 +267,31 @@ export function ScoutScreen() {
       if (!isOffline()) show(friendlyError(err, "Couldn't load spots"), true);
     }
   }, [load, fit, show, mapCity, settle]);
+
+  // Once a shared plan's stops are on the map, frame them and say whose plan it is. If they aren't,
+  // look up their city: another city's plan switches the map there (and resolves once it loads); one
+  // whose night has passed says so and drops the link.
+  useEffect(() => {
+    if (!sharedPlan || loading) return;
+    if (shared.length && !sharedShown.current) {
+      sharedShown.current = true;
+      show("A friend's plan. Swap a stop or change filters to make your own.", false, 4000);
+      setTimeout(() => fit(shared.map((p) => p.spot), true), 300);
+    } else if (!shared.length && spots.length && !sharedLookedUp.current) {
+      sharedLookedUp.current = true;
+      cityOfShorts(sharedPlan).then((c) => {
+        const city = c ? canonicalCity(c) : null;
+        if (city && city !== mapCity) {
+          show(`Opening your friend's plan in ${city.split(",")[0]}`);
+          switchingForShared.current = true;
+          open(city);
+        } else {
+          show("That plan has passed. Its spots aren't on the map anymore.");
+          setSharedPlan(null);
+        }
+      });
+    }
+  }, [sharedPlan, shared, loading, spots.length, show, fit, mapCity, open]);
 
   // Reopen the city the rider last looked at (an LA rider shouldn't land in New York every launch).
   useEffect(() => {

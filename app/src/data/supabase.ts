@@ -63,3 +63,10 @@ export async function sbRoomInterest(city: string): Promise<Record<string, numbe
   const { data } = await supabase!.rpc("room_interest", { p_city: city });
   return Object.fromEntries((data ?? []).map((r: { venue: string; views: number }) => [r.venue, Number(r.views)]));
 }
+
+// Which city a shared plan's stops are in (their share codes), so a link opened on another city's
+// map can switch to it. null when none of them is still on any map.
+export async function sbCityOfShorts(shorts: string[]): Promise<string | null> {
+  const { data } = await supabase!.from("upcoming_events").select("city").in("short", shorts).limit(1);
+  return (data?.[0]?.city as string | undefined) ?? null;
+}
