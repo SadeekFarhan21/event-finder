@@ -1,5 +1,6 @@
 // Cleanup shared by the agent (new results) and the store (merging runs).
 import type { YeloEvent } from "./discover.ts";
+import { calmCaps } from "./case.ts";
 
 // "Connolly's Pub (Times Square)" -> "Connolly's Pub"
 // "Dr. Martens Brand Centre, Herald Square" -> "Dr. Martens Brand Centre"
@@ -17,7 +18,7 @@ export function cleanVenue(name: string) {
 // "Happy Hour at Cubbyhole (Recurring)" -> "Happy Hour"; drops a trailing "at/@ <venue>"
 // (the sheet already shows the venue) and bracketed notes like "(Recurring)" or "[21+]".
 export function cleanTitle(title: string, venue: string) {
-  let t = title.replace(/\s*[([][^)\]]*[)\]]\s*/g, " ").replace(/\s+/g, " ").trim();
+  let t = calmCaps(title).replace(/\s*[([][^)\]]*[)\]]\s*/g, " ").replace(/\s+/g, " ").trim();
   const v = cleanVenue(venue).toLowerCase().replace(/^the\s+/, "");
   const m = /\s(?:at|@)\s+(.+)$/i.exec(t);
   if (m && m[1].toLowerCase().replace(/^the\s+/, "").startsWith(v.slice(0, 6))) t = t.slice(0, m.index).trim();
@@ -62,11 +63,21 @@ export function dedupeEvents(events: YeloEvent[]): YeloEvent[] {
       kept.push({ ...e, venue: cleanVenue(e.venue), title: cleanTitle(e.title, e.venue) });
       continue;
     }
+    // "New" means first found: a re-found listing keeps the earliest discovery time.
+    const first = twin.discoveredAt < e.discoveredAt ? twin.discoveredAt : e.discoveredAt;
     if (RANK[e.confidence] > RANK[twin.confidence]) Object.assign(twin, { ...e, venue: cleanVenue(e.venue), title: cleanTitle(e.title, e.venue), deal: e.deal ?? twin.deal, image: e.image ?? twin.image });
     else {
       if (!twin.deal && e.deal) twin.deal = e.deal;
       if (!twin.image && e.image) twin.image = e.image;
     }
+    twin.discoveredAt = first;
   }
   return kept;
 }
+
+// A deal has to offer something: a price, a discount, free entry, a happy hour, bottomless drinks.
+// Scraped "deals" are often just notes from the venue's page ("Sushi reservations on Resy",
+// "Themed holiday cocktails"), which would promise riders nothing at the door. The title counts
+// too, since a happy hour's deal text is often just its hours ("Daily 5-7 PM").
+const DEAL_VALUE = /(\$|%|\bfree\b|\boff\b|happy hour|\bhalf\b|discount|complimentary|\bcomp\b|2[- ]?for[- ]?1|two[- ]for[- ]one|\bbogo\b|buy one|no cover|reduced|special|bottomless|unlimited|open bar|\bhour\b|aperitivo)/i;
+export const isRealDeal = (deal: string | null | undefined, title = "") => !!deal && DEAL_VALUE.test(`${deal} ${title}`);

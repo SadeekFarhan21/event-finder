@@ -1,7 +1,8 @@
 // The discovery agent: Exa search -> structured events -> geocode -> dedupe.
+import { pageAboutVenue } from "./photos.ts";
 import { isRateLimit, type AgentDeps, type GeoCache, type Point } from "./deps.ts";
-import { cleanTitle, cleanVenue } from "./clean.ts";
-import { partnerAddress, partnersIn } from "./partners.ts";
+import { cleanTitle, cleanVenue, isRealDeal } from "./clean.ts";
+import { partnerAddress, partnerName, partnersIn } from "./partners.ts";
 
 export type Category = "nightlife" | "music" | "food_drink" | "arts" | "sports" | "community" | "deal";
 
@@ -116,7 +117,7 @@ export async function discover(city: string, { exa, geo, log = () => {}, deadlin
         const rank = { low: 0, medium: 1, high: 2 } as const;
         const confidence = g.length ? g.reduce((m, x) => (rank[x.confidence] < rank[m] ? x.confidence : m), "high" as YeloEvent["confidence"]) : "medium";
         const urls = [e.url, ...g.flatMap((x) => x.citations.map((c) => c.url))].filter(Boolean) as string[];
-        const image = urls.map((u) => imageOf.get(u)).find(Boolean) ?? "";
+        const image = urls.filter((u) => pageAboutVenue(u, String(e.venue ?? ""))).map((u) => imageOf.get(u)).find(Boolean) ?? "";
         return { ...e, url: e.url || urls[0] || "", image, confidence };
       });
     }),
@@ -155,12 +156,12 @@ export async function discover(city: string, { exa, geo, log = () => {}, deadlin
     out.push({
       id: slug(`${city}-${e.venue}-${e.title}-${e.start ?? ""}`),
       title: cleanTitle(e.title!, e.venue!),
-      venue: cleanVenue(e.venue!),
+      venue: partnerName(e.venue!) ?? cleanVenue(e.venue!),
       address: e.address!,
       start: validDate(e.start, city),
       category: CATEGORIES.includes(e.category as Category) ? (e.category as Category) : "community",
       price: e.price || null,
-      deal: e.deal || null,
+      deal: isRealDeal(e.deal, e.title) ? e.deal! : null,
       description: e.description ?? "",
       url: e.url || null,
       image: e.image || null,

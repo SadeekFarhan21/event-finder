@@ -8,6 +8,7 @@ import type { Point } from "../lib/fare";
 export function useMyLocation() {
   const [me, setMe] = useState<Point | null>(null);
   const [canAsk, setCanAsk] = useState(false); // false once the OS won't show the prompt again
+  const [refused, setRefused] = useState(false); // the rider said no this session
 
   const locate = useCallback(async () => {
     const last = await Location.getLastKnownPositionAsync();
@@ -25,8 +26,9 @@ export function useMyLocation() {
   const ask = useCallback(async () => {
     const p = await Location.requestForegroundPermissionsAsync();
     setCanAsk(!p.granted && p.canAskAgain);
+    setRefused(!p.granted);
     if (p.granted) await locate().catch(() => {});
   }, [locate]);
 
-  return { me, canAsk, ask };
+  return { me, canAsk, refused, ask };
 }

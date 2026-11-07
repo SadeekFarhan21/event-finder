@@ -58,6 +58,12 @@ Deno.test({ name: "crews: start, join, status, read back (names only)", ignore, 
     // Ride activity for the venue sees the crew (counts only).
     const [m] = (await rpc("venue_movement", { p_venue: `ZZ CI Room ${run}`, p_city: "New York, NY" })).body;
     assertEquals([m.crews, m.people, m.on_way], [1, 2, 1]);
+    // "N going" counts the crew too (both members, once each).
+    const [g] = (await rpc("going_counts", { p_spot_ids: [`new-york-ny-zz-ci-${run}`] })).body;
+    assertEquals(Number(g.going), 2);
+    await rpc("set_crew_status", { p_code: code, p_device_id: device("friend"), p_status: "out" });
+    const [g2] = (await rpc("going_counts", { p_spot_ids: [`new-york-ny-zz-ci-${run}`] })).body;
+    assertEquals(Number(g2.going), 1); // bowing out leaves the count
   } finally {
     await cleanup("crews", `code=eq.${code}`);
   }
@@ -137,4 +143,18 @@ Deno.test({ name: "scout: requests are validated and public runs are limited to 
   assertEquals([injected.status, injected.body.code], [403, "CITY_NOT_SERVED"]);
   const script = await scout({ task: "events", city: "<script>" });
   assertEquals(script.body.code, "BAD_REQUEST");
+} });
+
+Deno.test({ name: "going: a device can take back its own 'I'm going', and only its own", ignore, async fn() {
+  const spot = `new-york-ny-zz-ci-going-${run}`;
+  const ins = (dev: string) => fetch(`${URL}/rest/v1/spot_activity`, {
+    method: "POST", headers: { apikey: KEY!, "Content-Type": "application/json", Prefer: "return=minimal" },
+    body: JSON.stringify({ spot_id: spot, venue: "ZZ CI", city: "new york, ny", kind: "going", device_id: dev }),
+  });
+  await ins(device("a")); await ins(device("b"));
+  const count = async () => Number(((await rpc("going_counts", { p_spot_ids: [spot] })).body[0] ?? { going: 0 }).going);
+  assertEquals(await count(), 2);
+  assertEquals((await rpc("ungo", { p_spot_id: spot, p_device_id: device("a") })).status, 204);
+  assertEquals(await count(), 1);
+  await rpc("ungo", { p_spot_id: spot, p_device_id: device("b") });
 } });

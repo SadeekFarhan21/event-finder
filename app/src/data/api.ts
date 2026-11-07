@@ -3,7 +3,7 @@
 import type { Lead, Spot } from "../lib/types";
 import { config } from "../config";
 import { fetchWithTimeout } from "../lib/net";
-import { sbEvents, sbRooms, sbRun, supabase } from "./supabase";
+import { sbEvents, sbLastRun, sbRoomInterest, sbRooms, sbRun, supabase } from "./supabase";
 
 const fetchT = fetchWithTimeout(config.requestTimeoutMs);
 
@@ -42,3 +42,9 @@ export const runLeads = async (city: string) => {
   await sbRun("rooms", city);
   return sbRooms(city);
 };
+
+// The agent's last search for this city (Supabase only; the local server has no schedule).
+export const lastRun = (city: string) => (supabase ? sbLastRun(city).catch(() => null) : Promise.resolve(null));
+
+// How often riders opened each room's spots this week (Supabase only).
+export const roomInterest = (city: string) => (supabase ? sbRoomInterest(city).catch(() => ({})) : Promise.resolve({} as Record<string, number>));

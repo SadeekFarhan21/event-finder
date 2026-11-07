@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { track } from "../data/activity";
-import { goingCounts, loadMine, saveMine } from "../data/social";
+import { goingCounts, loadMine, saveMine, ungo } from "../data/social";
 import type { Spot } from "../lib/types";
 
 // Who's going where: live counts for the spots on the map plus what this device said.
@@ -26,5 +26,21 @@ export function useGoing(spots: Spot[], city: string | null) {
     track(e, "going", city ?? "");
   }, [mine, city]);
 
-  return { counts, mine, go };
+  // Undo: drop it locally right away, then on the server; restore if the server says no.
+  const unGo = useCallback((e: Spot) => {
+    if (!mine.has(e.id)) return;
+    const next = new Set(mine);
+    next.delete(e.id);
+    setMine(next);
+    saveMine(next);
+    setCounts((c) => ({ ...c, [e.id]: Math.max(0, (c[e.id] ?? 1) - 1) }));
+    ungo(e.id).catch(() => {
+      const back = new Set(next).add(e.id);
+      setMine(back);
+      saveMine(back);
+      setCounts((c) => ({ ...c, [e.id]: (c[e.id] ?? 0) + 1 }));
+    });
+  }, [mine]);
+
+  return { counts, mine, go, unGo };
 }

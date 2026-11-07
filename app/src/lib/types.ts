@@ -6,6 +6,7 @@ export type Confidence = "low" | "medium" | "high";
 // A spot on the map: an event, or a standing deal like a happy hour.
 export type Spot = {
   id: string;
+  short?: string | null; // 8-character share code (events.short)
   title: string;
   venue: string;
   address: string;
@@ -21,6 +22,7 @@ export type Spot = {
   confidence: Confidence;
   source: "exa" | "demo" | "venue";
   partner?: boolean; // one of Yelo's venue partners
+  discovered_at?: string; // when the agent first found it (never moves forward)
 };
 
 // "Rooms": a venue that could host a Yelo night.

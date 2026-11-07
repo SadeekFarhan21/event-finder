@@ -1,9 +1,13 @@
 // Android: MapLibre with OpenFreeMap's Positron style (OpenStreetMap data). No API key needed,
 // unlike Google Maps, which react-native-maps uses on Android and which crashes a release
 // build without one.
-import { useImperativeHandle, useRef } from "react";
-import { StyleSheet } from "react-native";
-import { Camera, Map, Marker, UserLocation, type CameraRef } from "@maplibre/maplibre-react-native";
+import { useEffect, useImperativeHandle, useRef, useState } from "react";
+import Animated, { FadeOut } from "react-native-reanimated";
+import { Linking, StyleSheet, Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { HEADER_GAP, HEADER_H } from "../layout";
+import { color as C, font as F } from "../theme";
+import { Camera, Layer, Map, Marker, UserLocation, type CameraRef } from "@maplibre/maplibre-react-native";
 import type { Region, ScoutMapProps, ScoutMarkerProps } from "./types";
 import { config } from "../config";
 
@@ -24,9 +28,17 @@ export function ScoutMap({ ref, initialRegion, showsUserLocation, onRegionChange
     flyTo: (point, zoom) => camera.current?.easeTo({ center: [point.longitude, point.latitude], zoom, duration: 500 }),
   }), []);
 
+  const insets = useSafeAreaInsets();
+  // Until the dark style arrives MapLibre paints its default cream background, a bright flash at night.
+  // Cover the map in the night colour until the style has loaded (or 4 s, so it can never stick).
+  const [styled, setStyled] = useState(false);
+  useEffect(() => { const t = setTimeout(() => setStyled(true), 4000); return () => clearTimeout(t); }, []);
+  // MapLibre's own attribution button is a bright blue "i"; credit OpenStreetMap in the palette instead.
   return (
-    <Map style={StyleSheet.absoluteFill} mapStyle={STYLE} logo={false} compass={false} attributionPosition={{ bottom: 8, left: 8 }}
+    <View style={StyleSheet.absoluteFill}>
+    <Map style={StyleSheet.absoluteFill} mapStyle={STYLE} logo={false} compass={false} attribution={false}
       onPress={() => onPress?.()}
+      onDidFinishLoadingStyle={() => setStyled(true)} onDidFailLoadingMap={() => setStyled(true)}
       onRegionDidChange={(ev) => {
         const [west, south, east, north] = ev.nativeEvent.bounds;
         onRegionChange?.({
@@ -37,9 +49,23 @@ export function ScoutMap({ ref, initialRegion, showsUserLocation, onRegionChange
       <Camera ref={camera} initialViewState={{
         center: [initialRegion.longitude, initialRegion.latitude], zoom: zoomFor(initialRegion),
       }} />
-      {showsUserLocation && <UserLocation />}
+      {showsUserLocation && (
+        // "You are here" in the palette (MapLibre's default puck is a stock blue).
+        <UserLocation>
+          <Layer type="circle" id="scout-me-halo" source="mlrn-user-location"
+            paint={{ "circle-radius": 14, "circle-color": C.ink, "circle-opacity": 0.14, "circle-pitch-alignment": "map" }} />
+          <Layer type="circle" id="scout-me-ring" source="mlrn-user-location"
+            paint={{ "circle-radius": 7, "circle-color": C.ink, "circle-pitch-alignment": "map" }} />
+          <Layer type="circle" id="scout-me-dot" source="mlrn-user-location"
+            paint={{ "circle-radius": 4, "circle-color": C.bg, "circle-pitch-alignment": "map" }} />
+        </UserLocation>
+      )}
       {children}
     </Map>
+    {!styled && <Animated.View pointerEvents="none" exiting={FadeOut.duration(250)} style={[StyleSheet.absoluteFill, { backgroundColor: C.bg }]} />}
+    <Text style={[s.credit, { top: insets.top + HEADER_GAP + HEADER_H + 6 }]} onPress={() => Linking.openURL("https://www.openstreetmap.org/copyright")}
+      accessibilityRole="link">© OpenStreetMap · OpenFreeMap</Text>
+    </View>
   );
 }
 
@@ -54,3 +80,9 @@ export function ScoutMarker({ coordinate, onPress, anchor, zIndex, children }: S
 
 // MapLibre takes named anchors; the app only uses "centered" and "pin above its label".
 const toAnchor = (a?: { x: number; y: number }) => (!a || a.y >= 0.5 ? "center" : "top");
+
+const s = StyleSheet.create({
+  // A dark backing so the credit never collides with a map label behind it ("LA CANADA FLINTRIDGE").
+  credit: { position: "absolute", right: 12, fontFamily: F.regular, fontSize: 10, color: C.ink3, paddingHorizontal: 6, paddingVertical: 2,
+    borderRadius: 4, overflow: "hidden", backgroundColor: "rgba(12,12,10,0.8)" },
+});

@@ -99,7 +99,9 @@ export type Database = {
           lat: number
           lng: number
           partner: boolean
+          photo_checked_at: string | null
           price: string | null
+          short: string | null
           source: string
           start: string | null
           title: string
@@ -119,7 +121,9 @@ export type Database = {
           lat: number
           lng: number
           partner?: boolean
+          photo_checked_at?: string | null
           price?: string | null
+          short?: string | null
           source?: string
           start?: string | null
           title: string
@@ -139,7 +143,9 @@ export type Database = {
           lat?: number
           lng?: number
           partner?: boolean
+          photo_checked_at?: string | null
           price?: string | null
+          short?: string | null
           source?: string
           start?: string | null
           title?: string
@@ -362,7 +368,9 @@ export type Database = {
           lat: number | null
           lng: number | null
           partner: boolean | null
+          photo_checked_at: string | null
           price: string | null
+          short: string | null
           source: string | null
           start: string | null
           title: string | null
@@ -382,7 +390,9 @@ export type Database = {
           lat?: number | null
           lng?: number | null
           partner?: boolean | null
+          photo_checked_at?: string | null
           price?: string | null
+          short?: string | null
           source?: string | null
           start?: string | null
           title?: string | null
@@ -402,7 +412,9 @@ export type Database = {
           lat?: number | null
           lng?: number | null
           partner?: boolean | null
+          photo_checked_at?: string | null
           price?: string | null
+          short?: string | null
           source?: string | null
           start?: string | null
           title?: string | null
@@ -464,7 +476,21 @@ export type Database = {
         Args: { p_code: string; p_device_id: string; p_name: string }
         Returns: undefined
       }
+      listing_short: { Args: { p_token: string }; Returns: string }
+      listing_stats: {
+        Args: { p_token: string }
+        Returns: {
+          crews: number
+          going: number
+          people: number
+          rides: number
+          shares: number
+          unlocks: number
+          views: number
+        }[]
+      }
       prune_events: { Args: never; Returns: number }
+      same_venue: { Args: { a: string; b: string }; Returns: boolean }
       scout_tick: { Args: never; Returns: undefined }
       set_crew_status: {
         Args: { p_code: string; p_device_id: string; p_status: string }
@@ -500,6 +526,10 @@ export type Database = {
         }
         Returns: string
       }
+      ungo: {
+        Args: { p_device_id: string; p_spot_id: string }
+        Returns: undefined
+      }
       update_listing: {
         Args: {
           p_address: string
@@ -512,6 +542,15 @@ export type Database = {
           p_url: string
         }
         Returns: undefined
+      }
+      venue_daily: {
+        Args: { p_city: string; p_days?: number; p_venue: string }
+        Returns: {
+          day: string
+          rides: number
+          unlocks: number
+          views: number
+        }[]
       }
       venue_movement: {
         Args: { p_city: string; p_days?: number; p_venue: string }
@@ -527,8 +566,11 @@ export type Database = {
           category: string
           deal: string
           partner: boolean
+          rides: number
           start: string
           title: string
+          venue: string
+          views: number
         }[]
       }
       venue_stats: {
@@ -537,6 +579,12 @@ export type Database = {
           kind: string
           people: number
           total: number
+        }[]
+      }
+      venue_suggest: {
+        Args: { p_city: string; p_venue: string }
+        Returns: {
+          venue: string
         }[]
       }
       withdraw_listing: { Args: { p_token: string }; Returns: undefined }

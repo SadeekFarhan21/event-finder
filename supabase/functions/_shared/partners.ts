@@ -25,6 +25,15 @@ const matchIndex = (venue: string) => {
 
 export const isPartner = (venue: string) => matchIndex(venue) >= 0;
 export const partnerAddress = (venue: string) => PARTNERS[matchIndex(venue)]?.address;
+// Yelo's own spelling of a partner's name: listings say "Nublu", "Nublu 151" or "NUBLU" for one room.
+// Only a bare street number is folded in; a location word ("Rocco's Tavern Westwood") is kept, since
+// some partners have several rooms.
+export const partnerName = (venue: string) => {
+  const i = matchIndex(venue);
+  if (i < 0) return undefined;
+  const extra = key(venue).slice(KEYS[i].length);
+  return extra === "" || /^\d+$/.test(extra) ? PARTNERS[i].name : undefined;
+};
 
 export const partnersIn = (city: string) => {
   const c = city.toLowerCase();

@@ -2,28 +2,33 @@ import type { ComponentProps } from "react";
 import type { Ionicons } from "@expo/vector-icons";
 import type { Category } from "./lib/types";
 
-// Five colors, on purpose: a warm neutral ramp, Yelo yellow (the one primary: main actions and
-// the selected spot), Yelo blue (deals only), and red (errors only). Neutrals lean slightly toward
-// the yellow instead of pure gray. Text tokens are checked for WCAG AA (4.5:1) on white and n50.
+// Night palette: Scout is used at night, on the way out. Monochrome warm near-blacks plus ONE
+// accent (Yelo yellow), the way a professional dark UI is built:
+//   d0..d4  surfaces from the page up (each step a little lighter, so depth reads without shadows)
+//   ink..ink3  text, from primary to metadata (all >= 4.5:1 on surface)
+//   accent  Yelo yellow, only for the main action, the selected spot and Yelo partners
+//   red     errors only
+// `ink` and `surface` are opposites, so "ink background + surface text" is an inverted chip
+// that stays legible; text on yellow uses `onAccent`.
 const neutral = {
-  n50: "#FBFAF6", n100: "#F4F2EA", n200: "#E8E5D9", n300: "#D5D1C3", n400: "#B4AFA0",
-  n500: "#8E897B", n600: "#6B665A", n700: "#4F4B42", n800: "#33302A", n900: "#1A1814",
+  d0: "#0C0C0A", d1: "#151513", d2: "#1D1C19", d3: "#282723", d4: "#3A3833",
 };
-
 export const color = {
   ...neutral,
-  bg: neutral.n50,
-  surface: "#FFFFFF",
-  fill: neutral.n100, // quiet buttons, image placeholders
-  hairline: neutral.n200, // dividers and borders
-  ink: neutral.n900, // 17.7:1
-  ink2: neutral.n700, // secondary text, 8.7:1
-  ink3: neutral.n600, // metadata, 5.7:1 (was #9A968C at 2.9:1, below AA)
-  placeholder: neutral.n500, // input placeholders and disabled only
-  yellow: "#FFE600",
-  blue: "#1F4FFF",
-  red: "#B42318",
-  scrim: "rgba(26,24,20,0.28)", // dims the map behind the spot sheet
+  bg: neutral.d0,
+  surface: neutral.d1, // cards, sheet, inputs
+  fill: neutral.d2, // quiet buttons, image placeholders
+  hairline: neutral.d3, // dividers and borders
+  strong: neutral.d4, // borders that must read (selected outlines)
+  ink: "#F2F0E9", // 16.9:1 on surface
+  ink2: "#C2BEB2", // secondary text, 10:1
+  ink3: "#8E8A7F", // metadata, 5.4:1
+  placeholder: "#6B675E", // input placeholders and disabled only
+  accent: "#FFE14A", // Yelo yellow, warmed slightly so it doesn't buzz on black
+  onAccent: "#14130F",
+  red: "#FF7A6B",
+  scrim: "rgba(0,0,0,0.55)", // dims the map behind the spot sheet
+  selection: "rgba(255,225,74,0.35)", // selected text in inputs (Android defaults to green)
 };
 
 // Instrument Serif is the display face on joinyelo.com; Inter does the rest.
@@ -47,8 +52,8 @@ export const text = { meta: 12, small: 14, body: 16, title: 28, display: 40 };
 // Only for things floating over the map (header, pills, carousel cards): short and crisp, not a
 // soft glow. Surfaces on the page background use a hairline border instead.
 export const shadow = {
-  shadowColor: neutral.n900,
-  shadowOpacity: 0.12,
+  shadowColor: "#000",
+  shadowOpacity: 0.45,
   shadowRadius: 6,
   shadowOffset: { width: 0, height: 2 },
   elevation: 3,

@@ -16,6 +16,6 @@ export function Toast({ text, visible }: { text: string; visible: boolean }) {
 }
 
 const s = StyleSheet.create({
-  toast: { position: "absolute", alignSelf: "center", backgroundColor: C.ink, paddingHorizontal: 16, paddingVertical: 8, borderRadius: R.pill },
-  text: { fontFamily: F.medium, fontSize: T.small, color: C.surface },
+  toast: { position: "absolute", alignSelf: "center", backgroundColor: C.d3, borderWidth: StyleSheet.hairlineWidth, borderColor: C.d4, paddingHorizontal: 16, paddingVertical: 8, borderRadius: R.pill },
+  text: { fontFamily: F.medium, fontSize: T.small, color: C.ink },
 });

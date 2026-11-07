@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Point the download site (site/index.html on main, deployed by Vercel) at the newest finished
-# Android preview APK. No-op if it already does. Works from any branch: it edits main in a
+# Android preview APK, and publish that APK as a GitHub release + releases/scout-latest.apk. No-op if it already does. Works from any branch: it edits main in a
 # temporary worktree, pushes, and merges main into refactor so the branches stay in sync.
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -11,6 +11,24 @@ read -r build_id apk_url <<<"$(npx -y eas-cli@latest build:list --platform andro
 [[ "$apk_url" == https://expo.dev/artifacts/eas/*.apk ]] || { echo "No finished APK found"; exit 1; }
 
 cd "$ROOT"
+
+# Keep a copy you can sideload: releases/ in the repo folder (git-ignored, APKs are >100 MB) and a
+# GitHub release with the APK attached. Skipped if this build already has its release.
+tag="apk-${build_id:0:8}"
+if ! gh release view "$tag" >/dev/null 2>&1; then
+  mkdir -p releases
+  file="releases/scout-${build_id:0:8}.apk"
+  [[ -s "$file" ]] || curl -sL -o "$file" "$apk_url"
+  if unzip -tq "$file" >/dev/null 2>&1; then
+    cp "$file" releases/scout-latest.apk
+    gh release create "$tag" "$file#Scout for Android ($tag)" --target refactor --title "Scout $tag" \
+      --notes "Android APK from EAS build $build_id. Later changes arrive as automatic updates when the app opens." >/dev/null \
+      && echo "GitHub release $tag published; local copy at releases/scout-latest.apk"
+  else
+    echo "Downloaded APK failed its zip check; not publishing a release." && rm -f "$file"
+  fi
+fi
+
 git fetch -q origin main
 if git show origin/main:site/index.html | grep -qF "$apk_url"; then
   echo "Download site already serves the newest APK (build ${build_id:0:8})."
@@ -25,7 +43,6 @@ import os, re, sys
 p = sys.argv[1]; s = open(p).read()
 s = re.sub(r"https://expo\.dev/artifacts/eas/[A-Za-z0-9_-]+\.apk", os.environ["APK_URL"], s)
 s = re.sub(r"(/projects/scout/builds/)[0-9a-f-]{36}", r"\g<1>" + os.environ["BUILD_ID"], s)
-s = re.sub(r"Build (\d+)", lambda m: f"Build {int(m.group(1)) + 1}", s, count=1)
 open(p, "w").write(s)
 PY
 git -C "$tmp" commit -qam "Download: newest APK (build ${build_id:0:8})"

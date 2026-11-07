@@ -4,6 +4,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getDeviceId } from "./activity";
 import { SITE } from "./social";
 import { supabase } from "./supabase";
+import { isOffline } from "../lib/net";
+import { clock, shortTitle, otherDayPrefix } from "../lib/time";
 import type { Spot } from "../lib/types";
 
 export type CrewStatus = "in" | "on_way" | "out";
@@ -35,7 +37,8 @@ const saveName = (name: string) => AsyncStorage.setItem(NAME_KEY, name.trim()).c
 // the network) gets a plain sentence instead of database text.
 const fail = (error: { message: string; code?: string } | null) => {
   if (!error) return;
-  throw new Error(error.code === "P0001" ? error.message : "Something went wrong. Try again in a moment.");
+  throw new Error(error.code === "P0001" ? error.message
+    : isOffline() ? "No connection. Try again when you're back online." : "Something went wrong. Try again in a moment.");
 };
 
 // The crew stores a copy of the spot, so it survives the scout re-merging or pruning listings.
@@ -78,14 +81,21 @@ export async function loadCrews(): Promise<Crew[]> {
 }
 
 export const crewInvite = (c: { venue: string; title: string; leaveAt: string; code: string }) =>
-  `Heading to ${c.title} at ${c.venue}, leaving ${leaveLabel(c.leaveAt).toLowerCase()}. Join the crew: ${crewLink(c.code)}`;
+  `Heading to ${c.venue}, leaving ${leavePhrase(c.leaveAt)} (${shortTitle(c.title)}). Join my crew:\n${crewLink(c.code)}`;
 
-export function leaveLabel(iso: string) {
+// When the crew leaves, for sentences: "now", "in 20 min", "at 9:30 PM", "Sat at 9:30 PM".
+export function leavePhrase(iso: string) {
   const d = new Date(iso);
   const mins = Math.round((d.getTime() - Date.now()) / 60000);
-  if (mins <= 0 && mins > -90) return "Now";
-  if (mins > 0 && mins < 60) return `In ${mins} min`;
-  const time = d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
-  const sameDay = new Date().toDateString() === d.toDateString();
-  return sameDay ? `At ${time}` : `${d.toLocaleDateString(undefined, { weekday: "short" })} ${time}`;
+  if (mins <= 0 && mins > -90) return "now";
+  if (mins > 0 && mins < 60) return `in ${mins} min`;
+  return `${otherDayPrefix(d)}at ${clock(d)}`;
 }
+
+// Same, as a label: "Leaving now", "Leaving at 9:30 PM", "Leaving Sat at 9:30 PM".
+export const leaveLabel = (iso: string) => {
+  const d = new Date(iso);
+  // Well past the leave time it's history, not a plan: "Left at 12:58 AM".
+  if (d.getTime() - Date.now() <= -90 * 60000) return `Left ${otherDayPrefix(d)}at ${clock(d)}`;
+  return `Leaving ${leavePhrase(iso)}`;
+};

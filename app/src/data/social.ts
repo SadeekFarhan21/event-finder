@@ -2,8 +2,9 @@
 // spot_activity (kind 'going', unique devices), and what this device said lives on the device.
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import type { Spot } from "../lib/types";
-import { whenLabel } from "../lib/time";
+import { shortTitle, whenPhrase } from "../lib/time";
 import { supabase } from "./supabase";
+import { getDeviceId } from "./activity";
 
 const MINE_KEY = "scout.going";
 import { config } from "../config";
@@ -21,11 +22,19 @@ export async function loadMine(): Promise<Set<string>> {
   return new Set(raw ? (JSON.parse(raw) as string[]) : []);
 }
 
+// Take back "I'm going" (only this device's tap; the server checks the device id).
+export async function ungo(spotId: string) {
+  if (!supabase) return;
+  const { error } = await supabase.rpc("ungo", { p_spot_id: spotId, p_device_id: await getDeviceId() });
+  if (error) throw new Error(error.message);
+}
+
 export const saveMine = (mine: Set<string>) =>
   AsyncStorage.setItem(MINE_KEY, JSON.stringify([...mine].slice(-200))).catch(() => {});
 
 // The link opens a web page for the night (works without the app), with a ride and download link.
-export const spotLink = (e: Spot) => `${SITE}/e.html?id=${encodeURIComponent(e.id)}`;
+// Short links (?s=3f9a1c2e) when the spot has a code; the long id link still works too.
+export const spotLink = (e: Spot) => (e.short ? `${SITE}/e.html?s=${e.short}` : `${SITE}/e.html?id=${encodeURIComponent(e.id)}`);
 
 export const inviteMessage = (e: Spot, going: boolean) =>
-  `${going ? "I'm going to" : "Want to go to"} ${e.title} at ${e.venue}, ${whenLabel(e).toLowerCase()}. Come with? ${spotLink(e)}`;
+  `${going ? "I'm going to" : "Come to"} ${e.venue} ${whenPhrase(e)}: ${shortTitle(e.title)}.\n${spotLink(e)}`;

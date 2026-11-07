@@ -50,6 +50,8 @@ night on a quiet weeknight, and fills the room with its riders.
   fingerprint with the newest APK: same -> `eas update` (over the air); different -> starts a new
   APK build (never two for one fingerprint). Every run then calls `scripts/sync-download-link.sh`,
   which points scout-download.vercel.app (site/index.html on main) at the newest finished APK.
+  It also downloads that APK to `releases/scout-latest.apk` (git-ignored: APKs exceed GitHub's
+  100 MB file limit) and attaches it to a GitHub release tagged `apk-<build id>`.
 - Don't poll scout-download.vercel.app in a loop (Vercel's bot protection blocks the machine).
 
 ## Security rules
