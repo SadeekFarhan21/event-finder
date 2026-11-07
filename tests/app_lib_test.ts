@@ -13,6 +13,7 @@ import { similar } from "../app/src/lib/case";
 import { goingLine, initials } from "../app/src/lib/friends";
 import { newSince } from "../app/src/lib/fresh";
 import { pitchEmail } from "../app/src/lib/pitch";
+import { calendarUrl } from "../app/src/lib/calendar";
 import { matchesQuery, parseQuery, priceOf, rankByVenue } from "../app/src/lib/search";
 
 const spot = (over: Partial<Spot>): Spot => ({
@@ -249,4 +250,13 @@ Deno.test("pitch email uses what Scout knows about the room", () => {
   expect(p.body).toContain("Mondays could be a good night to start");
   expect(p.body).toContain("3 times this week");
   expect(pitchEmail({ venue: "X", quietNight: null, capacity: null }, "Los Angeles, CA").body).not.toContain("Scout, our discovery app");
+});
+
+Deno.test("calendar link carries title, time and place; none without a start", () => {
+  const u = calendarUrl({ venue: "Nublu", title: "Late set", start: "2026-11-08T03:00:00Z", address: "151 Avenue C, New York, NY", url: "" })!;
+  const q = new URL(u).searchParams;
+  expect(q.get("text")).toBe("Late set at Nublu");
+  expect(q.get("dates")).toBe("20261108T030000Z/20261108T060000Z");
+  expect(q.get("location")).toBe("Nublu, 151 Avenue C, New York, NY");
+  expect(calendarUrl({ venue: "X", title: "y", start: null, address: "", url: "" })).toBe(null);
 });
