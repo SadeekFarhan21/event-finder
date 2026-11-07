@@ -195,6 +195,16 @@
   const norm = (t) => String(t || "").toLowerCase().replace(/[^a-z0-9$]/g, "");
   const repeats = (title, deal) => !!deal && !!norm(title) && norm(deal).includes(norm(title));
 
+  // Google Calendar's new-event link, as in the app: dated nights only, 3 hours long (listings rarely give an end).
+  function calLink(e) {
+    const t = e.start ? Date.parse(e.start) : NaN;
+    if (Number.isNaN(t) || e.category === "deal") return "";
+    const stamp = (x) => new Date(x).toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
+    const q = new URLSearchParams({ action: "TEMPLATE", text: `${e.title} at ${e.venue}`, dates: `${stamp(t)}/${stamp(t + 3 * 3600e3)}`,
+      location: `${e.venue}, ${e.address}`, details: "Found on Scout." });
+    return `https://calendar.google.com/calendar/render?${q}`;
+  }
+
   function band(e) {
     if (!e.start) return "";
     const d = new Date(e.start);
@@ -269,6 +279,7 @@
             ${isAndroid && !crew ? `<a class="btn primary" href="./">Get Scout to say you're going</a>` : ""}
             <a class="btn ${crew || isAndroid ? "quiet" : "primary"}" href="https://www.google.com/maps/dir/?api=1&destination=${dest}" target="_blank" rel="noopener">Directions</a>
             ${e.url && /^https?:\/\//.test(e.url) ? `<a class="link" href="${esc(e.url)}" target="_blank" rel="noopener">Event page</a>` : ""}
+            ${calLink(e) ? `<a class="link" href="${esc(calLink(e))}" target="_blank" rel="noopener">Add to calendar</a>` : ""}
             ${crew && isAndroid ? `<a class="link" href="${appLink(code)}">Open in the Scout app</a>` : ""}
           </div>
         </div>
