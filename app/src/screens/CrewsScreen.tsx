@@ -181,7 +181,7 @@ function CrewTile({ crew, photo, onStatus, onRide, onOpen }: {
         </View>
         <View style={{ flex: 1 }}>
           <Text style={s.peopleTitle}>{coming.length} coming</Text>
-          <Text style={s.peopleSub}>{onWay ? `${onWay} on the way` : "Nobody's left yet"}</Text>
+          <Text style={s.peopleSub}>{onWay && onWay === coming.length ? "Everyone's on the way" : onWay ? `${onWay} on the way` : "Nobody's left yet"}</Text>
         </View>
         <Tap style={s.round} accessibilityLabel="Invite to crew" onPress={() => Share.share({ message: crewInvite(crew) }).catch(() => {})}>
           <Feather name="user-plus" size={16} color={C.ink} />

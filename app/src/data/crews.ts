@@ -91,4 +91,9 @@ export function leavePhrase(iso: string) {
 }
 
 // Same, as a label: "Leaving now", "Leaving at 9:30 PM", "Leaving Sat at 9:30 PM".
-export const leaveLabel = (iso: string) => `Leaving ${leavePhrase(iso)}`;
+export const leaveLabel = (iso: string) => {
+  const d = new Date(iso);
+  // Well past the leave time it's history, not a plan: "Left at 12:58 AM".
+  if (d.getTime() - Date.now() <= -90 * 60000) return `Left ${otherDayPrefix(d)}at ${clock(d)}`;
+  return `Leaving ${leavePhrase(iso)}`;
+};
