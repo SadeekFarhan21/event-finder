@@ -31,7 +31,13 @@ export function CrewsScreen({ visible, crews, photos, linkCode, onJoin, onStatus
   const [error, setError] = useState<string | null>(null);
   const [joined, setJoined] = useState<string | null>(null); // venue of the crew just joined
   useEffect(() => { if (visible) savedName().then((n) => n && setName((cur) => cur || n)); }, [visible]);
-  useEffect(() => { if (linkCode && !crews.some((c) => c.code === linkCode)) setCode(linkCode); }, [linkCode, crews]);
+  // A crew link fills the join form, unless it's a crew you're already in. On a cold start your crews
+  // load after the link arrives, so clear the code again once it turns out to be one of yours.
+  useEffect(() => {
+    if (!linkCode) return;
+    const mine = crews.some((c) => c.code === linkCode);
+    setCode((cur) => (mine ? (cur === linkCode ? "" : cur) : cur || linkCode));
+  }, [linkCode, crews]);
 
   const live = crews.filter((c) => c.members.some((m) => m.me && m.status !== "out"));
   const ready = !!code.trim() && !!name.trim();
