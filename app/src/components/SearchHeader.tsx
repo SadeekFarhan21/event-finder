@@ -9,6 +9,7 @@ import { FILTERS, filterLabel, type Filter } from "../lib/filters";
 import { color as C, font as F, radius as R, shadow, text as T } from "../theme";
 import { HEADER_GAP, HEADER_H } from "../layout";
 import { Tap } from "./Tap";
+import { lastRun } from "../data/api";
 
 // Yelo's live markets (joinyelo.com/partner lists venues in both).
 const CITIES = ["New York, NY", "Los Angeles, CA"];
@@ -29,6 +30,9 @@ type Props = {
 // running the agent again. Filters sit under it: five, all visible.
 export function SearchHeader({ city, onCityChange, onSubmitCity, onScout, scouting, scoutable, filter, onFilter, onRooms }: Props) {
   const [open, setOpen] = useState(false);
+  // Shows the agent at work: when Scout last searched this city on its own.
+  const [last, setLast] = useState<{ ranAt: string; added: number } | null>(null);
+  useEffect(() => { if (open) lastRun(city).then(setLast); }, [open, city]);
   const insets = useSafeAreaInsets();
   const name = city.split(",")[0];
 
@@ -98,10 +102,18 @@ export function SearchHeader({ city, onCityChange, onSubmitCity, onScout, scouti
               <Text style={s.menuHint}>~2 min</Text>
             </Tap>
           )}
+          {last && <Text style={s.lastRun}>{agoLine(last)}</Text>}
         </Animated.View>
       )}
     </>
   );
+}
+
+// "Scout searched the web 4 min ago · 2 new"
+function agoLine({ ranAt, added }: { ranAt: string; added: number }) {
+  const mins = Math.max(0, Math.round((Date.now() - Date.parse(ranAt)) / 60000));
+  const ago = mins < 1 ? "just now" : mins < 60 ? `${mins} min ago` : `${Math.round(mins / 60)} h ago`;
+  return `Scout searched the web ${ago}${added ? ` · ${added} new` : ""}`;
 }
 
 const s = StyleSheet.create({
@@ -120,6 +132,7 @@ const s = StyleSheet.create({
   menuDivider: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: C.hairline },
   menuText: { fontFamily: F.display, fontSize: 24, lineHeight: 30, color: C.ink2, flex: 1 },
   menuAction: { fontFamily: F.medium, fontSize: T.small, color: C.ink3 },
+  lastRun: { fontFamily: F.regular, fontSize: T.meta, color: C.ink3, paddingHorizontal: 16, paddingTop: 4, paddingBottom: 10 },
   menuHint: { fontFamily: F.regular, fontSize: T.meta, color: C.ink3 },
   chips: { gap: 6, paddingHorizontal: 16, paddingTop: 12, paddingBottom: 8 },
   chip: { height: 32, paddingHorizontal: 12, justifyContent: "center", borderRadius: R.pill, backgroundColor: "rgba(21,21,19,0.75)",

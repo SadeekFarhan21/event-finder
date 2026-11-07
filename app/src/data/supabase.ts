@@ -48,3 +48,10 @@ export async function sbRun(task: "events" | "rooms", city: string) {
   }
   return { added: 0, ms: Date.now() - started, pending: true }; // still running server-side
 }
+
+// When the scout agent last searched this city on its own (pg_cron runs it every few minutes).
+export async function sbLastRun(city: string): Promise<{ ranAt: string; added: number } | null> {
+  const { data } = await supabase!.from("scout_runs").select("ran_at, added").eq("kind", "events")
+    .eq("city", cityKey(city)).is("error", null).order("ran_at", { ascending: false }).limit(1).maybeSingle();
+  return data ? { ranAt: data.ran_at, added: data.added ?? 0 } : null;
+}
