@@ -188,6 +188,10 @@
   }
 
   // No photo (most scraped listings): the start time set large on a tonal band, as in the app.
+  // A title that the deal already says ("Happy Hour" vs "Happy Hour everyday 3-7 PM") is dropped, as in the app.
+  const norm = (t) => String(t || "").toLowerCase().replace(/[^a-z0-9$]/g, "");
+  const repeats = (title, deal) => !!deal && !!norm(title) && norm(deal).includes(norm(title));
+
   function band(e) {
     if (!e.start) return "";
     const d = new Date(e.start);
@@ -248,7 +252,7 @@
         <div class="body">
           <p class="eyebrow">${e.partner ? "Yelo partner · " : ""}${esc(LABEL[e.category] ?? "")}</p>
           <h1>${esc(e.venue)}</h1>
-          <p class="title">${esc(e.title)}</p>
+          ${repeats(e.title, e.deal) ? "" : `<p class="title">${esc(e.title)}</p>`}
           ${e.description ? `<p class="desc">${esc(e.description)}</p>` : ""}
           ${crew ? crewHtml(crew) : ""}
           <dl>
