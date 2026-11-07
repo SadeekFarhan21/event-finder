@@ -4,8 +4,7 @@
 import { useEffect, useImperativeHandle, useRef, useState } from "react";
 import Animated, { FadeOut } from "react-native-reanimated";
 import { Linking, StyleSheet, Text, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { HEADER_GAP, HEADER_H } from "../layout";
+import { CARD_H, CAROUSEL_BOTTOM } from "../layout";
 import { color as C, font as F } from "../theme";
 import { Camera, Layer, Map, Marker, UserLocation, type CameraRef } from "@maplibre/maplibre-react-native";
 import type { Region, ScoutMapProps, ScoutMarkerProps } from "./types";
@@ -28,7 +27,6 @@ export function ScoutMap({ ref, initialRegion, showsUserLocation, onRegionChange
     flyTo: (point, zoom) => camera.current?.easeTo({ center: [point.longitude, point.latitude], zoom, duration: 500 }),
   }), []);
 
-  const insets = useSafeAreaInsets();
   // Until the dark style arrives MapLibre paints its default cream background, a bright flash at night.
   // Cover the map in the night colour until the style has loaded. The fallback is long (20 s): at 4 s it
   // lifted mid-load on slow connections and showed the cream map anyway. Load errors lift it at once.
@@ -64,7 +62,8 @@ export function ScoutMap({ ref, initialRegion, showsUserLocation, onRegionChange
       {children}
     </Map>
     {!styled && <Animated.View pointerEvents="none" exiting={FadeOut.duration(250)} style={[StyleSheet.absoluteFill, { backgroundColor: C.bg }]} />}
-    <Text style={[s.credit, { top: insets.top + HEADER_GAP + HEADER_H + 6 }]} onPress={() => Linking.openURL("https://www.openstreetmap.org/copyright")}
+    {/* Bottom right, level with the Crews pill: under the header it sat where the search suggestions open. */}
+    <Text style={[s.credit, { bottom: CAROUSEL_BOTTOM + CARD_H + 12 }]} onPress={() => Linking.openURL("https://www.openstreetmap.org/copyright")}
       accessibilityRole="link">© OpenStreetMap · OpenFreeMap</Text>
     </View>
   );
