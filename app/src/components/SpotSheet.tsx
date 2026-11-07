@@ -21,7 +21,6 @@ import { HeadingOutSheet } from "./HeadingOutSheet";
 import { isRecurring, whenLabel } from "../lib/time";
 import { calendarUrl } from "../lib/calendar";
 import { calmCaps, similar } from "../lib/case";
-import { goingLine, initials } from "../lib/friends";
 import type { Spot } from "../lib/types";
 import { CATEGORY, color as C, font as F, radius as R, shadow, text as T } from "../theme";
 import { Tap } from "./Tap";
@@ -102,17 +101,11 @@ export function SpotSheet({ spot, city, me, unlocked, canAskLocation, locationRe
   const backdropStyle = useAnimatedStyle(() => ({ opacity: interpolate(y.value, [0, 400], [1, 0], "clamp") }));
 
   const insets = useSafeAreaInsets();
-  // Friends by name when your crew is heading here, as on the map cards ("Maya and you · 2 more").
-  const crewOthers = crew?.members.filter((m) => !m.me && m.status !== "out").map((m) => m.name) ?? [];
-  const crewLine = crewOthers.length
-    ? goingLine(going, { others: crewOthers, me: isGoing || !!crew?.members.some((m) => m.me && m.status !== "out") })
-    : null;
   const scroll = useRef<React.ComponentRef<typeof ScrollView>>(null); // hooks stay above the early return
   if (!shown) return null;
   const e = shown;
   const fare = me ? estimateFare(me, { lat: e.lat, lng: e.lng }) : null;
   const addr = splitAddress(e.address);
-  const people = crew?.members.filter((m) => m.status !== "out") ?? [];
   const meInCrew = crew?.members.find((m) => m.me);
   const ride = () => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); track(e, "ride", city); openRide(e); };
   const share = async () => {
@@ -190,19 +183,11 @@ export function SpotSheet({ spot, city, me, unlocked, canAskLocation, locationRe
 
             <View style={s.rule} />
 
-            {/* Who's going, and getting your people there */}
+            {/* Who's going, and getting your people there (your crew's names and status are in the crew box below) */}
             <View style={s.row}>
-              {people.length ? (
-                <View style={s.faces}>
-                  {people.slice(0, 3).map((m, i) => (
-                    <View key={i} style={[s.face, { marginLeft: i ? -8 : 0, zIndex: 3 - i }, m.status === "on_way" && s.faceOnWay]}>
-                      <Text style={[s.faceText, m.status === "on_way" && { color: C.bg }]}>{m.me ? "You" : initials(m.name)}</Text>
-                    </View>
-                  ))}
-                </View>
-              ) : null}
               <Text style={[s.rowText, !going && { color: C.ink2, fontFamily: F.medium }]} numberOfLines={1}>
-                {crewLine ?? (isGoing && going <= 1 ? "You're going" : going ? `${going} going${isGoing ? ", including you" : ""}` : "No one going yet")}
+                {/* The total only: your crew's names are in the crew box right below. */}
+                {(isGoing && going <= 1 ? "You're going" : going ? `${going} going${isGoing ? ", including you" : ""}` : "No one going yet")}
               </Text>
               <Tap style={[s.pill, isGoing && s.pillOn]} disabled={isGoing && !onUnGo} accessibilityState={{ selected: isGoing }}
                 accessibilityHint={isGoing && onUnGo ? "Tap to take it back" : undefined}
@@ -415,11 +400,6 @@ const s = StyleSheet.create({
   moreTitle: { flex: 1, fontFamily: F.regular, fontSize: T.small, color: C.ink2 },
   rowText: { flex: 1, fontFamily: F.semibold, fontSize: T.small, color: C.ink },
   rowSub: { fontFamily: F.regular, fontSize: T.meta, color: C.ink3, marginTop: 2 },
-  faces: { flexDirection: "row" },
-  face: { width: 30, height: 30, borderRadius: 15, alignItems: "center", justifyContent: "center",
-    backgroundColor: C.d3, borderWidth: 2, borderColor: C.bg },
-  faceOnWay: { backgroundColor: C.ink },
-  faceText: { fontFamily: F.semibold, fontSize: T.meta, color: C.ink },
   pill: { flexDirection: "row", alignItems: "center", gap: 4, height: 36, paddingHorizontal: 16, borderRadius: R.pill,
     borderWidth: 1, borderColor: C.d4 },
   pillOn: { borderColor: C.d4, backgroundColor: C.surface },
