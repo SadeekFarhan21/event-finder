@@ -105,6 +105,11 @@
   .note { margin: 16px 0 0; font-size: 16px; color: var(--ink-2); max-width: 65ch; }
   footer { margin-top: 64px; padding-top: 16px; border-top: 1px solid var(--line); font-size: 14px; color: var(--ink-3);
     display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 24px; }
+  .venue-cta { display: flex; align-items: center; justify-content: space-between; gap: 16px 32px; flex-wrap: wrap; padding: 24px; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); }
+  .venue-cta h2 { margin-top: 0; }
+  .venue-cta .note { margin: 8px 0 0; max-width: 46ch; }
+  .btn.venue-btn { background: transparent; color: var(--ink); border: 1px solid var(--ink); }
+  .btn.venue-btn:hover { background: var(--fill); }
   .num { font-variant-numeric: tabular-nums; }
 
   @media (max-width: 860px) {
@@ -190,8 +195,13 @@
   </section>
 
   <section>
-    <h2>Run a venue?</h2>
-    <p class="note">See how riders engage with your spot and list your nights and deals on <a href="venues.html">Scout for Venues</a>.</p>
+    <div class="venue-cta">
+      <div>
+        <h2>Run a venue?</h2>
+        <p class="note">List your nights and deals, see how many riders open your spot and tap Ride, and get a link to share each night.</p>
+      </div>
+      <a class="btn venue-btn" href="venues.html">Scout for Venues</a>
+    </div>
   </section>
 
   <footer>
