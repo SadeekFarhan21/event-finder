@@ -17,3 +17,17 @@ export function goingLine(total: number, crew?: CrewPeople): string | null {
 
 // A friend's initials for face circles: first letter of each word, at most two ("Maya" M, "Maya Lin" ML).
 export const initials = (name: string) => name.trim().split(/\s+/).map((w) => w[0] ?? "").join("").slice(0, 2).toUpperCase();
+
+// The crew you're in that leaves soonest within the next 45 minutes, if you haven't set off yet:
+// the Crews pill names it ("Nublu in 18 min") so nobody has to open Crews to remember.
+type SoonCrew = { venue: string; leaveAt: string; members: { me: boolean; status: string }[] };
+export function leavingSoon<T extends SoonCrew>(crews: T[], now: number, within = 45): { crew: T; mins: number } | null {
+  let best: { crew: T; mins: number } | null = null;
+  for (const c of crews) {
+    if (!c.members.some((m) => m.me && m.status === "in")) continue; // on the way or out: nothing to remind
+    const mins = Math.ceil((Date.parse(c.leaveAt) - now) / 60000);
+    if (mins < 0 || mins > within) continue;
+    if (!best || mins < best.mins) best = { crew: c, mins };
+  }
+  return best;
+}

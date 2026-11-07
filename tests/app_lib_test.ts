@@ -10,7 +10,7 @@ import { clusterEvents, coreOf } from "../app/src/lib/cluster";
 import { estimateFare, km } from "../app/src/lib/fare";
 import { canonicalCity, cityKey } from "../app/src/lib/cities";
 import { similar } from "../app/src/lib/case";
-import { goingLine, initials } from "../app/src/lib/friends";
+import { goingLine, initials, leavingSoon } from "../app/src/lib/friends";
 import { newSince } from "../app/src/lib/fresh";
 import { pitchEmail } from "../app/src/lib/pitch";
 import { calendarUrl } from "../app/src/lib/calendar";
@@ -281,4 +281,15 @@ Deno.test("search understands tonight, tomorrow and the weekend", () => {
     expect(matchesQuery(nextFri, q("this weekend"), Date.parse("2026-11-10T18:00:00Z"))).toBe(true); // from Tuesday it is
     expect(matchesQuery(hh, q("tomorrow"), now)).toBe(true); // standing deals fit any day
   } finally { setCityZone(null); }
+});
+
+Deno.test("leavingSoon: soonest crew you haven't left for, within 45 min", () => {
+  const now = Date.parse("2026-11-07T23:00:00Z");
+  const at = (m: number) => new Date(now + m * 60000).toISOString();
+  const crew = (venue: string, m: number, status = "in") => ({ venue, leaveAt: at(m), members: [{ me: true, status }, { me: false, status: "in" }] });
+  expect(leavingSoon([crew("Nublu", 30), crew("Elsewhere", 18)], now)).toEqual({ crew: crew("Elsewhere", 18), mins: 18 });
+  expect(leavingSoon([crew("Nublu", 18, "on_way")], now)).toBeNull(); // already on the way
+  expect(leavingSoon([crew("Nublu", 60)], now)).toBeNull(); // too far off
+  expect(leavingSoon([crew("Nublu", -5)], now)).toBeNull(); // leave time passed
+  expect(leavingSoon([{ venue: "X", leaveAt: at(10), members: [{ me: false, status: "in" }] }], now)).toBeNull(); // not your crew
 });
