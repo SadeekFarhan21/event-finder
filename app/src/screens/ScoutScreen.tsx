@@ -139,7 +139,9 @@ export function ScoutScreen() {
   }, [detail, spots]);
   const savedHere = useMemo(() => spots.filter((e) => saved.has(e.id)).length, [spots, saved]);
   // The Saved chip disappears with the last saved spot (or in a city with none); don't leave it selected.
-  useEffect(() => { if ((filter === "saved" && !savedHere) || (filter === "near" && !me)) setFilter("tonight"); }, [filter, savedHere, me]);
+  // Near me only means something in the city the rider is in (browsing LA from New York, nothing is near).
+  const inCity = useMemo(() => !!me && spots.some((e) => dist(e) <= 25), [me, spots, dist]);
+  useEffect(() => { if ((filter === "saved" && !savedHere) || (filter === "near" && !inCity)) setFilter("tonight"); }, [filter, savedHere, inCity]);
   // The active pin never folds into a cluster. Partners do (a lone partner pin used to sit on top of
   // neighbouring bubbles); a bubble holding one gets the partner's ink ring instead.
   const clusters = useMemo(() => {
@@ -311,7 +313,7 @@ export function ScoutScreen() {
 
       <SearchHeader city={cityInput} onCityChange={setCityInput} onSubmitCity={open}
         onScout={runScout} scouting={scouting} scoutable={scoutable} filter={filter} onFilter={pickFilter}
-        onRooms={() => { Haptics.selectionAsync(); setRoomsOpen(true); }} query={query} onQuery={setQuery} savedCount={savedHere} canNear={!!me} />
+        onRooms={() => { Haptics.selectionAsync(); setRoomsOpen(true); }} query={query} onQuery={setQuery} savedCount={savedHere} canNear={inCity} />
 
       <OfflineBanner top={insets.top} />
       <FirstRunHint top={insets.top} city={cityInput} dismissed={!!detail || !!active} />
