@@ -79,6 +79,9 @@ export function ScoutScreen() {
   const sharedShown = useRef(false); // its "A friend's plan" toast and framing happened
   const sharedLookedUp = useRef(false); // its stops weren't on this map, and we asked which city they're in
   const switchingForShared = useRef(false); // set while the map moves to a friend's plan's city
+  // A spot a friend sent (scout://spot/<short>, from the spot page's Open in Scout): opens its sheet.
+  const [sharedSpot, setSharedSpot] = useState<string | null>(null);
+  const spotLookedUp = useRef(false);
   useEffect(() => { sharedPending.current = !!sharedPlan; }, [sharedPlan]);
 
   // A crew link opened on a phone with Scout (scout://crew/<code>) lands on Crews, code filled in.
@@ -88,6 +91,8 @@ export function ScoutScreen() {
       if (m) { setLinkCode(m[1].toLowerCase()); setCrewsOpen(true); }
       const p = url && /^scout:\/\/plan\/([a-f0-9]{8}(?:,[a-f0-9]{8}){1,3})/i.exec(url);
       if (p) { sharedShown.current = false; sharedLookedUp.current = false; setSharedPlan(p[1].toLowerCase().split(",")); } // the filter follows below
+      const sp = url && /^scout:\/\/spot\/([a-f0-9]{8})\b/i.exec(url);
+      if (sp) { spotLookedUp.current = false; setSharedSpot(sp[1].toLowerCase()); }
     };
     Linking.getInitialURL().then(handle).catch(() => {});
     const sub = Linking.addEventListener("url", (e) => handle(e.url));
@@ -333,6 +338,26 @@ export function ScoutScreen() {
       if (i >= 0) carousel.current?.scrollTo(i);
     }
   }, [shown]);
+
+  // Open a friend's spot once it's on the map; if it's another city's, switch there first; if it's gone,
+  // say so.
+  useEffect(() => {
+    if (!sharedSpot || loading) return;
+    const spot = spots.find((e) => e.short === sharedSpot);
+    if (spot) {
+      setSharedSpot(null);
+      if (!shown.some((x) => x.id === spot.id)) setFilter("all"); // a spot on another night: widen to the week so its pin shows
+      focus(spot, true);
+      setTimeout(() => setDetail(spot), 350);
+    } else if (spots.length && !spotLookedUp.current) {
+      spotLookedUp.current = true;
+      cityOfShorts([sharedSpot]).then((c) => {
+        const city = c ? canonicalCity(c) : null;
+        if (city && city !== mapCity) { switchingForShared.current = true; open(city); }
+        else { show("That spot has passed. It isn't on the map anymore."); setSharedSpot(null); }
+      });
+    }
+  }, [sharedSpot, spots, loading, focus, mapCity, open, show, shown]);
 
   // Several nights at one venue share a coordinate, so zooming never splits them apart.
   // If a cluster is really one place, select its first spot. The selected spot leaves the cluster,
