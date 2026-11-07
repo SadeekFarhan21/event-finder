@@ -110,8 +110,10 @@
   const cityName = (c) => String(c ?? "").split(",")[0].replace(/\b\w/g, (m) => m.toUpperCase());
   const sent = (t) => new Date(t).toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
 
+  const zoneFor = (city) => /los angeles/i.test(city || "") ? "America/Los_Angeles" : /new york/i.test(city || "") ? "America/New_York" : undefined;
+
   function item(s) {
-    const when = s.start ? new Date(s.start).toLocaleString(undefined, { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "Standing deal";
+    const when = s.start ? new Date(s.start).toLocaleString(undefined, { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZone: zoneFor(s.city) }) : "Standing deal";
     return `<article class="item" data-id="${s.id}">
       <p class="meta">${esc(cityName(s.city))} · ${esc(LABEL[s.category] ?? s.category)} · sent ${esc(sent(s.updated_at))}</p>
       <p class="venue">${esc(s.venue)}</p><p class="title">${esc(s.title)}</p>
