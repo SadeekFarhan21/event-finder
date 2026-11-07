@@ -238,7 +238,7 @@
           ${crew || !going ? "" : `<p class="going"><b>${going} ${going === 1 ? "person" : "people"}</b> on Scout ${going === 1 ? "is" : "are"} going.</p>`}
           <div class="actions">
             ${isAndroid && !crew ? `<a class="btn primary" href="./">Get Scout to say you're going</a>` : ""}
-            <a class="btn ${isAndroid && !crew ? "quiet" : "primary"}" href="https://www.google.com/maps/dir/?api=1&destination=${dest}" target="_blank" rel="noopener">Directions</a>
+            <a class="btn ${crew || isAndroid ? "quiet" : "primary"}" href="https://www.google.com/maps/dir/?api=1&destination=${dest}" target="_blank" rel="noopener">Directions</a>
             ${e.url && /^https?:\/\//.test(e.url) ? `<a class="link" href="${esc(e.url)}" target="_blank" rel="noopener">Event page</a>` : ""}
             ${crew && isAndroid ? `<a class="link" href="${appLink(code)}">Open in the Scout app</a>` : ""}
           </div>
