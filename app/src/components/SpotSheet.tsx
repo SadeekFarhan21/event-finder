@@ -19,7 +19,7 @@ import { inviteMessage } from "../data/social";
 import { crewInvite, leaveLabel, type Crew, type CrewStatus } from "../data/crews";
 import { HeadingOutSheet } from "./HeadingOutSheet";
 import { whenLabel } from "../lib/time";
-import { calmCaps } from "../lib/case";
+import { calmCaps, similar } from "../lib/case";
 import type { Spot } from "../lib/types";
 import { CATEGORY, color as C, font as F, radius as R, shadow, text as T } from "../theme";
 import { Tap } from "./Tap";
@@ -108,7 +108,7 @@ export function SpotSheet({ spot, city, me, unlocked, canAskLocation, onAskLocat
   };
   const unlock = () => { Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); track(e, "unlock", city); onUnlock(e); };
   // Each fact stays whole when the line wraps ("3 mi away" never splits).
-  const facts = [whenLabel(e), e.price, fare && `${fare.miles < 0.95 ? fare.miles.toFixed(1) : Math.round(fare.miles)} mi away`].filter(Boolean) as string[];
+  const facts = [whenLabel(e), e.price && !similar(e.price, e.title) ? e.price : null, fare && `${fare.miles < 0.95 ? fare.miles.toFixed(1) : Math.round(fare.miles)} mi away`].filter(Boolean) as string[];
   const eyebrow = [(e.category === "deal" ? "Deal" : CATEGORY[e.category].label), addr.area].filter(Boolean).join("  ·  ");
   const source = e.source === "venue" ? "Listed by the venue" : e.confidence === "low" ? "Unconfirmed listing, check before you go" : "Found on the web";
 

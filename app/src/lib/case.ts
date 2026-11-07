@@ -18,3 +18,13 @@ export function calmCaps(title: string) {
     return lower.replace(/[a-z]/, (c) => c.toUpperCase());
   }).join("");
 }
+
+// Scraped fields often repeat each other ("$4 Yuengling Drafts & Shots" as both title and price).
+const norm = (t: string) => t.toLowerCase().replace(/[^a-z0-9$]/g, "");
+export const similar = (a: string, b: string) => {
+  const x = norm(a), y = norm(b);
+  if (!x || !y) return false;
+  let i = 0;
+  while (i < x.length && x[i] === y[i]) i++;
+  return x.includes(y) || y.includes(x) || i >= 12;
+};

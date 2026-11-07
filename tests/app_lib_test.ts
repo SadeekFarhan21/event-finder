@@ -9,6 +9,7 @@ import { matches, sortSpots } from "../app/src/lib/filters";
 import { clusterEvents, coreOf } from "../app/src/lib/cluster";
 import { estimateFare, km } from "../app/src/lib/fare";
 import { canonicalCity, cityKey } from "../app/src/lib/cities";
+import { similar } from "../app/src/lib/case";
 
 const spot = (over: Partial<Spot>): Spot => ({
   id: "s", city: "new york, ny", title: "Jazz", venue: "Nublu", address: "151 Avenue C", start: null, category: "music",
@@ -103,4 +104,9 @@ Deno.test("fresh: New means first found in the last 24 hours", async () => {
   expect(isNew(spot({ discovered_at: "2026-11-06T10:00:00Z" }), now)).toBe(true);
   expect(isNew(spot({ discovered_at: "2026-11-05T20:00:00Z" }), now)).toBe(false);
   expect(isNew(spot({}), now)).toBe(false);
+});
+
+Deno.test("similar catches a price that repeats the title", () => {
+  expect(similar("$4 Yuengling Drafts & Shots", "$4 Yuengling Drafts & Shots all night")).toBe(true);
+  expect(similar("$20", "Jazz at Nublu")).toBe(false);
 });

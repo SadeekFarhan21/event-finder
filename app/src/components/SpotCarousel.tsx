@@ -10,7 +10,7 @@ import Animated, {
   type SharedValue,
 } from "react-native-reanimated";
 import { clock, isRecurring, whenLabel } from "../lib/time";
-import { calmCaps } from "../lib/case";
+import { calmCaps, similar } from "../lib/case";
 import type { Spot } from "../lib/types";
 import { CARD_GAP, CARD_INSET, CARD_STEP, CARD_W, CAROUSEL_BOTTOM, MEDIA_H } from "../layout";
 import { CATEGORY, color as C, font as F, radius as R, shadow, text as T } from "../theme";
@@ -57,14 +57,15 @@ export function SpotCarousel({ ref, spots, fresh, going, activeId, onSettle, onP
 
 // "10 PM" / "Tonight"; standing deals read "Happy hour" / "Every night".
 const bigTime = (e: Spot) => (isRecurring(e) || !e.start ? (/happy hour/i.test(`${e.title} ${e.deal ?? ""}`) ? "Happy hour" : "Any night") : clock(new Date(e.start)));
-const bigDay = (e: Spot) => (isRecurring(e) || !e.start ? "This week" : whenLabel(e).split(" · ")[0]);
+const bigDay = (e: Spot) => (isRecurring(e) || !e.start ? "Standing deal" : whenLabel(e).split(" · ")[0]);
 
 // One line under the venue, with nothing said twice: category (unless the Deal tag says it),
 // then the title (unless it's just "Happy hour" again), then the price.
 function cardLine(e: Spot) {
   const title = calmCaps(e.title);
   const sameAsWhen = title.toLowerCase() === whenLabel(e).toLowerCase();
-  return [e.category === "deal" ? null : CATEGORY[e.category].label, sameAsWhen ? null : title, e.price]
+  const price = e.price && !similar(e.price, title) ? e.price : null;
+  return [e.category === "deal" ? null : CATEGORY[e.category].label, sameAsWhen ? null : title, price]
     .filter(Boolean).join("  ·  ") || (e.deal ?? "");
 }
 
