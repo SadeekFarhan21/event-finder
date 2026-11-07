@@ -182,7 +182,8 @@
            <button class="btn primary" type="submit">Join the crew</button></div><p class="msg" id="msg" role="status"></p></form>`
       : `<div class="statusrow">
            <button class="btn ${me.status === "on_way" ? "quiet" : "primary"}" data-status="on_way">${me.status === "on_way" ? "You're on the way" : "I'm on my way"}</button>
-           <button class="btn quiet" data-status="${me.status === "out" ? "in" : "out"}">${me.status === "out" ? "I'm back in" : "Can't make it"}</button></div>`;
+           <button class="btn quiet" data-status="${me.status === "out" ? "in" : "out"}">${me.status === "out" ? "I'm back in" : "Can't make it"}</button></div>
+         <p class="msg" id="statusmsg" role="status"></p>`;
     return `<section class="crew" aria-label="Crew"><p class="crewhead"><b>${Date.parse(c.leave_at) - Date.now() <= -90 * 60000 ? "Left" : "Leaving"} ${esc(leaveLabel(c.leave_at))}</b> · ${coming} coming</p>
       <div class="members">${chips}</div>${action}</section>`;
   }
@@ -284,7 +285,13 @@
     });
     document.querySelectorAll("[data-status]").forEach((b) => b.addEventListener("click", async () => {
       const status = b.dataset.status;
-      await db.rpc("set_crew_status", { p_code: code, p_device_id: deviceId(), p_status: status });
+      b.disabled = true;
+      const { error } = await db.rpc("set_crew_status", { p_code: code, p_device_id: deviceId(), p_status: status });
+      if (error) { // offline or failed: say so and leave the card as it was
+        b.disabled = false;
+        document.getElementById("statusmsg").textContent = "Couldn't reach Scout. Your crew didn't get that, try again.";
+        return;
+      }
       if (status === "on_way") window.open(`https://www.google.com/maps/dir/?api=1&destination=${dest}`, "_blank", "noopener");
       render();
     }));
@@ -292,7 +299,7 @@
 
   render().catch(() => gone("offline"));
   // Friends join and head out while the page is open: keep the crew current.
-  if (new URLSearchParams(location.search).get("crew")) setInterval(() => { if (!document.querySelector("#nm:focus")) render().catch(() => {}); }, 20000);
+  if (new URLSearchParams(location.search).get("crew")) setInterval(() => { if (navigator.onLine && !document.querySelector("#nm:focus")) render().catch(() => {}); }, 20000); // offline: keep what loaded
 </script>
 </body>
 </html>
