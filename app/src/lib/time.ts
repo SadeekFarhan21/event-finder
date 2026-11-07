@@ -43,8 +43,37 @@ const todayWord = (d: Date) => { const h = +parts(d.getTime()).hour; return h >=
 // The same word for right now, in the city on the map: the first filter chip reads Today until 5 PM.
 export const nowWord = () => todayWord(new Date());
 
+// A standing deal's daily hours from its own text ("Happy Hour 3-7pm", "4 to 6:30 PM"), as minutes
+// after midnight. Never guessed: no stated hours, no status.
+export function dealHours(text: string): { from: number; to: number } | null {
+  const m = text.match(/\b(\d{1,2})(?::(\d\d))?\s*(am|pm)?\s*(?:-|–|to)\s*(\d{1,2})(?::(\d\d))?\s*(am|pm)\b/i);
+  if (!m) return null;
+  const toMin = (h: string, mm: string | undefined, ap: string) => ((+h % 12) + (/pm/i.test(ap) ? 12 : 0)) * 60 + (+(mm ?? 0));
+  const to = toMin(m[4], m[5], m[6]);
+  // "3-7pm": the start shares the end's am/pm unless that would put it after the end ("11-2am").
+  let from = toMin(m[1], m[2], m[3] ?? m[6]);
+  if (!m[3] && from > to) from = toMin(m[1], m[2], /pm/i.test(m[6]) ? "am" : "pm");
+  return { from, to };
+}
+
+// "On until 7 PM" while a happy hour is running, "From 3 PM" before it starts, null after or unknown.
+export function dealStatus(e: Pick<WhenFields, "title" | "deal">, now = Date.now()): string | null {
+  const h = dealHours(`${e.deal ?? ""} ${e.title}`);
+  if (!h) return null;
+  const p = parts(now), mins = +p.hour * 60 + +p.minute;
+  const on = h.to > h.from ? mins >= h.from && mins < h.to : mins >= h.from || mins < h.to; // "11-2am" crosses midnight
+  if (on) return `On until ${sayUTC(h.to)}`;
+  if (mins < h.from) return `From ${sayUTC(h.from)}`;
+  return null;
+  function sayUTC(m: number) { const hh = Math.floor(m / 60) % 24, mm = m % 60; return `${hh % 12 || 12}${mm ? `:${String(mm).padStart(2, "0")}` : ""} ${hh < 12 ? "AM" : "PM"}`; }
+}
+
 export function whenLabel(e: WhenFields) {
-  if (isRecurring(e)) return /happy hour/i.test(`${e.title} ${e.deal ?? ""}`) ? "Happy hour" : "Recurring deal";
+  if (isRecurring(e)) {
+    const base = /happy hour/i.test(`${e.title} ${e.deal ?? ""}`) ? "Happy hour" : "Recurring deal";
+    const st = dealStatus(e);
+    return st ? `${base} · ${st.replace(/^On /, "").replace(/^From/, "from")}` : base; // "Happy hour · until 7 PM" / "· From 3 PM"
+  }
   if (!e.start) return "Ongoing";
   const d = new Date(e.start);
   const days = nightDay(d.getTime()) - nightDay(Date.now());

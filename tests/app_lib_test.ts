@@ -4,7 +4,7 @@
 import { expect } from "jsr:@std/expect@1";
 import { FakeTime } from "jsr:@std/testing@1/time";
 import type { Spot } from "../app/src/lib/types";
-import { clock, isRecurring, nightEnd, otherDayPrefix, setCityZone, whenLabel } from "../app/src/lib/time";
+import { clock, dealHours, dealStatus, isRecurring, nightEnd, otherDayPrefix, setCityZone, whenLabel } from "../app/src/lib/time";
 import { matches, sortSpots } from "../app/src/lib/filters";
 import { clusterEvents, coreOf } from "../app/src/lib/cluster";
 import { estimateFare, km } from "../app/src/lib/fare";
@@ -207,4 +207,19 @@ Deno.test("daytime starts read Today, evening ones Tonight", () => {
     expect(whenLabel(at("2026-11-08T00:00:00Z"))).toBe("Tonight · 7:00 PM");
     expect(whenLabel(at("2026-11-08T06:00:00Z"))).toBe("Tonight · 1:00 AM"); // after midnight, same night
   } finally { setCityZone(null); t.restore(); }
+});
+
+Deno.test("happy hour status comes from the listing's own hours", () => {
+  expect(dealHours("Happy Hour 3-7pm: $5 beers")).toEqual({ from: 900, to: 1140 });
+  expect(dealHours("Daily 4 to 6:30 PM")).toEqual({ from: 960, to: 1110 });
+  expect(dealHours("Late night 11-2am")).toEqual({ from: 1380, to: 120 });
+  expect(dealHours("Half off all drinks")).toBe(null);
+  const hh = { title: "Happy hour", deal: "Happy Hour 3-7pm" };
+  setCityZone("New York, NY");
+  try {
+    expect(dealStatus(hh, Date.parse("2026-11-07T17:00:00Z"))).toBe("From 3 PM");      // noon
+    expect(dealStatus(hh, Date.parse("2026-11-07T22:30:00Z"))).toBe("On until 7 PM");  // 5:30 PM
+    expect(dealStatus(hh, Date.parse("2026-11-08T01:00:00Z"))).toBe(null);             // 8 PM
+    expect(dealStatus({ title: "Late", deal: "11-2am" }, Date.parse("2026-11-08T06:00:00Z"))).toBe("On until 2 AM"); // 1 AM
+  } finally { setCityZone(null); }
 });
