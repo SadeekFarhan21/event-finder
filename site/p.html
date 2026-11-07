@@ -110,6 +110,9 @@
   };
   const hop = (d) => (d < 0.5 ? "a short walk" : `${(d * 0.621).toFixed(1)} mi`);
 
+  // Android: open the plan in Scout if it's installed (scout://plan/<codes>), otherwise the download page.
+  const appLink = (stops) => `intent://plan/${stops.map((e) => e.short).join(",")}#Intent;scheme=scout;package=com.farhan.scout;S.browser_fallback_url=${encodeURIComponent(location.origin + "/")};end`;
+
   function gone(kind) {
     const copy = {
       expired: ["This plan has passed.", "The spots in it are over. See what's on tonight in the app."],
@@ -166,7 +169,7 @@
       <ol class="route">${rows}</ol>
       <div class="actions">
         <a class="btn primary" href="https://www.google.com/maps/dir/?${dir}" target="_blank" rel="noopener">Directions for the whole night</a>
-        ${isAndroid ? `<a class="btn quiet" href="./">Get Scout for the ride there</a>` : ""}
+        ${isAndroid ? `<a class="btn quiet" href="${esc(appLink(stops))}">Open in Scout</a>` : ""}
       </div>
       <p class="note">Scout finds what's on tonight in New York and Los Angeles and shows the ride there. An independent prototype, not an official Yelo app.</p>`;
   }
