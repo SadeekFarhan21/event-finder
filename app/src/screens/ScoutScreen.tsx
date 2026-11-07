@@ -24,7 +24,7 @@ import { useMyLocation } from "../hooks/useMyLocation";
 import { useGoing } from "../hooks/useGoing";
 import { useCrews } from "../hooks/useCrews";
 import { openRide } from "../lib/ride";
-import { newIds } from "../lib/fresh";
+import { newIds, newSince } from "../lib/fresh";
 import { isOffline, onNetworkChange } from "../lib/net";
 import { friendlyError } from "../lib/report";
 import { track } from "../data/activity";
@@ -197,9 +197,15 @@ export function ScoutScreen() {
       const found = newIds(list);
       setFresh(found);
       const lead = tonight >= 3 ? `${tonight} things on ${nowWord().toLowerCase()}` : `${list.length} spots this week`;
-      // Count new only within what the toast names ("158 tonight · 280 new" read as nonsense).
-      const fresh = tonight >= 3 ? list.filter((e) => found.has(e.id) && matches(e, "tonight")).length : found.size;
-      if (list.length) show(fresh ? `${lead}  ·  ${fresh} new` : lead);
+      // Coming back: count what's new since the last visit to this city (over an hour ago), else the
+      // last 24 hours. Only within what the toast names ("158 tonight · 280 new" read as nonsense).
+      const seenKey = `scout.seen.${city.toLowerCase()}`;
+      const last = Number(await AsyncStorage.getItem(seenKey).catch(() => null)) || 0;
+      AsyncStorage.setItem(seenKey, String(Date.now())).catch(() => {});
+      const returning = last > 0 && Date.now() - last > 3600e3;
+      const pool = returning ? newSince(list, last) : list.filter((e) => found.has(e.id));
+      const fresh = tonight >= 3 ? pool.filter((e) => matches(e, "tonight")).length : pool.length;
+      if (list.length) show(fresh ? `${lead}  ·  ${fresh} new${returning ? " since you last looked" : ""}` : lead);
       if (city !== mapCity) settle(1800);
       setTimeout(() => fit(list), 300);
     } catch (err) {
