@@ -4,7 +4,7 @@
 import { expect } from "jsr:@std/expect@1";
 import { FakeTime } from "jsr:@std/testing@1/time";
 import type { Spot } from "../app/src/lib/types";
-import { clock, dealHours, dealStatus, isRecurring, nightEnd, otherDayPrefix, setCityZone, whenLabel } from "../app/src/lib/time";
+import { clock, shortTitle, dealHours, dealStatus, isRecurring, nightEnd, otherDayPrefix, setCityZone, whenLabel } from "../app/src/lib/time";
 import { matches, sortSpots } from "../app/src/lib/filters";
 import { clusterEvents, coreOf } from "../app/src/lib/cluster";
 import { estimateFare, km } from "../app/src/lib/fare";
@@ -332,4 +332,9 @@ Deno.test("planNight: happy hour now, a show close by later, then somewhere late
     expect(m2[3]).toMatch(/^2\. Nublu · 8 PM, Nublu Presents Jazz Night$/);
   } finally { t.restore(); }
   setCityZone(null);
+});
+
+Deno.test("shortTitle never ends on a joiner", () => {
+  expect(shortTitle("Reggaeton on Houston – Latin & Caribbean Nights", 40)).toBe("Reggaeton on Houston – Latin…");
+  expect(shortTitle("Short title")).toBe("Short title");
 });

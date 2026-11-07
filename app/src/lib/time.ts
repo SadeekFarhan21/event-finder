@@ -115,6 +115,7 @@ export function whenPhrase(e: WhenFields) {
 // "Producer Mondays with Ray Angry & The Council of…": long scraped titles, cut at a word.
 export function shortTitle(title: string, max = 48) {
   if (title.length <= max) return title;
-  const cut = title.slice(0, max).replace(/\s+\S*$/, "");
+  // Cut at a word, and never end on a joiner: "Latin &…" or "Night –…" reads broken.
+  const cut = title.slice(0, max).replace(/\s+\S*$/, "").replace(/[\s&+–—\-,:;·/|]+$/, "");
   return `${cut}…`;
 }
