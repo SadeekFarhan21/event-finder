@@ -109,6 +109,14 @@
   const isAndroid = /android/i.test(navigator.userAgent);
   const SERVED = ["new york, ny", "los angeles, ca"];
 
+  // Times read in the spot's city, not the visitor's: an LA show is "7 PM" even opened in New York.
+  let ZONE;
+  const zoneFor = (city) => /los angeles/i.test(city || "") ? "America/Los_Angeles" : /new york/i.test(city || "") ? "America/New_York" : undefined;
+  const fmtT = (d, o) => d.toLocaleTimeString(undefined, { ...o, timeZone: ZONE });
+  const fmtD = (d, o) => d.toLocaleDateString(undefined, { ...o, timeZone: ZONE });
+  const ymd = (t) => new Date(t).toLocaleDateString("en-CA", { timeZone: ZONE }); // YYYY-MM-DD in the city
+  const nightKey = (t) => Date.parse(ymd(t - 6 * 3600e3)) / 864e5; // a night runs until 6am
+
   // Same rule as the app: a night runs until 6am, so a 1am set still reads "Tonight".
   function when(e) {
     const text = `${e.title} ${e.deal ?? ""} ${e.description ?? ""}`;
@@ -120,10 +128,9 @@
     }
     if (!e.start) return "Ongoing";
     const d = new Date(e.start);
-    const night = (t) => { const x = new Date(t); x.setHours(x.getHours() - 6, 0, 0, 0); x.setHours(0, 0, 0, 0); return x; };
-    const days = Math.round((night(d) - night(Date.now())) / 864e5);
-    const day = days === 0 ? "Tonight" : days === 1 ? "Tomorrow" : d.toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" });
-    return `${day} · ${d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}`;
+    const days = Math.round(nightKey(d.getTime()) - nightKey(Date.now()));
+    const day = days === 0 ? "Tonight" : days === 1 ? "Tomorrow" : fmtD(d, { weekday: "long", month: "short", day: "numeric" });
+    return `${day} · ${fmtT(d, { hour: "numeric", minute: "2-digit" })}`;
   }
 
   // Three different situations, three different messages: an expired night, a link that
@@ -158,8 +165,8 @@
     const d = new Date(iso), mins = Math.round((d - Date.now()) / 60000);
     if (mins <= 0 && mins > -90) return "now";
     if (mins > 0 && mins < 60) return `in ${mins} min`;
-    const t = d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
-    return new Date().toDateString() === d.toDateString() ? `at ${t}` : `${d.toLocaleDateString(undefined, { weekday: "long" })} at ${t}`;
+    const t = fmtT(d, { hour: "numeric", minute: "2-digit" });
+    return ymd(Date.now()) === ymd(d.getTime()) ? `at ${t}` : `${fmtD(d, { weekday: "long" })} at ${t}`;
   }
 
   function crewHtml(c) {
@@ -180,10 +187,9 @@
   // No photo (most scraped listings): the start time set large on a tonal band, as in the app.
   function band(e) {
     if (!e.start) return "";
-    const d = new Date(e.start), now = new Date();
-    const time = d.toLocaleTimeString(undefined, { hour: "numeric", minute: d.getMinutes() ? "2-digit" : undefined });
-    const night = (x) => new Date(x.getTime() - 6 * 3600e3).toDateString(); // a night runs until 6am
-    const day = night(d) === night(now) ? "Tonight" : d.toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" });
+    const d = new Date(e.start);
+    const time = fmtT(d, { hour: "numeric", minute: "2-digit" }).replace(":00", "");
+    const day = nightKey(d.getTime()) === nightKey(Date.now()) ? "Tonight" : fmtD(d, { weekday: "long", month: "short", day: "numeric" });
     return `<div class="band" aria-hidden="true"><b>${esc(time)}</b><span>${esc(day)}</span></div>`;
   }
 
@@ -228,6 +234,7 @@
     if (loadErr && !crew) return gone("offline");
     if (!e) return gone("expired");
     if (live && !SERVED.includes(live.city)) return gone("expired"); // Scout covers NYC and LA
+    ZONE = zoneFor(live?.city); // before any time is formatted
     const going = Number(g?.[0]?.going ?? 0);
     const dest = encodeURIComponent(`${e.venue}, ${e.address}`);
     document.title = crew ? `Crew to ${e.venue} · Scout` : `${e.venue} · ${when(e)} · Scout`;
