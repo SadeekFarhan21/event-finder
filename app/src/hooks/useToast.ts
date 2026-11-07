@@ -5,10 +5,10 @@ export function useToast() {
   const [toast, setToast] = useState<{ text: string; visible: boolean }>({ text: "", visible: false });
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
 
-  const show = useCallback((text: string, sticky = false) => {
+  const show = useCallback((text: string, sticky = false, ms = 2400) => {
     clearTimeout(timer.current);
     setToast({ text, visible: true });
-    if (!sticky) timer.current = setTimeout(() => setToast((t) => ({ ...t, visible: false })), 2400);
+    if (!sticky) timer.current = setTimeout(() => setToast((t) => ({ ...t, visible: false })), ms);
   }, []);
 
   useEffect(() => () => clearTimeout(timer.current), []);

@@ -31,11 +31,9 @@ export const nightEnd = (now = Date.now()) => {
   return wall - offset(wall);
 };
 
-// "Sat " when d falls on another day than today in the city, "" when it's today.
-export const otherDayPrefix = (d: Date) => {
-  const a = parts(d.getTime()), b = parts(Date.now());
-  return a.year === b.year && a.month === b.month && a.day === b.day ? "" : `${fmt(d, { weekday: "short" })} `;
-};
+// "Sat " when d falls on another night than tonight (a night runs until 6am), "" when it's tonight:
+// leaving at 12:58 AM on a Friday night out reads "at 12:58 AM", not "Sat at 12:58 AM".
+export const otherDayPrefix = (d: Date) => (nightDay(d.getTime()) === nightDay(Date.now()) ? "" : `${fmt(d, { weekday: "short" })} `);
 
 const fmt = (d: Date, o: Intl.DateTimeFormatOptions) => (o.hour ? d.toLocaleTimeString : d.toLocaleDateString).call(d, undefined, { ...o, timeZone: ZONE });
 

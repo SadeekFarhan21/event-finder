@@ -4,7 +4,7 @@
 import { expect } from "jsr:@std/expect@1";
 import { FakeTime } from "jsr:@std/testing@1/time";
 import type { Spot } from "../app/src/lib/types";
-import { clock, isRecurring, nightEnd, setCityZone, whenLabel } from "../app/src/lib/time";
+import { clock, isRecurring, nightEnd, otherDayPrefix, setCityZone, whenLabel } from "../app/src/lib/time";
 import { matches, sortSpots } from "../app/src/lib/filters";
 import { clusterEvents, coreOf } from "../app/src/lib/cluster";
 import { estimateFare, km } from "../app/src/lib/fare";
@@ -123,5 +123,14 @@ Deno.test("times read in the city on the map, whatever the phone's zone", () => 
     setCityZone("New York, NY");
     expect(clock(new Date("2026-11-07T03:00:00Z"))).toBe("10 PM");
     expect(new Date(nightEnd()).toISOString()).toBe("2026-11-07T11:00:00.000Z");
+  } finally { setCityZone(null); t.restore(); }
+});
+
+Deno.test("leaving after midnight on the same night out has no day prefix", () => {
+  const t = new FakeTime(new Date("2026-11-07T04:58:00Z")); // Fri 11:58 PM in New York
+  try {
+    setCityZone("New York, NY");
+    expect(otherDayPrefix(new Date("2026-11-07T05:58:00Z"))).toBe(""); // Sat 12:58 AM: still Friday night
+    expect(otherDayPrefix(new Date("2026-11-08T01:00:00Z"))).toBe("Sat "); // Sat 8 PM: the next night
   } finally { setCityZone(null); t.restore(); }
 });
