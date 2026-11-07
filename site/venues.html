@@ -102,7 +102,8 @@
   .stats.n3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .spot-title { min-width: 0; }
   @media (max-width: 560px) { ul.spots li { flex-direction: column; gap: 4px; } ul.spots small { white-space: normal; } }
-  #preview { margin-top: 24px; max-width: 380px; }
+  #preview { margin-top: 24px; max-width: 720px; }
+  #preview .pcard { max-width: 380px; }
   .preview-label { margin: 0 0 8px; font-size: 14px; color: var(--ink-3); }
   .pcard { border: 1px solid var(--line); border-radius: 16px; overflow: hidden; background: var(--surface); }
   .pband { padding: 16px; background: linear-gradient(135deg, #282723, #151513); }
@@ -349,6 +350,16 @@
       <div class="pcard"><div class="pband"><b>${esc(time)}</b><span>${esc(day)}</span></div>
         <div class="pbody"><p class="pvenue">${esc(l.venue)}</p><p class="ptitle">${esc(l.title)}</p>
         ${l.deal ? `<p class="pdeal">Deal: ${esc(l.deal)}</p>` : ""}<span class="pride">Ride</span></div></div>`;
+    // Once it's on the map: how riders engaged with this one night, from the Scout app.
+    if (l.live) {
+      const { data: st } = await db.rpc("listing_stats", { p_token: token });
+      const n = st?.[0] ?? {};
+      const tiles = [[n.views, "Views"], [n.people, "People reached"], [n.going, "Said they're going"], [n.rides, "Ride taps"],
+        [n.unlocks, "Deals unlocked"], [n.crews, "Crews heading here"]].map(([v, label]) => [Number(v ?? 0), label]).filter(([v]) => v > 0);
+      $("preview").insertAdjacentHTML("beforeend", `<p class="preview-label" style="margin-top:24px">This night so far</p>
+        ${tiles.length ? `<div class="stats n${tiles.length}">${tiles.map(([v, label]) => `<div class="stat"><b>${v.toLocaleString()}</b><span>${label}</span></div>`).join("")}</div>`
+          : `<p class="zeros">No rider activity yet. Views, ride taps and crews show up here as riders find your night.</p>`}`);
+    }
     for (const [k, v] of Object.entries({ city: l.city.replace(/\b\w/g, (c) => c.toUpperCase()).replace(/, (\w+)$/, (m, st) => `, ${st.toUpperCase()}`),
       venue: l.venue, address: l.address, title: l.title, category: l.category, deal: l.deal, description: l.description,
       url: l.url, contact_email: "on file" })) {
