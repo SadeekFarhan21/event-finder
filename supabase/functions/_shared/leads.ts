@@ -139,7 +139,7 @@ export async function findLeads(city: string, { exa, log = () => {} }: Pick<Agen
     out.push(tidyLead({
       id: `${city}-${key}`.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
       venue,
-      area: r.area ?? "",
+      area: (r.area ?? "").replace(/\s*\([^)]*\)/g, "").trim(), // "Manhattan (Hart Bar location)" -> "Manhattan"
       address: r.address,
       kind: r.kind ?? "",
       capacity: r.capacity || null,
