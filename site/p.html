@@ -43,6 +43,7 @@
   .time { text-align: right; padding-top: 2px; }
   .time b { display: block; font: 400 28px/1 var(--display); color: var(--ink); }
   .time b.word { font-size: 22px; line-height: 1.05; }
+  .time b.hm { font-size: 22px; white-space: nowrap; } /* "7:30 PM" stays on one line in the time column */
   .time span { display: block; font-size: 13px; color: var(--ink-3); margin-top: 4px; }
   .rail { position: relative; display: flex; justify-content: center; }
   .rail::before { content: ""; position: absolute; top: 0; bottom: 0; width: 1px; background: var(--line); }
@@ -172,7 +173,7 @@
       // A deal's first clause is the offer ("50% off every drink Mon–Fri 2–7pm"); the rest is on Details.
       const bill = calm(deal ? String(e.deal || e.title).split(/;\s*/)[0] : e.title);
       return `<li class="stop">
-        <div class="time"><b${deal ? ' class="word"' : ""}>${esc(time)}</b>${sub ? `<span>${esc(sub)}</span>` : ""}</div>
+        <div class="time"><b${deal ? ' class="word"' : /:/.test(time) ? ' class="hm"' : ""}>${esc(time)}</b>${sub ? `<span>${esc(sub)}</span>` : ""}</div>
         <div class="rail" aria-hidden="true"><span class="dot"></span></div>
         <div class="what">
           <p class="step">${esc(step)}${away ? ` · ${esc(away)} from the last stop` : ""}</p>
