@@ -19,7 +19,10 @@ export function planNight(spots: Spot[], now = Date.now(), me?: { lat: number; l
   const usable = (e: Spot) => e.confidence !== "low";
 
   const stops: Stop[] = [];
-  let at: { lat: number; lng: number } | null = me ?? null;
+  // Start from the rider only when they're in this city: browsing LA from New York, every stop is
+  // thousands of km from "here" and nothing would ever fit.
+  const here = me && spots.some((e) => km(me, e) <= 25) ? me : null;
+  let at: { lat: number; lng: number } | null = here;
   let free = now; // when the rider is free to start the next stop
 
   // Open with a happy hour that's on right now, nearest first (partners win ties).
