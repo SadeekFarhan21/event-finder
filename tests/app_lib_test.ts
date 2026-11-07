@@ -324,6 +324,9 @@ Deno.test("planNight: happy hour now, a show close by later, then somewhere late
     const msg = planMessage(plan, (e) => `https://x/${e.id}`);
     expect(msg.split("\n")).toEqual(["Tonight's plan:", "1. Bar A · happy hour, until 7 PM", "https://x/hh",
       "2. Club B · 8 PM", "https://x/show", "3. Room D · 11 PM", "https://x/late"]);
+    // With a whole-plan link: stops without links, the one link last.
+    expect(planMessage(plan, (e) => `https://x/${e.id}`, "https://x/p").split("\n")).toEqual(["Tonight's plan:",
+      "1. Bar A · happy hour, until 7 PM", "2. Club B · 8 PM", "3. Room D · 11 PM", "https://x/p"]);
     // Shouting titles calmed, a billing that names the venue kept, a deal without hours says what it is.
     const loud = spot("loud", "Nublu", "music", at(20), 40.724, { title: "NUBLU PRESENTS JAZZ NIGHT" });
     const deal = spot("deal", "Bar H", "deal", null, 40.72, { title: "Bar H Specials", deal: "$5 drafts all night" });

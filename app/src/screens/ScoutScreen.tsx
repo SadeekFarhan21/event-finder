@@ -29,7 +29,7 @@ import { newIds, newSince } from "../lib/fresh";
 import { isOffline, onNetworkChange } from "../lib/net";
 import { friendlyError } from "../lib/report";
 import { track } from "../data/activity";
-import { spotLink } from "../data/social";
+import { planLink, spotLink } from "../data/social";
 import { useToast } from "../hooks/useToast";
 import { SearchHeader } from "../components/SearchHeader";
 import { SpotPins } from "../components/SpotPins";
@@ -334,7 +334,7 @@ export function ScoutScreen() {
             )}
             {filter === "plan" && plan.length > 0 && (
               <Tap hitSlop={4} style={s.rooms} accessibilityLabel="Share this plan with friends"
-                onPress={() => { Haptics.selectionAsync(); Share.share({ message: planMessage(plan, spotLink) }).catch(() => {}); }}>
+                onPress={() => { Haptics.selectionAsync(); Share.share({ message: planMessage(plan, spotLink, planLink(plan.map((p) => p.spot))) }).catch(() => {}); }}>
                 <Feather name="share" size={15} color={C.ink} />
                 <Text style={s.roomsText}>Share plan</Text>
               </Tap>

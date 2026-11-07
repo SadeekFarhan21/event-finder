@@ -56,7 +56,9 @@ export function planNight(spots: Spot[], now = Date.now(), me?: { lat: number; l
 
 // The plan as a text to friends: each stop with its time and its link, in order.
 // "Tonight's plan:\n1. 11th Street Bar · happy hour, until 7 PM\nhttps://…\n2. Nublu · 8 PM, Mike Monford…"
-export function planMessage(stops: Stop[], link: (e: Spot) => string): string {
+// With a whole-plan link the stops read as a short list and the one link goes last; otherwise
+// each stop carries its own link.
+export function planMessage(stops: Stop[], link: (e: Spot) => string, whole?: string | null): string {
   const same = (a: string, b: string) => a.toLowerCase().replace(/[^a-z0-9]/g, "") === b.toLowerCase().replace(/[^a-z0-9]/g, "");
   // The billing in calm caps, unless it's just the venue's name again ("Nublu · 8 PM", not "…, Nublu").
   const bill = (e: Spot) => { const t = calmCaps(e.title).trim(); return !t || same(t, e.venue) ? null : shortTitle(t, 40); };
@@ -69,5 +71,7 @@ export function planMessage(stops: Stop[], link: (e: Spot) => string): string {
     }
     return [clock(new Date(e.start)), bill(e)].filter(Boolean).join(", ");
   };
-  return ["Tonight's plan:", ...stops.map((s, i) => `${i + 1}. ${[s.spot.venue, when(s.spot)].filter(Boolean).join(" · ")}\n${link(s.spot)}`)].join("\n");
+  const line = (s: Stop, i: number) => `${i + 1}. ${[s.spot.venue, when(s.spot)].filter(Boolean).join(" · ")}`;
+  if (whole) return ["Tonight's plan:", ...stops.map(line), whole].join("\n");
+  return ["Tonight's plan:", ...stops.map((s, i) => `${line(s, i)}\n${link(s.spot)}`)].join("\n");
 }
