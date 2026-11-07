@@ -442,3 +442,11 @@ Deno.test("planFromShorts: a friend's plan, in their order", () => {
     expect(planFromShorts([hh, set], ["aaaa1111", "zzzz9999"], now)).toEqual([]); // one stop left isn't a plan
   } finally { setCityZone(null); }
 });
+
+Deno.test("parseQuery: 'near me' is a place to filter by, not words", () => {
+  expect(parseQuery("jazz near me")).toEqual({ words: ["jazz"], maxPrice: null, when: null, near: true });
+  expect(parseQuery("free drinks nearby tonight").near).toBe(true);
+  expect(parseQuery("free drinks nearby tonight").words).toEqual(["free", "drinks"]);
+  expect(parseQuery("Close By").near).toBe(true);
+  expect(parseQuery("nearly famous").near).toBe(false); // a band name isn't "near me"
+});

@@ -139,12 +139,16 @@ export function ScoutScreen() {
     [filter, shared, planFrom, skipped, minute, me]);
   const steps = useMemo(() => Object.fromEntries(plan.map((p) => [p.spot.id, p])), [plan]);
   const route = useMemo(() => (plan.length > 1 ? plan.map((p) => ({ latitude: p.spot.lat, longitude: p.spot.lng })) : undefined), [plan]);
+  // Near me only means something in the city the rider is in (browsing LA from New York, nothing is near).
+  const inCity = useMemo(() => !!me && spots.some((e) => dist(e) <= 25), [me, spots, dist]);
   const shown = useMemo(() => {
     if (filter === "plan") return plan.map((p) => p.spot);
+    // The Near me chip, or "near me" typed in a search (only when the rider is in this city).
+    const near = filter === "near" || (!!parsed.near && inCity);
     const list = spots.filter((e) => matches(e, filter) && matchesQuery(e, parsed)
-      && (filter !== "saved" || saved.has(e.id)) && (filter !== "near" || dist(e) <= 3.2));
-    return filter === "near" ? [...list].sort((a, b) => dist(a) - dist(b)) : rankByVenue(sortSpots(list), parsed);
-  }, [spots, filter, parsed, saved, dist, plan]);
+      && (filter !== "saved" || saved.has(e.id)) && (!near || dist(e) <= 3.2));
+    return near ? [...list].sort((a, b) => dist(a) - dist(b)) : rankByVenue(sortSpots(list), parsed);
+  }, [spots, filter, parsed, saved, dist, plan, inCity]);
   // Saved spots in this city (the chip count); the shortlist only shows what's still on the map.
   // The open spot's venue: its other dated nights after this one (all of them if this is a standing deal).
   const moreNights = useMemo(() => {
@@ -155,8 +159,6 @@ export function ScoutScreen() {
   }, [detail, spots]);
   const savedHere = useMemo(() => spots.filter((e) => saved.has(e.id)).length, [spots, saved]);
   // The Saved chip disappears with the last saved spot (or in a city with none); don't leave it selected.
-  // Near me only means something in the city the rider is in (browsing LA from New York, nothing is near).
-  const inCity = useMemo(() => !!me && spots.some((e) => dist(e) <= 25), [me, spots, dist]);
   useEffect(() => { if ((filter === "saved" && !savedHere) || (filter === "near" && !inCity)) setFilter("tonight"); }, [filter, savedHere, inCity]);
   // The active pin never folds into a cluster. Partners do (a lone partner pin used to sit on top of
   // neighbouring bubbles); a bubble holding one gets the partner's ink ring instead.
