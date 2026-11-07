@@ -275,7 +275,7 @@ export function SpotSheet({ spot, city, me, unlocked, canAskLocation, locationRe
                 <Feather name="clock" size={18} color={C.ink2} />
                 <View style={{ flex: 1 }}>
                   <Text style={s.rowText} numberOfLines={1}>Ride price</Text>
-                  <Text style={s.rowSub} numberOfLines={1}>{locationRefused ? "Location is off · Yelo shows it when you book" : "Uses your location once"}</Text>
+                  <Text style={s.rowSub} numberOfLines={1}>{locationRefused ? "Location is off for Scout" : "Uses your location once"}</Text>
                 </View>
                 <Tap onPress={onAskLocation} style={s.smallPill} hitSlop={8} accessibilityLabel="Use my location to see the ride price">
                   <Text style={s.smallPillText}>{locationRefused ? "Try again" : "Show price"}</Text>
