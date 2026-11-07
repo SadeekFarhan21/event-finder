@@ -40,6 +40,7 @@ type Props = {
   onStartCrew: (spot: Spot, leaveAt: Date, name: string) => Promise<string>;
   onCrewStatus: (code: string, s: CrewStatus) => Promise<boolean>;
   isSaved?: boolean; onToggleSave?: (id: string) => void;
+  moreNights?: Spot[]; onOpenSpot?: (spot: Spot) => void; // the venue's other upcoming nights
 };
 
 // "151 Avenue C, East Village, New York, NY 10009" -> street "151 Avenue C", rest, area "East Village".
@@ -51,7 +52,7 @@ function splitAddress(address: string) {
 
 
 export function SpotSheet({ spot, city, me, unlocked, canAskLocation, locationRefused, onAskLocation, onUnlock, onClose, going, isGoing, onGo, onUnGo,
-  crew, canCrew, onStartCrew, onCrewStatus, isSaved, onToggleSave }: Props) {
+  crew, canCrew, onStartCrew, onCrewStatus, isSaved, onToggleSave, moreNights, onOpenSpot }: Props) {
   const y = useSharedValue(OFFSCREEN);
   const [shown, setShown] = useState<Spot | null>(null); // stays mounted while sliding out
   const [composing, setComposing] = useState(false); // the "Go with friends" sheet is open
@@ -302,6 +303,20 @@ export function SpotSheet({ spot, city, me, unlocked, canAskLocation, locationRe
               </Animated.View>
             )}
 
+            {/* The venue's other upcoming nights, one tap away (Nublu, Gold-Diggers run several a week). */}
+            {!!moreNights?.length && (
+              <View style={s.more}>
+                <Text style={s.moreLabel}>More nights at {e.venue}</Text>
+                {moreNights.slice(0, 3).map((n) => (
+                  <Tap key={n.id} pressedScale={0.99} style={s.moreRow} onPress={() => onOpenSpot?.(n)} accessibilityLabel={`${whenLabel(n)}, ${n.title}`}>
+                    <Text style={s.moreWhen} numberOfLines={1}>{whenLabel(n)}</Text>
+                    <Text style={s.moreTitle} numberOfLines={1}>{calmCaps(n.title)}</Text>
+                    <Feather name="chevron-right" size={16} color={C.ink3} />
+                  </Tap>
+                ))}
+              </View>
+            )}
+
             <Text style={s.source}>{source}</Text>
           </View>
         </ScrollView>
@@ -382,6 +397,11 @@ const s = StyleSheet.create({
   desc: { fontFamily: F.regular, fontSize: T.small, lineHeight: 21, color: C.ink3, marginTop: 6 },
   rule: { height: StyleSheet.hairlineWidth, backgroundColor: C.hairline, marginVertical: 20 },
   row: { flexDirection: "row", alignItems: "center", gap: 12 },
+  more: { marginTop: 24, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: C.hairline, paddingTop: 16 },
+  moreLabel: { fontFamily: F.medium, fontSize: T.small, color: C.ink3, marginBottom: 4 },
+  moreRow: { flexDirection: "row", alignItems: "center", gap: 12, minHeight: 48 },
+  moreWhen: { width: 132, fontFamily: F.semibold, fontSize: T.small, color: C.ink },
+  moreTitle: { flex: 1, fontFamily: F.regular, fontSize: T.small, color: C.ink2 },
   rowText: { flex: 1, fontFamily: F.semibold, fontSize: T.small, color: C.ink },
   rowSub: { fontFamily: F.regular, fontSize: T.meta, color: C.ink3, marginTop: 2 },
   faces: { flexDirection: "row" },
