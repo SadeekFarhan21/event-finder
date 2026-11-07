@@ -6,14 +6,14 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
 import { Feather } from "@expo/vector-icons";
 import { savedName } from "../data/crews";
-import { clock, isRecurring, whenLabel } from "../lib/time";
+import { clock, isRecurring, whenLabel, otherDayPrefix } from "../lib/time";
 import type { Spot } from "../lib/types";
 import { color as C, font as F, radius as R, text as T } from "../theme";
 import { Tap } from "./Tap";
 
 type Option = { title: string; detail: string; at: Date };
 
-const day = (d: Date) => (new Date().toDateString() === d.toDateString() ? "" : `${d.toLocaleDateString(undefined, { weekday: "short" })} `);
+const day = otherDayPrefix;
 
 // Choices that fit this spot: for a night that's days away, times relative to doors; for tonight,
 // soon; for something already on (or a standing deal), now-ish.

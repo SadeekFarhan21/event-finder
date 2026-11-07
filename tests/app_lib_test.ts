@@ -4,7 +4,7 @@
 import { expect } from "jsr:@std/expect@1";
 import { FakeTime } from "jsr:@std/testing@1/time";
 import type { Spot } from "../app/src/lib/types";
-import { isRecurring, nightEnd, whenLabel } from "../app/src/lib/time";
+import { clock, isRecurring, nightEnd, setCityZone, whenLabel } from "../app/src/lib/time";
 import { matches, sortSpots } from "../app/src/lib/filters";
 import { clusterEvents, coreOf } from "../app/src/lib/cluster";
 import { estimateFare, km } from "../app/src/lib/fare";
@@ -109,4 +109,19 @@ Deno.test("fresh: New means first found in the last 24 hours", async () => {
 Deno.test("similar catches a price that repeats the title", () => {
   expect(similar("$4 Yuengling Drafts & Shots", "$4 Yuengling Drafts & Shots all night")).toBe(true);
   expect(similar("$20", "Jazz at Nublu")).toBe(false);
+});
+
+Deno.test("times read in the city on the map, whatever the phone's zone", () => {
+  const t = new FakeTime(new Date("2026-11-07T01:00:00Z")); // 8 PM in New York, 5 PM in LA
+  try {
+    const show = { start: "2026-11-07T03:00:00Z", category: "music", title: "Set", deal: null } as never;
+    setCityZone("Los Angeles, CA");
+    expect(clock(new Date("2026-11-07T03:00:00Z"))).toBe("7 PM");
+    expect(whenLabel(show)).toBe("Tonight · 7:00 PM");
+    // The LA night ends at 6am LA time (14:00 UTC), not 6am New York time.
+    expect(new Date(nightEnd()).toISOString()).toBe("2026-11-07T14:00:00.000Z");
+    setCityZone("New York, NY");
+    expect(clock(new Date("2026-11-07T03:00:00Z"))).toBe("10 PM");
+    expect(new Date(nightEnd()).toISOString()).toBe("2026-11-07T11:00:00.000Z");
+  } finally { setCityZone(null); t.restore(); }
 });

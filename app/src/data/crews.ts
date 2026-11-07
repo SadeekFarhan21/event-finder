@@ -4,7 +4,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getDeviceId } from "./activity";
 import { SITE } from "./social";
 import { supabase } from "./supabase";
-import { clock, shortTitle } from "../lib/time";
+import { clock, shortTitle, otherDayPrefix } from "../lib/time";
 import type { Spot } from "../lib/types";
 
 export type CrewStatus = "in" | "on_way" | "out";
@@ -87,8 +87,7 @@ export function leavePhrase(iso: string) {
   const mins = Math.round((d.getTime() - Date.now()) / 60000);
   if (mins <= 0 && mins > -90) return "now";
   if (mins > 0 && mins < 60) return `in ${mins} min`;
-  const sameDay = new Date().toDateString() === d.toDateString();
-  return `${sameDay ? "" : `${d.toLocaleDateString(undefined, { weekday: "short" })} `}at ${clock(d)}`;
+  return `${otherDayPrefix(d)}at ${clock(d)}`;
 }
 
 // Same, as a label: "Leaving now", "Leaving at 9:30 PM", "Leaving Sat at 9:30 PM".

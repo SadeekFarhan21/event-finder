@@ -1,6 +1,7 @@
 // The main screen: map of spots, search + filters on top, cards along the bottom.
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { setCityZone } from "../lib/time";
 import { Linking, StyleSheet, Text, View } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { LinearGradient } from "expo-linear-gradient";
@@ -118,6 +119,7 @@ export function ScoutScreen() {
 
   const open = useCallback(async (typed: string) => {
     const city = canonicalCity(typed); // "nyc" and "New York, NY" are the same map
+    if (city) setCityZone(city); // times on screen read in this city's clock
     if (!city) { setCityInput(mapCity ?? "New York, NY"); return; } // empty search: keep the current city
     setCityInput(city);
     setActive(null);
