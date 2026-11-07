@@ -159,3 +159,13 @@ Deno.test("late in the night: started sets say so and sort after ones to come", 
     expect(sortSpots([deal, early]).map((e) => e.id)).toEqual(["a", "c"]); // a set under way beats a standing deal
   } finally { setCityZone(null); t.restore(); }
 });
+
+Deno.test("a partner's standing deal doesn't lead dated events", () => {
+  const t = new FakeTime(new Date("2026-11-07T06:47:00Z")); // 10:47 PM in LA
+  try {
+    const hh = { id: "hh", start: null, category: "deal", title: "Happy hour", deal: "3-7 PM", partner: true } as unknown as Spot;
+    const set = { id: "set", start: "2026-11-07T07:30:00Z", category: "music", title: "Set", deal: null, partner: false } as unknown as Spot;
+    const pset = { id: "pset", start: "2026-11-07T08:00:00Z", category: "music", title: "Set", deal: null, partner: true } as unknown as Spot;
+    expect(sortSpots([hh, set, pset]).map((e) => e.id)).toEqual(["pset", "set", "hh"]);
+  } finally { t.restore(); }
+});

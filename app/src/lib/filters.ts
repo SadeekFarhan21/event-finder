@@ -29,5 +29,8 @@ export function sortSpots(spots: Spot[]) {
   // Order: sets still to come, then ones under way (began over 90 min ago), then standing deals.
   const now = Date.now();
   const stage = (e: Spot) => (t(e) === Infinity ? 2 : t(e) < now - 90 * 60000 ? 1 : 0);
-  return [...spots].sort((a, b) => Number(!!b.partner) - Number(!!a.partner) || shaky(a) - shaky(b) || stage(a) - stage(b) || t(a) - t(b));
+  // Standing deals (happy hours) go after dated events even for partners: at 11 PM a 3-7 PM happy hour
+  // shouldn't lead the night. Among dated events, Yelo partners still come first.
+  const deal = (e: Spot) => Number(stage(e) === 2);
+  return [...spots].sort((a, b) => deal(a) - deal(b) || Number(!!b.partner) - Number(!!a.partner) || shaky(a) - shaky(b) || stage(a) - stage(b) || t(a) - t(b));
 }
