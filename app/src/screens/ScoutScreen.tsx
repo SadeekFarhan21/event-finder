@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { setCityZone } from "../lib/time";
+import type { CrewPeople } from "../lib/friends";
 import { Linking, StyleSheet, Text, View } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { LinearGradient } from "expo-linear-gradient";
@@ -88,6 +89,18 @@ export function ScoutScreen() {
   const [unlocked, setUnlocked] = useState<Set<string>>(new Set());
   const [roomsOpen, setRoomsOpen] = useState(false);
 
+  // Your crews by spot, so cards can name friends ("Maya and you") instead of a bare count.
+  const crewPeople = useMemo(() => {
+    const by: Record<string, CrewPeople> = {};
+    for (const c of crewsApi.crews) {
+      const p = (by[c.spotId] ??= { others: [], me: false });
+      for (const m of c.members) {
+        if (m.status === "out") continue;
+        if (m.me) p.me = true; else if (!p.others.includes(m.name)) p.others.push(m.name);
+      }
+    }
+    return by;
+  }, [crewsApi.crews]);
   const shown = useMemo(() => sortSpots(spots.filter((e) => matches(e, filter))), [spots, filter]);
   // The active pin never folds into a cluster. Partners do (a lone partner pin used to sit on top of
   // neighbouring bubbles); a bubble holding one gets the partner's ink ring instead.
@@ -249,7 +262,7 @@ export function ScoutScreen() {
               </Tap>
             )}
           </Animated.View>
-          <SpotCarousel ref={carousel} spots={shown} fresh={fresh} going={going} activeId={active?.id ?? null}
+          <SpotCarousel ref={carousel} spots={shown} fresh={fresh} going={going} crewPeople={crewPeople} activeId={active?.id ?? null}
             onSettle={(e) => { Haptics.selectionAsync(); focus(e); }}
             onPress={(e) => (active?.id === e.id ? setDetail(e) : focus(e, true))}
             onRide={(e) => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); track(e, "ride", mapCity ?? cityInput); openRide(e); }} />

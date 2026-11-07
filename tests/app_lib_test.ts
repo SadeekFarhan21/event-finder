@@ -10,6 +10,7 @@ import { clusterEvents, coreOf } from "../app/src/lib/cluster";
 import { estimateFare, km } from "../app/src/lib/fare";
 import { canonicalCity, cityKey } from "../app/src/lib/cities";
 import { similar } from "../app/src/lib/case";
+import { goingLine } from "../app/src/lib/friends";
 
 const spot = (over: Partial<Spot>): Spot => ({
   id: "s", city: "new york, ny", title: "Jazz", venue: "Nublu", address: "151 Avenue C", start: null, category: "music",
@@ -133,4 +134,14 @@ Deno.test("leaving after midnight on the same night out has no day prefix", () =
     expect(otherDayPrefix(new Date("2026-11-07T05:58:00Z"))).toBe(""); // Sat 12:58 AM: still Friday night
     expect(otherDayPrefix(new Date("2026-11-08T01:00:00Z"))).toBe("Sat "); // Sat 8 PM: the next night
   } finally { setCityZone(null); t.restore(); }
+});
+
+Deno.test("goingLine names your crew, then counts everyone else", () => {
+  expect(goingLine(0)).toBe(null);
+  expect(goingLine(4)).toBe("4 going");
+  expect(goingLine(2, { others: ["Maya"], me: true })).toBe("Maya and you");
+  expect(goingLine(5, { others: ["Maya"], me: true })).toBe("Maya and you · 3 more");
+  expect(goingLine(1, { others: ["Maya"], me: false })).toBe("Maya");
+  expect(goingLine(4, { others: ["Maya", "Jo", "Sam"], me: true })).toBe("Maya, Jo and you · 1 more");
+  expect(goingLine(0, { others: ["Maya"], me: false })).toBe("Maya"); // count not refreshed yet
 });
