@@ -1,8 +1,9 @@
 // "Plan my night": tonight's spots chained into a route a person could actually do, the way a friend
 // who knows the city would: a happy hour that's on now, a show about an hour and a half later close by,
 // then somewhere late. No network and no AI call: it picks from what the agent already found.
+import { similar } from "./case";
 import { km } from "./fare";
-import { cityHour, dealRank, isRecurring, nightEnd } from "./time";
+import { cityHour, clock, dealRank, dealStatus, isRecurring, nightEnd, shortTitle } from "./time";
 import type { Spot } from "./types";
 
 // step: "Start here" / "Then" / "Late"; hop: how far from the stop before ("0.4 mi", "a short walk").
@@ -51,4 +52,13 @@ export function planNight(spots: Spot[], now = Date.now(), me?: { lat: number; l
   }
   // One stop isn't a plan; the regular list already shows it.
   return stops.length >= 2 ? stops : [];
+}
+
+// The plan as a text to friends: each stop with its time and its link, in order.
+// "Tonight's plan:\n1. 11th Street Bar · happy hour, until 7 PM\nhttps://…\n2. Nublu · 8 PM, Mike Monford…"
+export function planMessage(stops: Stop[], link: (e: Spot) => string): string {
+  const when = (e: Spot) => (isRecurring(e) || !e.start
+    ? `${/happy hour/i.test(`${e.title} ${e.deal ?? ""}`) ? "happy hour" : "deal"}${dealStatus(e) ? `, ${dealStatus(e)!.replace(/^On /, "").replace(/^From/, "from")}` : ""}`
+    : similar(e.title, e.venue) ? clock(new Date(e.start)) : `${clock(new Date(e.start))}, ${shortTitle(e.title, 40)}`); // no "Nublu · 8 PM, Nublu"
+  return ["Tonight's plan:", ...stops.map((s, i) => `${i + 1}. ${s.spot.venue} · ${when(s.spot)}\n${link(s.spot)}`)].join("\n");
 }

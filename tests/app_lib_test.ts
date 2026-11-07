@@ -11,7 +11,7 @@ import { estimateFare, km } from "../app/src/lib/fare";
 import { canonicalCity, cityKey } from "../app/src/lib/cities";
 import { similar } from "../app/src/lib/case";
 import { goingLine, initials, leavingSoon } from "../app/src/lib/friends";
-import { planNight } from "../app/src/lib/plan";
+import { planMessage, planNight } from "../app/src/lib/plan";
 import { newSince } from "../app/src/lib/fresh";
 import { pitchEmail } from "../app/src/lib/pitch";
 import { calendarUrl } from "../app/src/lib/calendar";
@@ -318,5 +318,12 @@ Deno.test("planNight: happy hour now, a show close by later, then somewhere late
   // A third stop at 8:30 PM is "Then", not "Late".
   const early = spot("early", "Club F", "music", at(18.5), 40.724), evening = spot("evening", "Room G", "nightlife", at(20.5), 40.726);
   expect(planNight([hh, early, evening], now).map((p) => p.step)).toEqual(["Start here", "Then", "Then"]);
+  // As a text to friends: each stop with its time and link.
+  const t = new FakeTime(now);
+  try {
+    const msg = planMessage(plan, (e) => `https://x/${e.id}`);
+    expect(msg.split("\n")).toEqual(["Tonight's plan:", "1. Bar A · happy hour, until 7 PM", "https://x/hh",
+      "2. Club B · 8 PM", "https://x/show", "3. Room D · 11 PM", "https://x/late"]);
+  } finally { t.restore(); }
   setCityZone(null);
 });

@@ -5,7 +5,7 @@ import { nowWord, setCityZone } from "../lib/time";
 import { matchesQuery, parseQuery, rankByVenue } from "../lib/search";
 import { useSaved } from "../hooks/useSaved";
 import { km } from "../lib/fare";
-import { Linking, StyleSheet, Text, View } from "react-native";
+import { Linking, Share, StyleSheet, Text, View } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { LinearGradient } from "expo-linear-gradient";
 import { Dimensions } from "react-native";
@@ -23,12 +23,13 @@ import { useMyLocation } from "../hooks/useMyLocation";
 import { useGoing } from "../hooks/useGoing";
 import { useCrews } from "../hooks/useCrews";
 import { leavingSoon, type CrewPeople } from "../lib/friends";
-import { planNight } from "../lib/plan";
+import { planMessage, planNight } from "../lib/plan";
 import { openRide } from "../lib/ride";
 import { newIds, newSince } from "../lib/fresh";
 import { isOffline, onNetworkChange } from "../lib/net";
 import { friendlyError } from "../lib/report";
 import { track } from "../data/activity";
+import { spotLink } from "../data/social";
 import { useToast } from "../hooks/useToast";
 import { SearchHeader } from "../components/SearchHeader";
 import { SpotPins } from "../components/SpotPins";
@@ -329,6 +330,13 @@ export function ScoutScreen() {
                 <Text numberOfLines={1} style={[s.roomsText, liveCrews.length > 0 && s.crewsOnText]}>
                   {soon ? `${soon.crew.venue} ${soon.mins <= 1 ? "now" : `in ${soon.mins} min`}` : `Crews${liveCrews.length ? `  ·  ${liveCrews.length}` : ""}`}
                 </Text>
+              </Tap>
+            )}
+            {filter === "plan" && plan.length > 0 && (
+              <Tap hitSlop={4} style={s.rooms} accessibilityLabel="Share this plan with friends"
+                onPress={() => { Haptics.selectionAsync(); Share.share({ message: planMessage(plan, spotLink) }).catch(() => {}); }}>
+                <Feather name="share" size={15} color={C.ink} />
+                <Text style={s.roomsText}>Share plan</Text>
               </Tap>
             )}
           </Animated.View>
