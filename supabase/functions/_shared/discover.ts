@@ -2,7 +2,7 @@
 import { pageAboutVenue } from "./photos.ts";
 import { isRateLimit, type AgentDeps, type GeoCache, type Point } from "./deps.ts";
 import { cleanTitle, cleanVenue } from "./clean.ts";
-import { partnerAddress, partnersIn } from "./partners.ts";
+import { partnerAddress, partnerName, partnersIn } from "./partners.ts";
 
 export type Category = "nightlife" | "music" | "food_drink" | "arts" | "sports" | "community" | "deal";
 
@@ -156,7 +156,7 @@ export async function discover(city: string, { exa, geo, log = () => {}, deadlin
     out.push({
       id: slug(`${city}-${e.venue}-${e.title}-${e.start ?? ""}`),
       title: cleanTitle(e.title!, e.venue!),
-      venue: cleanVenue(e.venue!),
+      venue: partnerName(e.venue!) ?? cleanVenue(e.venue!),
       address: e.address!,
       start: validDate(e.start, city),
       category: CATEGORIES.includes(e.category as Category) ? (e.category as Category) : "community",

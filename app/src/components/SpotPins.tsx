@@ -27,7 +27,7 @@ export function SpotPins({ clusters, active, onSpot, onCluster, onActive }: Prop
           </ScoutMarker>
         ) : (
           <ScoutMarker key={c.key} coordinate={{ latitude: c.lat, longitude: c.lng }} onPress={() => onCluster(c.events)}>
-            <View style={[s.cluster, clusterSize(c.events.length)]}><Text style={s.clusterText}>{c.events.length}</Text></View>
+            <View style={[s.cluster, clusterSize(c.events.length), c.events.some((e) => e.partner) && s.clusterPartner]}><Text style={s.clusterText}>{c.events.length}</Text></View>
           </ScoutMarker>
         );
       })}
@@ -54,6 +54,8 @@ const clusterSize = (n: number) => {
 const s = StyleSheet.create({
   pin: { width: 28, height: 28, borderRadius: 14, backgroundColor: C.ink, borderWidth: 2, borderColor: C.surface, alignItems: "center", justifyContent: "center", ...shadow },
   pinPartner: { borderColor: C.ink, borderWidth: 3 },
+  // A bubble holding a Yelo partner keeps the partner's ink ring, so partners read at every zoom.
+  clusterPartner: { borderColor: C.ink, borderWidth: 2 },
   pinActive: { width: 42, height: 42, borderRadius: 21, backgroundColor: C.accent, borderWidth: 3, borderColor: C.bg, alignItems: "center", justifyContent: "center", ...shadow },
   label: { marginTop: 4, paddingHorizontal: 8, paddingVertical: 4, borderRadius: R.pill, backgroundColor: C.surface, maxWidth: 180, ...shadow },
   labelText: { fontFamily: F.semibold, fontSize: T.meta, color: C.ink },

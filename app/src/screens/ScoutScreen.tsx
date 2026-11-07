@@ -85,18 +85,17 @@ export function ScoutScreen() {
   const [roomsOpen, setRoomsOpen] = useState(false);
 
   const shown = useMemo(() => sortSpots(spots.filter((e) => matches(e, filter))), [spots, filter]);
-  // The active pin and Yelo partners never fold into a cluster: partners are the rooms Yelo
-  // wants people riding to, so their yellow-ringed pins stay visible at every zoom.
+  // The active pin never folds into a cluster. Partners do (a lone partner pin used to sit on top of
+  // neighbouring bubbles); a bubble holding one gets the partner's ink ring instead.
   const clusters = useMemo(() => {
     const rest = shown.filter((e) => e.id !== active?.id);
-    const partners = rest.filter((e) => e.partner).map((e) => ({ key: e.id, lat: e.lat, lng: e.lng, events: [e] }));
     // Pins that would land behind the bottom pills and cards are noise: hide them (the cards list them anyway).
     const south = region.latitude - region.latitudeDelta / 2, north = region.latitude + region.latitudeDelta / 2;
     const low = south + region.latitudeDelta * BOTTOM_BAND, high = north - region.latitudeDelta * TOP_BAND;
     // Nothing may sit under the selected pin (a venue with two listings tonight put its second pin right behind it).
     const clear = region.longitudeDelta * 0.05;
     const underActive = (c: { lat: number; lng: number }) => !!active && Math.hypot(c.lat - active.lat, c.lng - active.lng) < clear;
-    return [...clusterEvents(rest.filter((e) => !e.partner), region), ...partners]
+    return clusterEvents(rest, region)
       .filter((c) => c.lat > low && c.lat < high && !underActive(c));
   }, [shown, active, region]);
 
