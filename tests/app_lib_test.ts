@@ -260,3 +260,22 @@ Deno.test("calendar link carries title, time and place; none without a start", (
   expect(q.get("location")).toBe("Nublu, 151 Avenue C, New York, NY");
   expect(calendarUrl({ venue: "X", title: "y", start: null, address: "", url: "" })).toBe(null);
 });
+
+Deno.test("search understands tonight, tomorrow and the weekend", () => {
+  setCityZone("New York, NY");
+  try {
+    const now = Date.parse("2026-11-07T18:00:00Z"); // Sat 1 PM in New York
+    const at = (start: string | null, category = "music") => ({ venue: "V", title: "Jazz set", description: "", deal: null, price: null, address: "", category, start }) as unknown as Spot;
+    const sat = at("2026-11-08T01:00:00Z"), sun = at("2026-11-09T01:00:00Z"), tue = at("2026-11-11T01:00:00Z");
+    const hh = at(null, "deal");
+    const q = (t: string) => parseQuery(t);
+    expect(q("jazz tomorrow").when).toBe("tomorrow");
+    expect(q("jazz tomorrow").words).toEqual(["jazz"]);
+    expect(matchesQuery(sat, q("jazz tonight"), now)).toBe(true);
+    expect(matchesQuery(sun, q("jazz tonight"), now)).toBe(false);
+    expect(matchesQuery(sun, q("tomorrow"), now)).toBe(true);
+    expect(matchesQuery(tue, q("this weekend"), now)).toBe(false);
+    expect(matchesQuery(sun, q("this weekend"), now)).toBe(true);
+    expect(matchesQuery(hh, q("tomorrow"), now)).toBe(true); // standing deals fit any day
+  } finally { setCityZone(null); }
+});

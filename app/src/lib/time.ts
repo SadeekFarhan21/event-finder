@@ -25,6 +25,10 @@ const offset = (t: number) => { const p = parts(t); return Date.UTC(+p.year, +p.
 // The night's date in the city's zone, as a day number (wall clock, so DST changes are fine).
 const nightDay = (t: number) => { const p = parts(t - 6 * 3600e3); return Date.UTC(+p.year, +p.month - 1, +p.day) / 864e5; };
 
+// How many nights ahead t is (0 = tonight), and that night's weekday (0 Sun ... 6 Sat), in the city.
+export const nightOffset = (t: number, now = Date.now()) => nightDay(t) - nightDay(now);
+export const nightWeekday = (t: number) => new Date(nightDay(t) * 864e5).getUTCDay();
+
 // End of the current night (6am in the city), shared by the "Tonight" filter and the labels.
 export const nightEnd = (now = Date.now()) => {
   const wall = (nightDay(now) + 1) * 864e5 + 6 * 3600e3; // 6am the next morning, as wall-clock ms
