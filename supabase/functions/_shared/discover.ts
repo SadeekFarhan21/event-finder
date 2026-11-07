@@ -1,7 +1,7 @@
 // The discovery agent: Exa search -> structured events -> geocode -> dedupe.
 import { pageAboutVenue } from "./photos.ts";
 import { isRateLimit, type AgentDeps, type GeoCache, type Point } from "./deps.ts";
-import { cleanTitle, cleanVenue } from "./clean.ts";
+import { cleanTitle, cleanVenue, isRealDeal } from "./clean.ts";
 import { partnerAddress, partnerName, partnersIn } from "./partners.ts";
 
 export type Category = "nightlife" | "music" | "food_drink" | "arts" | "sports" | "community" | "deal";
@@ -161,7 +161,7 @@ export async function discover(city: string, { exa, geo, log = () => {}, deadlin
       start: validDate(e.start, city),
       category: CATEGORIES.includes(e.category as Category) ? (e.category as Category) : "community",
       price: e.price || null,
-      deal: e.deal || null,
+      deal: isRealDeal(e.deal, e.title) ? e.deal! : null,
       description: e.description ?? "",
       url: e.url || null,
       image: e.image || null,

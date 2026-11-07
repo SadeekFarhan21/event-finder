@@ -1,6 +1,6 @@
 // Unit tests for the runtime-agnostic agent code. Run: deno test supabase/functions/tests/unit_test.ts
 import { assert, assertEquals } from "jsr:@std/assert@1";
-import { cleanTitle, cleanVenue, dedupeEvents } from "../_shared/clean.ts";
+import { cleanTitle, cleanVenue, dedupeEvents, isRealDeal } from "../_shared/clean.ts";
 import { canonicalCity, cityKey } from "../_shared/cities.ts";
 import { validDate, type YeloEvent } from "../_shared/discover.ts";
 import { describeIssues, errorBody, ScoutRequest } from "../_shared/requests.ts";
@@ -148,4 +148,13 @@ Deno.test("partnerName gives one spelling for a partner's listings", () => {
 
 Deno.test("partnerName keeps a location word", () => {
   assertEquals(partnerName("Rocco's Tavern Westwood"), undefined);
+});
+
+Deno.test("isRealDeal keeps offers and drops venue notes", () => {
+  assert(isRealDeal("$5 drafts until 7", "Happy hour"));
+  assert(isRealDeal("Daily 5-7 PM", "Happy Hour at Joe's"));
+  assert(isRealDeal("Bottomless mimosas", "Brunch"));
+  assert(!isRealDeal("Sushi reservations on Resy", "Producer Mondays"));
+  assert(!isRealDeal("Themed holiday cocktails", "Miracle on 9th Street"));
+  assert(!isRealDeal(null));
 });

@@ -74,3 +74,10 @@ export function dedupeEvents(events: YeloEvent[]): YeloEvent[] {
   }
   return kept;
 }
+
+// A deal has to offer something: a price, a discount, free entry, a happy hour, bottomless drinks.
+// Scraped "deals" are often just notes from the venue's page ("Sushi reservations on Resy",
+// "Themed holiday cocktails"), which would promise riders nothing at the door. The title counts
+// too, since a happy hour's deal text is often just its hours ("Daily 5-7 PM").
+const DEAL_VALUE = /(\$|%|\bfree\b|\boff\b|happy hour|\bhalf\b|discount|complimentary|\bcomp\b|2[- ]?for[- ]?1|two[- ]for[- ]one|\bbogo\b|buy one|no cover|reduced|special|bottomless|unlimited|open bar|\bhour\b|aperitivo)/i;
+export const isRealDeal = (deal: string | null | undefined, title = "") => !!deal && DEAL_VALUE.test(`${deal} ${title}`);

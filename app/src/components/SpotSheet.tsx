@@ -1,7 +1,7 @@
 // Spot details, edited down: the photo carries the name, one line of facts, what's on, who's
 // going, where it is. One place for actions (the dock), one for sharing (top right).
 // A real bottom sheet: springs up, drags down to dismiss, backdrop fades with the drag.
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { BackHandler, Dimensions, Linking, Pressable, Share, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Image } from "expo-image";
@@ -106,7 +106,12 @@ export function SpotSheet({ spot, city, me, unlocked, canAskLocation, onAskLocat
     const r = await Share.share({ message: crew ? crewInvite(crew) : inviteMessage(e, isGoing) }).catch(() => null);
     if (r?.action === Share.sharedAction) track(e, "share", city);
   };
-  const unlock = () => { Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); track(e, "unlock", city); onUnlock(e); };
+  const scroll = useRef<React.ComponentRef<typeof ScrollView>>(null);
+  // The unlocked deal appears at the end of the sheet, under the fold; bring it into view.
+  const unlock = () => {
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); track(e, "unlock", city); onUnlock(e);
+    setTimeout(() => scroll.current?.scrollToEnd({ animated: true }), 120);
+  };
   // Each fact stays whole when the line wraps ("3 mi away" never splits).
   const facts = [whenLabel(e), e.price && !similar(e.price, e.title) ? e.price : null, fare && `${fare.miles < 0.95 ? fare.miles.toFixed(1) : Math.round(fare.miles)} mi away`].filter(Boolean) as string[];
   const eyebrow = [(e.category === "deal" ? "Deal" : CATEGORY[e.category].label), addr.area].filter(Boolean).join("  ·  ");
@@ -129,7 +134,7 @@ export function SpotSheet({ spot, city, me, unlocked, canAskLocation, onAskLocat
       </Animated.View>
 
       <Animated.View style={[s.sheet, sheetStyle]}>
-        <ScrollView style={{ flexShrink: 1 }} contentContainerStyle={{ paddingBottom: 112 + insets.bottom }}
+        <ScrollView ref={scroll} style={{ flexShrink: 1 }} contentContainerStyle={{ paddingBottom: 112 + insets.bottom }}
           showsVerticalScrollIndicator={false} bounces={false}>
           {/* The photo is the header: name and neighborhood set on it, like a magazine cover. */}
           <GestureDetector gesture={drag}>
@@ -181,7 +186,7 @@ export function SpotSheet({ spot, city, me, unlocked, canAskLocation, onAskLocat
                 </View>
               ) : null}
               <Text style={[s.rowText, !going && { color: C.ink2, fontFamily: F.medium }]} numberOfLines={1}>
-                {going ? `${going} going` : "No one going yet"}{isGoing && going > 1 ? ", including you" : ""}
+                {isGoing && going <= 1 ? "You're going" : going ? `${going} going${isGoing ? ", including you" : ""}` : "No one going yet"}
               </Text>
               <Tap style={[s.pill, isGoing && s.pillOn]} disabled={isGoing && !onUnGo} accessibilityState={{ selected: isGoing }}
                 accessibilityHint={isGoing && onUnGo ? "Tap to take it back" : undefined}
@@ -280,7 +285,7 @@ export function SpotSheet({ spot, city, me, unlocked, canAskLocation, onAskLocat
 
             {e.deal && unlocked && (
               <Animated.View entering={FadeIn} style={s.deal}>
-                <Text style={s.dealLabel}>YOUR DEAL  ·  SHOW IT AT THE DOOR</Text>
+                <Text style={s.dealLabel}>Your deal · show it at the door</Text>
                 <Text style={s.dealText}>{e.deal}</Text>
               </Animated.View>
             )}
@@ -389,7 +394,7 @@ const s = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth, borderColor: C.d4 },
   smallPillText: { fontFamily: F.semibold, fontSize: T.small, color: C.ink },
   deal: { marginTop: 20, paddingVertical: 12, paddingHorizontal: 16, borderRadius: R.md, backgroundColor: C.surface, borderWidth: StyleSheet.hairlineWidth, borderColor: C.d4 },
-  dealLabel: { fontFamily: F.semibold, fontSize: 11, color: C.ink3, letterSpacing: 1.2 },
+  dealLabel: { fontFamily: F.medium, fontSize: T.meta, color: C.ink3 },
   dealText: { fontFamily: F.semibold, fontSize: T.body, lineHeight: 23, color: C.ink, marginTop: 4 },
   source: { fontFamily: F.regular, fontSize: T.meta, color: C.ink3, marginTop: 24 },
   dock: { position: "absolute", left: 0, right: 0, bottom: 0, flexDirection: "row", gap: 10, paddingHorizontal: 16, paddingTop: 28 },
