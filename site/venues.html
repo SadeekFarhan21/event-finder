@@ -101,6 +101,7 @@
   .bar.today .bar-d { color: var(--ink); font-weight: 500; }
   .bar-r { font-size: 11px; color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .spot-eng { display: block; margin-top: 2px; font-size: 14px; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+  .spot-meta .spot-eng:not(.spot-none) { color: var(--ink-2); } /* real counts read brighter than "No views yet" */
   .zeros { margin: 12px 0 0; font-size: 14px; color: var(--ink-3); }
   .stats.n1 { grid-template-columns: minmax(0, 1fr); } .stats.n2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .stats.n3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
@@ -335,7 +336,7 @@
         `<div class="stat"><b>${v.toLocaleString()}</b><span>${label}</span></div>`).join("")}</div>` : ""}
       ${trend(daily.data ?? [])}
       ${zero.length ? `<p class="zeros">No ${joinWords(zero.map(([, , w]) => w))} yet this week.</p>` : ""}
-      ${list.length ? `<h3 class="subh">On the map now</h3><ul class="spots">${list.map((s, i) => `<li${i >= 5 ? ' class="more" hidden' : ""}><span class="spot-title">${esc(s.title)}</span><span class="spot-meta"><small>${esc(fmt(s.start))}</small>${engaged(s) || '<span class="spot-eng">–</span>'}</span></li>`).join("")}</ul>${list.length > 5 ? `<button type="button" class="showall" id="showall">Show all ${list.length}</button>` : ""}`
+      ${list.length ? `<h3 class="subh">On the map now</h3><ul class="spots">${list.map((s, i) => `<li${i >= 5 ? ' class="more" hidden' : ""}><span class="spot-title">${esc(s.title)}</span><span class="spot-meta"><small>${esc(fmt(s.start))}</small>${engaged(s) || '<span class="spot-eng spot-none">No views yet</span>'}</span></li>`).join("")}</ul>${list.length > 5 ? `<button type="button" class="showall" id="showall">Show all ${list.length}</button>` : ""}`
         : `<p class="empty">${esc(name)} has no spots on the map right now. List one below.</p>`}`;
   });
 
