@@ -5,7 +5,8 @@ import { getDeviceId } from "./activity";
 import { SITE } from "./social";
 import { supabase } from "./supabase";
 import { isOffline } from "../lib/net";
-import { clock, shortTitle, otherDayPrefix } from "../lib/time";
+import { clock, otherDayPrefix } from "../lib/time";
+import { inviteBill, withBill } from "../lib/invite";
 import type { Spot } from "../lib/types";
 
 export type CrewStatus = "in" | "on_way" | "out";
@@ -81,7 +82,7 @@ export async function loadCrews(): Promise<Crew[]> {
 }
 
 export const crewInvite = (c: { venue: string; title: string; leaveAt: string; code: string }) =>
-  `Heading to ${c.venue}, leaving ${leavePhrase(c.leaveAt)} (${shortTitle(c.title)}). Join my crew:\n${crewLink(c.code)}`;
+  `${withBill(`Heading to ${c.venue}, leaving ${leavePhrase(c.leaveAt)}`, inviteBill(c.title, c.venue))} Join my crew:\n${crewLink(c.code)}`;
 
 // When the crew leaves, for sentences: "now", "in 20 min", "at 9:30 PM", "Sat at 9:30 PM".
 export function leavePhrase(iso: string) {

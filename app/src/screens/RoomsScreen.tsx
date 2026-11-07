@@ -25,6 +25,20 @@ function inBrief(capacity?: string | null) {
   return !n || (n >= 50 && n <= 400);
 }
 
+// "@nublu" is Instagram, "booking@nublu.net" is email, a URL (or no contact) is the website.
+type Reach = "email" | "instagram" | "web";
+function reach(l: Lead): Reach {
+  const c = l.contact ?? "";
+  if (c.startsWith("@")) return "instagram";
+  if (c.includes("@")) return "email";
+  return "web";
+}
+const REACH: Record<Reach, { icon: "mail" | "instagram" | "arrow-up-right"; label: (venue: string) => string }> = {
+  email: { icon: "mail", label: (v) => `Email ${v}` },
+  instagram: { icon: "instagram", label: (v) => `Open ${v} on Instagram` },
+  web: { icon: "arrow-up-right", label: (v) => `Open the website of ${v}` },
+};
+
 const CONTACTED_KEY = "scout.roomsContacted";
 // "today", "yesterday", or "Nov 4".
 function contactedWhen(t: number) {
@@ -37,6 +51,7 @@ export function RoomsScreen({ visible, city, leads, setLeads, canSearch, onClose
 }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [pending, setPending] = useState(false); // the agent was still searching when we stopped waiting
   // Warm leads: rooms Scout riders already open. Shown on the row and sorted first.
   const [interest, setInterest] = useState<Record<string, number>>({});
   useEffect(() => { if (visible) roomInterest(city).then(setInterest); }, [visible, city]);
@@ -44,10 +59,13 @@ export function RoomsScreen({ visible, city, leads, setLeads, canSearch, onClose
   const find = async () => {
     setBusy(true);
     setError(null);
+    setPending(false);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     try {
-      setLeads(await runLeads(city));
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      const run = await runLeads(city);
+      setLeads(run.leads);
+      setPending(run.pending);
+      if (!run.pending) Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -67,11 +85,11 @@ export function RoomsScreen({ visible, city, leads, setLeads, canSearch, onClose
   const contact = (l: Lead) => {
     markContacted(l.id);
     const c = l.contact ?? "";
-    if (c.includes("@") && !c.startsWith("@")) {
+    if (reach(l) === "email") {
       const { subject, body } = pitchEmail(l, city, interest[l.venue] ?? 0);
       return Linking.openURL(`mailto:${c}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`);
     }
-    if (c.startsWith("@")) return Linking.openURL(`https://instagram.com/${c.slice(1)}`);
+    if (reach(l) === "instagram") return Linking.openURL(`https://instagram.com/${c.slice(1)}`);
     if (/^https?:\/\//.test(c)) return Linking.openURL(c);
     if (l.url) return Linking.openURL(l.url);
   };
@@ -95,6 +113,7 @@ export function RoomsScreen({ visible, city, leads, setLeads, canSearch, onClose
       </Tap>
       {busy && <Text style={s.hint} accessibilityLiveRegion="polite">Searching venue sites and calendars. This takes about a minute.</Text>}
       {!busy && !canSearch && <Text style={s.hint}>Searching isn't available right now. The rooms below are from the last search.</Text>}
+      {pending && !busy && <Text style={s.hint} accessibilityLiveRegion="polite">Still searching. New rooms will be here when you open Rooms again.</Text>}
       {error && <Text style={[s.hint, { color: C.red }]} accessibilityLiveRegion="polite">{error}</Text>}
     </View>
   );
@@ -130,8 +149,8 @@ export function RoomsScreen({ visible, city, leads, setLeads, canSearch, onClose
               </View>
               {(l.contact || l.url) && (
                 <Tap onPress={() => contact(l)} style={s.go} hitSlop={8}
-                  accessibilityLabel={`${l.contact?.includes("@") ? "Email" : "Open the website of"} ${l.venue}`}>
-                  <Feather name={l.contact?.includes("@") ? "mail" : "arrow-up-right"} size={17} color={C.ink} />
+                  accessibilityLabel={REACH[reach(l)].label(l.venue)}>
+                  <Feather name={REACH[reach(l)].icon} size={17} color={C.ink} />
                 </Tap>
               )}
             </View>

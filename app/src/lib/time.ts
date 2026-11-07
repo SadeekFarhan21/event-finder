@@ -108,7 +108,7 @@ export function whenPhrase(e: WhenFields) {
   if (!e.start) return "this week";
   const d = new Date(e.start);
   const days = nightDay(d.getTime()) - nightDay(Date.now());
-  const day = days === 0 ? todayWord(d).toLowerCase() : days === 1 ? "tomorrow" : fmt(d, { weekday: "short", month: "short", day: "numeric" });
+  const day = days === 0 ? todayWord(d).toLowerCase() : days === 1 ? "tomorrow" : `on ${fmt(d, { weekday: "short", month: "short", day: "numeric" })}`;
   return `${day} at ${clock(d)}`;
 }
 
