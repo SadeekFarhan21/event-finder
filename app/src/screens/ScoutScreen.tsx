@@ -23,6 +23,7 @@ import { useMyLocation } from "../hooks/useMyLocation";
 import { useGoing } from "../hooks/useGoing";
 import { useCrews } from "../hooks/useCrews";
 import { leavingSoon, type CrewPeople } from "../lib/friends";
+import { planNight } from "../lib/plan";
 import { openRide } from "../lib/ride";
 import { newIds, newSince } from "../lib/fresh";
 import { isOffline, onNetworkChange } from "../lib/net";
@@ -117,11 +118,15 @@ export function ScoutScreen() {
   const { saved, toggle: toggleSave } = useSaved();
   // Near me: within 2 miles of the rider, nearest first (only offered once location is shared).
   const dist = useCallback((e: Spot) => (me ? km(me, { lat: e.lat, lng: e.lng }) : Infinity), [me]);
+  // Plan my night: tonight's spots chained into two or three stops (lib/plan), in route order.
+  const plan = useMemo(() => (filter === "plan" && minute ? planNight(spots, minute, me) : []), [filter, spots, minute, me]);
+  const steps = useMemo(() => Object.fromEntries(plan.map((p) => [p.spot.id, p])), [plan]);
   const shown = useMemo(() => {
+    if (filter === "plan") return plan.map((p) => p.spot);
     const list = spots.filter((e) => matches(e, filter) && matchesQuery(e, parsed)
       && (filter !== "saved" || saved.has(e.id)) && (filter !== "near" || dist(e) <= 3.2));
     return filter === "near" ? [...list].sort((a, b) => dist(a) - dist(b)) : rankByVenue(sortSpots(list), parsed);
-  }, [spots, filter, parsed, saved, dist]);
+  }, [spots, filter, parsed, saved, dist, plan]);
   // Saved spots in this city (the chip count); the shortlist only shows what's still on the map.
   // The open spot's venue: its other dated nights after this one (all of them if this is a standing deal).
   const moreNights = useMemo(() => {
@@ -282,7 +287,7 @@ export function ScoutScreen() {
     setFilter(f);
     setActive(null);
     carousel.current?.scrollTo(0, false);
-    fit(f === "saved" ? spots.filter((e) => saved.has(e.id)) : f === "near" ? spots.filter((e) => dist(e) <= 3.2) : spots.filter((e) => matches(e, f)), f === "saved"); // a short list: frame every saved spot
+    fit(f === "plan" ? planNight(spots, Date.now(), me).map((p) => p.spot) : f === "saved" ? spots.filter((e) => saved.has(e.id)) : f === "near" ? spots.filter((e) => dist(e) <= 3.2) : spots.filter((e) => matches(e, f)), f === "saved" || f === "plan"); // a short list: frame every stop
   };
 
   const cityName = cityInput.split(",")[0];
@@ -309,8 +314,9 @@ export function ScoutScreen() {
 
       {loading && !spots.length ? <LoadingCard /> : !shown.length && !scouting ? (
         <EmptyCard
-          title={loadFailed ? "Couldn't load spots" : query.trim() && spots.length ? `Nothing matches "${query.trim()}"` : spots.length ? "Nothing here yet" : `No spots in ${cityName} yet`}
+          title={loadFailed ? "Couldn't load spots" : filter === "plan" && spots.length ? "Not enough on tonight to plan" : query.trim() && spots.length ? `Nothing matches "${query.trim()}"` : spots.length ? "Nothing here yet" : `No spots in ${cityName} yet`}
           body={loadFailed ? "Check your connection. Scout will try again as soon as you're back online."
+            : filter === "plan" && spots.length ? "A plan needs two spots close together, still to come tonight. Try Today or This week."
             : query.trim() && spots.length ? (filter === "all" ? "Try another word, like a venue, a genre or a neighbourhood." : "Try This week, or another word.")
             : spots.length ? "Try This week, or another filter."
             : scoutable ? `Open the ${cityName} menu and choose "Look for new spots".` : "New spots usually appear within the hour."} />
@@ -325,7 +331,7 @@ export function ScoutScreen() {
               </Tap>
             )}
           </Animated.View>
-          <SpotCarousel ref={carousel} spots={shown} fresh={fresh} going={going} crewPeople={crewPeople} me={me} activeId={active?.id ?? null}
+          <SpotCarousel ref={carousel} spots={shown} fresh={fresh} steps={filter === "plan" ? steps : undefined} going={going} crewPeople={crewPeople} me={me} activeId={active?.id ?? null}
             onSettle={(e) => { Haptics.selectionAsync(); focus(e); }}
             onPress={(e) => (active?.id === e.id ? setDetail(e) : focus(e, true))}
             onRide={(e) => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); track(e, "ride", mapCity ?? cityInput); openRide(e); }} />

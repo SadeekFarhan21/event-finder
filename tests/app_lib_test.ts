@@ -11,6 +11,7 @@ import { estimateFare, km } from "../app/src/lib/fare";
 import { canonicalCity, cityKey } from "../app/src/lib/cities";
 import { similar } from "../app/src/lib/case";
 import { goingLine, initials, leavingSoon } from "../app/src/lib/friends";
+import { planNight } from "../app/src/lib/plan";
 import { newSince } from "../app/src/lib/fresh";
 import { pitchEmail } from "../app/src/lib/pitch";
 import { calendarUrl } from "../app/src/lib/calendar";
@@ -293,4 +294,26 @@ Deno.test("leavingSoon: soonest crew you haven't left for, within 45 min", () =>
   expect(leavingSoon([crew("Nublu", -5)], now)?.mins).toBe(-5); // just past: still nudging
   expect(leavingSoon([crew("Nublu", -15)], now)).toBeNull(); // long past
   expect(leavingSoon([{ venue: "X", leaveAt: at(10), members: [{ me: false, status: "in" }] }], now)).toBeNull(); // not your crew
+});
+
+Deno.test("planNight: happy hour now, a show close by later, then somewhere late", () => {
+  setCityZone("New York, NY");
+  const now = Date.parse("2026-11-07T22:30:00Z"); // 5:30 PM in New York
+  const at = (h: number) => new Date(Date.parse("2026-11-07T05:00:00Z") + h * 3600e3).toISOString(); // h o'clock NY, that day
+  const base = { address: "", price: null, deal: null, description: "", url: null, confidence: "high" as const, source: "exa" as const };
+  const spot = (id: string, venue: string, category: Spot["category"], start: string | null, lat: number, extra: Partial<Spot> = {}): Spot =>
+    ({ ...base, id, title: venue, venue, category, start, lat, lng: -73.98, ...extra });
+  const hh = spot("hh", "Bar A", "deal", null, 40.72, { deal: "Happy Hour 4-7pm" });
+  const show = spot("show", "Club B", "music", at(20), 40.724);
+  const far = spot("far", "Far C", "music", at(20.25), 40.85);
+  const late = spot("late", "Room D", "nightlife", at(23), 40.728);
+  const shaky = spot("shaky", "Maybe E", "nightlife", at(22), 40.721, { confidence: "low" });
+  const plan = planNight([late, far, show, hh, shaky], now);
+  expect(plan.map((p) => p.spot.id)).toEqual(["hh", "show", "late"]);
+  expect(plan.map((p) => p.step)).toEqual(["Start here", "Then", "Late"]);
+  expect(plan[0].hop).toBeNull();
+  expect(plan[1].hop).toBe("a short walk");
+  // Nothing to chain: a single spot is not a plan.
+  expect(planNight([show], now)).toEqual([]);
+  setCityZone(null);
 });

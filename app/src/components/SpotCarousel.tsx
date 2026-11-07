@@ -10,6 +10,7 @@ import Animated, {
   type SharedValue,
 } from "react-native-reanimated";
 import { clock, isRecurring, whenLabel, dealStatus } from "../lib/time";
+import type { Stop } from "../lib/plan";
 import { calmCaps, similar } from "../lib/case";
 import { goingLine, type CrewPeople } from "../lib/friends";
 import { estimateFare, type Point } from "../lib/fare";
@@ -18,6 +19,7 @@ import { CARD_GAP, CARD_INSET, CARD_STEP, CARD_W, CAROUSEL_BOTTOM, MEDIA_H } fro
 import { CATEGORY, color as C, font as F, radius as R, shadow, text as T } from "../theme";
 import { Tap } from "./Tap";
 
+type Step = Pick<Stop, "step" | "hop">;
 export type CarouselRef = { scrollTo: (index: number, animated?: boolean) => void };
 
 type Props = {
@@ -27,13 +29,14 @@ type Props = {
   crewPeople?: Record<string, CrewPeople>; // spot id -> your crew heading there
   me?: Point | null; // the rider's location, if shared
   fresh?: Set<string>; // ids found since the last visit
+  steps?: Record<string, Step>; // Plan my night: spot id -> its place in the plan
   activeId: string | null;
   onSettle: (spot: Spot) => void; // a swipe came to rest on this card
   onPress: (spot: Spot, index: number) => void;
   onRide: (spot: Spot) => void;
 };
 
-export function SpotCarousel({ ref, spots, fresh, going, crewPeople, me, activeId, onSettle, onPress, onRide }: Props) {
+export function SpotCarousel({ ref, spots, fresh, steps, going, crewPeople, me, activeId, onSettle, onPress, onRide }: Props) {
   const list = useAnimatedRef<Animated.FlatList<Spot>>();
   const x = useSharedValue(0);
   const onScroll = useAnimatedScrollHandler((e) => { x.value = e.contentOffset.x; });
@@ -54,7 +57,7 @@ export function SpotCarousel({ ref, spots, fresh, going, crewPeople, me, activeI
         snapToInterval={CARD_STEP} decelerationRate="fast" disableIntervalMomentum
         contentContainerStyle={{ gap: CARD_GAP, paddingHorizontal: CARD_INSET }}
         onScroll={onScroll} scrollEventThrottle={16} onMomentumScrollEnd={onEnd}
-        renderItem={({ item, index }) => <Card spot={item} isNew={!!fresh?.has(item.id)} going={going[item.id] ?? 0} crew={crewPeople?.[item.id]} me={me} index={index} x={x} onPress={() => onPress(item, index)} onRide={() => onRide(item)} />} />
+        renderItem={({ item, index }) => <Card spot={item} step={steps?.[item.id]} isNew={!!fresh?.has(item.id)} going={going[item.id] ?? 0} crew={crewPeople?.[item.id]} me={me} index={index} x={x} onPress={() => onPress(item, index)} onRide={() => onRide(item)} />} />
     </Animated.View>
   );
 }
@@ -62,6 +65,9 @@ export function SpotCarousel({ ref, spots, fresh, going, crewPeople, me, activeI
 // "10 PM" / "Tonight"; standing deals read "Happy hour" / "Every night".
 const bigTime = (e: Spot) => (isRecurring(e) || !e.start ? (/happy hour/i.test(`${e.title} ${e.deal ?? ""}`) ? "Happy hour" : "Any night") : clock(new Date(e.start)));
 const bigDay = (e: Spot) => (isRecurring(e) || !e.start ? (dealStatus(e) ?? "Standing deal") : whenLabel(e).split(" · ")[0]);
+
+// In a plan, the photo pill says the step instead of the day: "Then · 8 PM · 0.4 mi".
+const stepLine = (e: Spot, st: Step) => [st.step, bigTime(e) === "Happy hour" || bigTime(e) === "Any night" ? dealStatus(e) : bigTime(e), st.hop].filter(Boolean).join(" · ");
 
 // One line under the venue, with nothing said twice: category (unless the Deal tag says it),
 // then the title (unless it's just "Happy hour" again), then the price.
@@ -75,8 +81,8 @@ function cardLine(e: Spot) {
 
 // Photo first: the place, then when, then who's going and the ride. Most listings have no photo
 // (the web rarely has a good one), so the fallback is a designed panel, not an empty box.
-function Card({ spot: e, isNew, going, crew, me, index, x, onPress, onRide }: {
-  spot: Spot; isNew: boolean; going: number; crew?: CrewPeople; me?: Point | null; index: number; x: SharedValue<number>; onPress: () => void; onRide: () => void;
+function Card({ spot: e, step, isNew, going, crew, me, index, x, onPress, onRide }: {
+  spot: Spot; step?: Step; isNew: boolean; going: number; crew?: CrewPeople; me?: Point | null; index: number; x: SharedValue<number>; onPress: () => void; onRide: () => void;
 }) {
   // Distance once the rider has shared location (same figure as the sheet's "mi away").
   const miles = me ? (estimateFare(me, { lat: e.lat, lng: e.lng })?.miles ?? null) : null;
@@ -96,7 +102,7 @@ function Card({ spot: e, isNew, going, crew, me, index, x, onPress, onRide }: {
             <LinearGradient pointerEvents="none" colors={["rgba(0,0,0,0.0)", "rgba(0,0,0,0.55)"]} style={s.shade} />
             <View style={s.chips}>
               <View style={s.whenRow}>
-                <View style={s.when}><Text style={s.whenText} numberOfLines={1}>{whenLabel(e)}</Text></View>
+                <View style={s.when}><Text style={s.whenText} numberOfLines={1}>{step ? stepLine(e, step) : whenLabel(e)}</Text></View>
                 {isNew && <View style={s.newTag}><Text style={s.newText}>New</Text></View>}
               </View>
               {e.partner && <View style={s.partner}><View style={s.partnerMark} /><Text style={s.partnerText}>Yelo partner</Text></View>}
@@ -107,7 +113,7 @@ function Card({ spot: e, isNew, going, crew, me, index, x, onPress, onRide }: {
           <LinearGradient colors={[C.d3, C.d1]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={[s.media, s.typeBand]}>
             <View style={{ flex: 1 }}>
               <Text style={s.bigTime} numberOfLines={1} adjustsFontSizeToFit>{bigTime(e)}</Text>
-              <Text style={s.bigDay} numberOfLines={1}>{bigDay(e)}{isNew ? "  ·  New" : ""}</Text>
+              <Text style={s.bigDay} numberOfLines={1}>{step ? [step.step, step.hop].filter(Boolean).join("  ·  ") : `${bigDay(e)}${isNew ? "  ·  New" : ""}`}</Text>
             </View>
             <View style={s.bandSide}>
               {e.partner && <View style={s.partner}><View style={s.partnerMark} /><Text style={s.partnerText}>Yelo partner</Text></View>}
