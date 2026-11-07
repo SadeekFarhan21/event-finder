@@ -21,13 +21,15 @@ export function SpotPins({ clusters, active, onSpot, onCluster, onActive }: Prop
         const only = c.events.length === 1 ? c.events[0] : null;
         return only ? (
           <ScoutMarker key={only.id} coordinate={{ latitude: c.lat, longitude: c.lng }} onPress={() => onSpot(only)}>
-            <View style={[s.pin, only.partner && s.pinPartner]}>
+            <View style={[s.pin, only.partner && s.pinPartner]} accessible accessibilityRole="button"
+              accessibilityLabel={`${only.venue}, ${CATEGORY[only.category].label}${only.partner ? ", Yelo partner" : ""}`}>
               <Ionicons name={CATEGORY[only.category].icon} size={14} color={C.surface} />
             </View>
           </ScoutMarker>
         ) : (
           <ScoutMarker key={c.key} coordinate={{ latitude: c.lat, longitude: c.lng }} onPress={() => onCluster(c.events)}>
-            <View style={[s.cluster, clusterSize(c.events.length), c.events.some((e) => e.partner) && s.clusterPartner]}><Text style={s.clusterText}>{c.events.length}</Text></View>
+            <View style={[s.cluster, clusterSize(c.events.length), c.events.some((e) => e.partner) && s.clusterPartner]}
+              accessible accessibilityRole="button" accessibilityLabel={`${c.events.length} spots close together. Zoom in`}><Text style={s.clusterText}>{c.events.length}</Text></View>
           </ScoutMarker>
         );
       })}
@@ -53,12 +55,13 @@ const clusterSize = (n: number) => {
 
 const s = StyleSheet.create({
   pin: { width: 28, height: 28, borderRadius: 14, backgroundColor: C.ink, borderWidth: 2, borderColor: C.surface, alignItems: "center", justifyContent: "center", ...shadow },
-  pinPartner: { borderColor: C.ink, borderWidth: 3 },
-  // A bubble holding a Yelo partner keeps the partner's ink ring, so partners read at every zoom.
-  clusterPartner: { borderColor: C.ink, borderWidth: 2 },
+  // Yelo partners wear the yellow ring (an ink ring vanished into the ink pin).
+  pinPartner: { borderColor: C.accent, borderWidth: 3 },
+  // A bubble holding a Yelo partner keeps the partner's ring, so partners read at every zoom.
+  clusterPartner: { borderColor: C.accent, borderWidth: 2 },
   pinActive: { width: 42, height: 42, borderRadius: 21, backgroundColor: C.accent, borderWidth: 3, borderColor: C.bg, alignItems: "center", justifyContent: "center", ...shadow },
   label: { marginTop: 4, paddingHorizontal: 8, paddingVertical: 4, borderRadius: R.pill, backgroundColor: C.surface, maxWidth: 180, ...shadow },
   labelText: { fontFamily: F.semibold, fontSize: T.meta, color: C.ink },
   cluster: { paddingHorizontal: 6, backgroundColor: "rgba(21,21,19,0.82)", borderWidth: 1, borderColor: C.d4, alignItems: "center", justifyContent: "center", ...shadow },
-  clusterText: { fontFamily: F.medium, fontSize: 12, color: C.ink2 },
+  clusterText: { fontFamily: F.medium, fontSize: T.meta, color: C.ink2, fontVariant: ["tabular-nums"] },
 });
