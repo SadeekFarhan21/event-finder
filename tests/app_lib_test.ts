@@ -155,5 +155,7 @@ Deno.test("late in the night: started sets say so and sort after ones to come", 
     expect(whenLabel(early as never)).toBe("Started · 10:30 PM");
     expect(whenLabel(late as never)).toBe("Tonight · 1:30 AM");
     expect(sortSpots([early, late]).map((e) => e.id)).toEqual(["b", "a"]);
+    const deal = { id: "c", start: null, category: "deal", title: "Happy hour", deal: "Half off" } as unknown as Spot;
+    expect(sortSpots([deal, early]).map((e) => e.id)).toEqual(["a", "c"]); // a set under way beats a standing deal
   } finally { setCityZone(null); t.restore(); }
 });

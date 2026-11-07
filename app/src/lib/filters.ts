@@ -26,8 +26,8 @@ export function matches(e: Spot, f: Filter) {
 export function sortSpots(spots: Spot[]) {
   const t = (e: Spot) => (e.start && !isRecurring(e) ? Date.parse(e.start) : Infinity);
   const shaky = (e: Spot) => Number(e.confidence === "low");
-  // Late in the night, sets that began a while ago fall behind ones still to come.
+  // Order: sets still to come, then ones under way (began over 90 min ago), then standing deals.
   const now = Date.now();
-  const stale = (e: Spot) => Number(t(e) !== Infinity && t(e) < now - 90 * 60000);
-  return [...spots].sort((a, b) => Number(!!b.partner) - Number(!!a.partner) || shaky(a) - shaky(b) || stale(a) - stale(b) || t(a) - t(b));
+  const stage = (e: Spot) => (t(e) === Infinity ? 2 : t(e) < now - 90 * 60000 ? 1 : 0);
+  return [...spots].sort((a, b) => Number(!!b.partner) - Number(!!a.partner) || shaky(a) - shaky(b) || stage(a) - stage(b) || t(a) - t(b));
 }
