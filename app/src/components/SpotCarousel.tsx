@@ -139,8 +139,9 @@ function Card({ spot: e, step, onSwap, isNew, going, crew, me, index, x, onPress
               )}
             </View>
             {onSwap && (
+              // shuffle, not refresh-cw: that one already means "Look for new spots" in the city menu
               <Tap onPress={onSwap} style={s.swap} accessibilityLabel={`Swap ${e.venue} for another stop`} hitSlop={6}>
-                <Feather name="shuffle" size={15} color={C.ink} /> {/* not refresh-cw: that one means "Look for new spots" */}
+                <Feather name="shuffle" size={15} color={C.ink} />
               </Tap>
             )}
             <Tap onPress={onRide} style={s.ride} accessibilityLabel={`Ride to ${e.venue}`} hitSlop={6}>
