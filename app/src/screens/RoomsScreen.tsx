@@ -17,6 +17,12 @@ function shortKind(kind?: string | null) {
   return k.charAt(0).toUpperCase() + k.slice(1);
 }
 
+// Yelo's brief is rooms for 50-400 people; hide known capacities outside it (same rule as the agent).
+function inBrief(capacity?: string | null) {
+  const n = Number((capacity ?? "").match(/\d+/)?.[0]);
+  return !n || (n >= 50 && n <= 400);
+}
+
 export function RoomsScreen({ visible, city, leads, setLeads, canSearch, onClose }: {
   visible: boolean; city: string; leads: Lead[]; setLeads: (l: Lead[]) => void; canSearch: boolean; onClose: () => void;
 }) {
@@ -68,7 +74,7 @@ export function RoomsScreen({ visible, city, leads, setLeads, canSearch, onClose
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
       <View style={[s.root, Platform.OS === "android" && { paddingTop: insets.top }]}>
-        <FlatList data={leads} keyExtractor={(l) => l.id} ListHeaderComponent={header}
+        <FlatList data={leads.filter((l) => inBrief(l.capacity))} keyExtractor={(l) => l.id} ListHeaderComponent={header}
           contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: Math.max(insets.bottom, 16) + 32 }}
           ListEmptyComponent={busy ? undefined : <Text style={s.empty}>No rooms yet. Tap Find rooms to search this city.</Text>}
           ItemSeparatorComponent={() => <View style={s.rule} />}

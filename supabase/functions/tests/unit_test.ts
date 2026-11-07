@@ -6,7 +6,7 @@ import { validDate, type YeloEvent } from "../_shared/discover.ts";
 import { describeIssues, errorBody, ScoutRequest } from "../_shared/requests.ts";
 import { isPrivateAddress, isPublicHttps, isSafeTarget, ogImageFrom, pageAboutVenue } from "../_shared/photos.ts";
 import { partnerName } from "../_shared/partners.ts";
-import { shortKind } from "../_shared/leads.ts";
+import { inBrief, shortKind } from "../_shared/leads.ts";
 
 const ev = (over: Partial<YeloEvent>): YeloEvent => ({
   id: "x", city: "new york, ny", title: "Jazz", venue: "Nublu", address: "151 Avenue C", start: "2026-11-07T00:00:00Z",
@@ -166,4 +166,11 @@ Deno.test("shortKind keeps room types short", () => {
   assertEquals(shortKind("Wine bar with a back room"), "Wine bar");
   assertEquals(shortKind("Private underground venue for album parties"), "");
   assertEquals(shortKind("Live music venue"), "Live music venue");
+});
+
+Deno.test("inBrief keeps 50-400 rooms and unknowns", () => {
+  assert(inBrief("Up to 220"));
+  assert(inBrief(null));
+  assert(!inBrief("Up to 780"));
+  assert(!inBrief("Up to 30"));
 });

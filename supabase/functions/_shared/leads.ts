@@ -75,6 +75,13 @@ export function shortCapacity(s?: string | null) {
   return nums?.length ? `Up to ${Math.max(...nums)}` : null;
 }
 
+// Yelo's brief: independent rooms for 50-400 people. A known capacity outside that is the wrong
+// room for a Yelo night (Echoplex holds 780); an unknown one stays, the team can ask.
+export function inBrief(capacity?: string | null) {
+  const n = Number((capacity ?? "").match(/\d+/)?.[0]);
+  return !n || (n >= 50 && n <= 400);
+}
+
 // Prefer an email, then an Instagram handle, then a URL.
 export function shortContact(s?: string | null) {
   if (!s) return null;
@@ -136,7 +143,7 @@ export async function findLeads(city: string, { exa, log = () => {} }: Pick<Agen
     const key = venue.toLowerCase().replace(/[^a-z0-9]/g, "");
     if (seen.has(key)) continue;
     seen.add(key);
-    out.push(tidyLead({
+    const lead = tidyLead({
       id: `${city}-${key}`.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
       venue,
       area: (r.area ?? "").replace(/\s*\([^)]*\)/g, "").trim(), // "Manhattan (Hart Bar location)" -> "Manhattan"
@@ -150,7 +157,8 @@ export async function findLeads(city: string, { exa, log = () => {} }: Pick<Agen
       city,
       confidence: r.confidence as Lead["confidence"],
       foundAt: now,
-    }));
+    });
+    if (inBrief(lead.capacity)) out.push(lead);
   }
   log(`${out.length} room leads`);
   return out;
