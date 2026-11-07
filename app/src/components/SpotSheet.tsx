@@ -31,7 +31,7 @@ const HERO_H = 320;
 
 type Props = {
   spot: Spot | null; city: string; me: Point | null; unlocked: boolean;
-  canAskLocation: boolean; onAskLocation: () => void; // ask for location here, where the ride price explains why
+  canAskLocation: boolean; locationRefused?: boolean; onAskLocation: () => void; // ask for location here, where the ride price explains why
   onUnlock: (spot: Spot) => void; onClose: () => void;
   going: number; isGoing: boolean; onGo: (spot: Spot) => void; // "I'm going" + live count
   onUnGo?: (spot: Spot) => void; // take it back (absent when you're going via a crew)
@@ -49,7 +49,7 @@ function splitAddress(address: string) {
 
 const initials = (name: string) => name.split(/\s+/).map((w) => w[0]).join("").slice(0, 2).toUpperCase();
 
-export function SpotSheet({ spot, city, me, unlocked, canAskLocation, onAskLocation, onUnlock, onClose, going, isGoing, onGo, onUnGo,
+export function SpotSheet({ spot, city, me, unlocked, canAskLocation, locationRefused, onAskLocation, onUnlock, onClose, going, isGoing, onGo, onUnGo,
   crew, canCrew, onStartCrew, onCrewStatus }: Props) {
   const y = useSharedValue(OFFSCREEN);
   const [shown, setShown] = useState<Spot | null>(null); // stays mounted while sliding out
@@ -275,10 +275,10 @@ export function SpotSheet({ spot, city, me, unlocked, canAskLocation, onAskLocat
                 <Feather name="clock" size={18} color={C.ink2} />
                 <View style={{ flex: 1 }}>
                   <Text style={s.rowText} numberOfLines={1}>Ride price</Text>
-                  <Text style={s.rowSub} numberOfLines={1}>Uses your location once</Text>
+                  <Text style={s.rowSub} numberOfLines={1}>{locationRefused ? "Location is off · Yelo shows it when you book" : "Uses your location once"}</Text>
                 </View>
                 <Tap onPress={onAskLocation} style={s.smallPill} hitSlop={8} accessibilityLabel="Use my location to see the ride price">
-                  <Text style={s.smallPillText}>Show price</Text>
+                  <Text style={s.smallPillText}>{locationRefused ? "Try again" : "Show price"}</Text>
                 </Tap>
               </View>
             ) : null}
