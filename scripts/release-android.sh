@@ -12,6 +12,18 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT/app"
 MSG="${1:-App update}"
+
+# Ship only what's committed and in sync with GitHub: eas update bundles the working tree, so
+# uncommitted edits (another session's half-done work, say) would go out to every phone.
+if [[ -n "$(git status --porcelain -- . | grep -v '^??')" ]]; then
+  echo "Not releasing: app/ has uncommitted changes. Commit or set them aside first." >&2
+  git status --short -- . | grep -v '^??' >&2; exit 1
+fi
+branch=$(git rev-parse --abbrev-ref HEAD)
+git fetch -q origin "$branch" 2>/dev/null || true
+if git rev-parse -q --verify "origin/$branch" >/dev/null && ! git merge-base --is-ancestor "origin/$branch" HEAD; then
+  echo "Not releasing: $branch is behind origin/$branch (merged PRs would be missing). Pull first." >&2; exit 1
+fi
 EAS="npx -y eas-cli@latest"
 
 local_fp=$($EAS fingerprint:generate -p android --json --non-interactive 2>/dev/null | python3 -c 'import sys,json; print(json.load(sys.stdin)["hash"])')
