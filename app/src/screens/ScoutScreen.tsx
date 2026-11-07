@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { setCityZone } from "../lib/time";
-import { matchesQuery, parseQuery } from "../lib/search";
+import { matchesQuery, parseQuery, rankByVenue } from "../lib/search";
 import type { CrewPeople } from "../lib/friends";
 import { Linking, StyleSheet, Text, View } from "react-native";
 import { StatusBar } from "expo-status-bar";
@@ -104,7 +104,7 @@ export function ScoutScreen() {
   }, [crewsApi.crews]);
   const [query, setQuery] = useState("");
   const parsed = useMemo(() => parseQuery(query), [query]);
-  const shown = useMemo(() => sortSpots(spots.filter((e) => matches(e, filter) && matchesQuery(e, parsed))), [spots, filter, parsed]);
+  const shown = useMemo(() => rankByVenue(sortSpots(spots.filter((e) => matches(e, filter) && matchesQuery(e, parsed))), parsed), [spots, filter, parsed]);
   // The active pin never folds into a cluster. Partners do (a lone partner pin used to sit on top of
   // neighbouring bubbles); a bubble holding one gets the partner's ink ring instead.
   const clusters = useMemo(() => {

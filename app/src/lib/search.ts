@@ -42,3 +42,11 @@ export function matchesQuery(e: Spot, q: Query): boolean {
   const hay = fold([e.venue, e.title, e.description, e.deal, e.price, e.address, CATEGORY[e.category]?.label].filter(Boolean).join(" "));
   return q.words.every((w) => (ALIASES[w] ?? [w]).some((a) => hay.includes(a)));
 }
+
+// Searching a place by name ("nublu", "gold diggers") puts that venue first; everything else keeps
+// the usual order. Stable: spots that tie stay as they were.
+export function rankByVenue<T extends Pick<Spot, "venue">>(spots: T[], q: Query): T[] {
+  if (!q.words.length) return spots;
+  const named = (e: T) => q.words.every((w) => fold(e.venue).includes(w));
+  return [...spots].sort((a, b) => Number(named(b)) - Number(named(a)));
+}

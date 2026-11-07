@@ -11,7 +11,7 @@ import { estimateFare, km } from "../app/src/lib/fare";
 import { canonicalCity, cityKey } from "../app/src/lib/cities";
 import { similar } from "../app/src/lib/case";
 import { goingLine, initials } from "../app/src/lib/friends";
-import { matchesQuery, parseQuery, priceOf } from "../app/src/lib/search";
+import { matchesQuery, parseQuery, priceOf, rankByVenue } from "../app/src/lib/search";
 
 const spot = (over: Partial<Spot>): Spot => ({
   id: "s", city: "new york, ny", title: "Jazz", venue: "Nublu", address: "151 Avenue C", start: null, category: "music",
@@ -190,4 +190,10 @@ Deno.test("search: every word must match, with aliases and a price cap", () => {
   expect(m("under 20", club)).toBe(true);           // free entry counts as 0
   expect(priceOf({ price: null, deal: null } as never)).toBe(null);
   expect(m("", jazz)).toBe(true);
+});
+
+Deno.test("search ranks the named venue first, otherwise keeps order", () => {
+  const a = { venue: "Blue Note" }, b = { venue: "Nublu" }, c = { venue: "Smalls" };
+  expect(rankByVenue([a, b, c], parseQuery("nublu")).map((e) => e.venue)).toEqual(["Nublu", "Blue Note", "Smalls"]);
+  expect(rankByVenue([a, b, c], parseQuery("jazz")).map((e) => e.venue)).toEqual(["Blue Note", "Nublu", "Smalls"]);
 });
