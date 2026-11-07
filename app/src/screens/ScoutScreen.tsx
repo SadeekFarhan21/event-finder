@@ -93,7 +93,11 @@ export function ScoutScreen() {
     // Pins that would land behind the bottom pills and cards are noise: hide them (the cards list them anyway).
     const south = region.latitude - region.latitudeDelta / 2, north = region.latitude + region.latitudeDelta / 2;
     const low = south + region.latitudeDelta * BOTTOM_BAND, high = north - region.latitudeDelta * TOP_BAND;
-    return [...clusterEvents(rest.filter((e) => !e.partner), region), ...partners].filter((c) => c.lat > low && c.lat < high);
+    // Nothing may sit under the selected pin (a venue with two listings tonight put its second pin right behind it).
+    const clear = region.longitudeDelta * 0.05;
+    const underActive = (c: { lat: number; lng: number }) => !!active && Math.hypot(c.lat - active.lat, c.lng - active.lng) < clear;
+    return [...clusterEvents(rest.filter((e) => !e.partner), region), ...partners]
+      .filter((c) => c.lat > low && c.lat < high && !underActive(c));
   }, [shown, active, region]);
 
   const fit = useCallback((list: Spot[]) => {

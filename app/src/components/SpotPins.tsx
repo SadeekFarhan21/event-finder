@@ -17,8 +17,7 @@ type Props = {
 export function SpotPins({ clusters, active, onSpot, onCluster, onActive }: Props) {
   return (
     <>
-      {/* The selected spot is drawn on its own below; skip the pin or bubble that holds it so nothing peeks out behind. */}
-      {clusters.filter((c) => !active || !c.events.some((e) => e.id === active.id)).map((c) => {
+      {clusters.map((c) => {
         const only = c.events.length === 1 ? c.events[0] : null;
         return only ? (
           <ScoutMarker key={only.id} coordinate={{ latitude: c.lat, longitude: c.lng }} onPress={() => onSpot(only)}>
