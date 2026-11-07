@@ -103,6 +103,16 @@
   .near-list em { font-style: normal; font-size: 13px; color: var(--ink-3); white-space: nowrap; }
   .actions .link { align-self: flex-start; padding: 12px 0; color: var(--ink-2); font-size: 16px; text-decoration: underline; text-underline-offset: 3px; }
   .actions .link:hover { color: var(--ink); }
+
+  /* Opened on a laptop (a link from Messages on a Mac): hand the page to the phone, where directions and
+     the ride live. Wide screens only, beside the column; never on a phone. */
+  .handoff { display: none; }
+  @media (min-width: 1000px) {
+    .handoff:not([hidden]) { display: block; position: fixed; top: 112px; left: calc(50% + 312px); width: 168px; }
+  }
+  .handoff .qr-box { background: #FFFFFF; padding: 8px; border-radius: 12px; width: 152px; height: 152px; }
+  .handoff .qr-box img, .handoff .qr-box canvas { width: 100% !important; height: 100% !important; display: block; }
+  .handoff p { margin: 12px 0 0; font-size: 14px; line-height: 1.45; color: var(--ink-3); }
 </style>
 </head>
 <body>
@@ -111,6 +121,11 @@
   <p id="live" class="sr" aria-live="polite"></p>
   <main id="app"><p class="note" style="margin-top:32px">Loading the night…</p></main>
 </div>
+<aside class="handoff" id="handoff" hidden aria-label="Open on your phone">
+  <div class="qr-box" id="qr" role="img" aria-label="QR code that opens this page on your phone"></div>
+  <p>Scan to open this night on your phone, with directions and the ride.</p>
+</aside>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.0/dist/umd/supabase.js"></script>
 <script>
@@ -272,6 +287,18 @@
     box.hidden = false;
   }
 
+
+  // Show the phone handoff once the page has something worth opening (never on an error state).
+  function handoff() {
+    if (!window.matchMedia("(min-width: 1000px)").matches || typeof QRCode === "undefined") return;
+    const box = document.getElementById("qr");
+    if (box.childElementCount) return; // drawn once; the crew page re-renders every 20 s
+    try {
+      new QRCode(box, { text: location.href, width: 256, height: 256, colorDark: "#111111", colorLight: "#FFFFFF", correctLevel: QRCode.CorrectLevel.M });
+      document.getElementById("handoff").hidden = false;
+    } catch { /* no QR, no panel */ }
+  }
+
   async function render() {
     const q = new URLSearchParams(location.search);
     const code = (q.get("crew") || "").toLowerCase();
@@ -337,6 +364,7 @@
       </article>
       ${crew ? "" : '<section id="nearby" class="nearby" hidden></section>'}
       <p class="note">Scout finds what's on tonight in New York and Los Angeles and shows the ride there. An independent prototype, not an official Yelo app.</p>`;
+    handoff();
 
     if (!crew) { nearby(e).catch(() => {}); return; } // extras never block or break the page
     announce(crew);
