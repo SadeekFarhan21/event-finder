@@ -2,7 +2,7 @@
 import { assert, assertEquals } from "jsr:@std/assert@1";
 import { cleanTitle, cleanVenue, dedupeEvents, isRealDeal } from "../_shared/clean.ts";
 import { canonicalCity, cityKey } from "../_shared/cities.ts";
-import { validDate, type YeloEvent } from "../_shared/discover.ts";
+import { NOT_A_PHOTO, validDate, type YeloEvent } from "../_shared/discover.ts";
 import { describeIssues, errorBody, ScoutRequest } from "../_shared/requests.ts";
 import { isPrivateAddress, isPublicHttps, isSafeTarget, ogImageFrom, pageAboutVenue } from "../_shared/photos.ts";
 import { partnerName } from "../_shared/partners.ts";
@@ -173,4 +173,13 @@ Deno.test("inBrief keeps 50-400 rooms and unknowns", () => {
   assert(inBrief(null));
   assert(!inBrief("Up to 780"));
   assert(!inBrief("Up to 30"));
+});
+
+Deno.test("NOT_A_PHOTO drops logos and social badges, keeps real photos", () => {
+  for (const u of ["https://mattiesweho.com/images/f/tiktok-22.webp", "https://x.com/static/instagram-icon.png", "https://a.com/logo.svg", "https://a.com/img/app-store-badge.png", "https://s3.amazonaws.com/resy.com/images/social/facebook-preview.png", "https://images.getbento.com/x/99248PT_BADGE_WHITE-100.png"])
+    assertEquals(NOT_A_PHOTO.test(u), true, u);
+  for (const u of ["https://nublu.net/wp-content/uploads/2026/11/monford.jpg", "https://cdn.dice.fm/events/abc123/hero.jpg",
+    "https://mato.s3.us-east-1.amazonaws.com/instagram/post-image/193b76ed-original.webp", // a real Instagram post photo
+    "https://brooklyn.brooklynbowl.com/assets/img/20260905_loveInTheClub_facebook_1920x1005-77c50567b8.jpg"])
+    assertEquals(NOT_A_PHOTO.test(u), false, u);
 });
