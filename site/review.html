@@ -100,15 +100,21 @@
     return data;
   }
 
+  // Database values read as people would write them: "new york, ny" -> "New York", "music" -> "Live music".
+  const LABEL = { nightlife: "Nightlife", music: "Live music", food_drink: "Food & drink", arts: "Arts", sports: "Sports", community: "Community", deal: "Deal" };
+  const cityName = (c) => String(c ?? "").split(",")[0].replace(/\b\w/g, (m) => m.toUpperCase());
+  const sent = (t) => new Date(t).toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+
   function item(s) {
     const when = s.start ? new Date(s.start).toLocaleString(undefined, { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "Standing deal";
     return `<article class="item" data-id="${s.id}">
-      <p class="meta">${esc(s.city)} · ${esc(s.category)} · sent ${new Date(s.updated_at).toLocaleString()}</p>
+      <p class="meta">${esc(cityName(s.city))} · ${esc(LABEL[s.category] ?? s.category)} · sent ${esc(sent(s.updated_at))}</p>
       <p class="venue">${esc(s.venue)}</p><p class="title">${esc(s.title)}</p>
       <dl><dt>When</dt><dd>${esc(when)}</dd><dt>Address</dt><dd>${esc(s.address)}</dd>
         ${s.deal ? `<dt>Deal</dt><dd>${esc(s.deal)}</dd>` : ""}${s.description ? `<dt>About</dt><dd>${esc(s.description)}</dd>` : ""}
         ${s.url ? `<dt>Link</dt><dd>${safeHref(s.url) ? `<a href="${esc(safeHref(s.url))}" target="_blank" rel="noopener noreferrer">${esc(s.url)}</a>` : esc(s.url)}</dd>` : ""}
-        <dt>Contact</dt><dd>${esc(s.contact_email)}</dd></dl>
+        <dt>Contact</dt><dd>${esc(s.contact_email)}</dd>
+        ${s.status === "rejected" && s.review_note ? `<dt>Reason</dt><dd>${esc(s.review_note)}</dd>` : ""}</dl>
       ${s.status === "pending" ? `<div class="actions"><button class="approve" data-act="approve">Approve</button>
         <input placeholder="Note to the venue if rejecting (optional)" maxlength="300" aria-label="Rejection note">
         <button class="reject" data-act="reject">Reject</button></div>` : ""}
