@@ -21,6 +21,9 @@ const parts = (t: number) => Object.fromEntries(new Intl.DateTimeFormat("en-US",
 // The zone's wall clock read as if it were UTC, minus the real instant: the zone's offset.
 const offset = (t: number) => { const p = parts(t); return Date.UTC(+p.year, +p.month - 1, +p.day, +p.hour, +p.minute) - Math.floor(t / 6e4) * 6e4; };
 
+// The hour (0-23) on the city's clock.
+export const cityHour = (t: number) => +parts(t).hour;
+
 // A night out runs until 6am: a 1am set belongs to the evening before, so it reads "Tonight".
 // The night's date in the city's zone, as a day number (wall clock, so DST changes are fine).
 const nightDay = (t: number) => { const p = parts(t - 6 * 3600e3); return Date.UTC(+p.year, +p.month - 1, +p.day) / 864e5; };

@@ -142,7 +142,7 @@ export function SpotSheet({ spot, city, me, unlocked, canAskLocation, locationRe
   return (
     <View style={StyleSheet.absoluteFill}>
       <Animated.View style={[s.backdrop, backdropStyle]}>
-        <Pressable style={StyleSheet.absoluteFill} onPress={close} accessibilityLabel="Close" />
+        <Pressable style={StyleSheet.absoluteFill} onPress={close} accessibilityRole="button" accessibilityLabel="Close" />
       </Animated.View>
 
       <Animated.View style={[s.sheet, sheetStyle]}>
@@ -183,7 +183,7 @@ export function SpotSheet({ spot, city, me, unlocked, canAskLocation, locationRe
               <Text style={s.bill} numberOfLines={2}>{calmCaps(e.title)}</Text>
             )}
             {!!e.description && (
-              <Tap pressedScale={1} onPress={() => setMore((m) => !m)} accessibilityLabel={more ? "Show less" : "Show more"}>
+              <Tap pressedScale={1} onPress={() => setMore((m) => !m)} accessibilityHint={more ? "Shows less" : "Shows the full description"}>
                 <Text style={s.desc} numberOfLines={more ? undefined : 2}>{e.description}</Text>
               </Tap>
             )}
@@ -246,7 +246,7 @@ export function SpotSheet({ spot, city, me, unlocked, canAskLocation, locationRe
                     </Tap>
                   )}
                 </View>
-                {crewFailed && <Text style={s.crewErr}>{"No connection. Your crew didn't get that, try again."}</Text>}
+                {crewFailed && <Text style={s.crewErr} accessibilityLiveRegion="polite">{"Your crew didn't get that. Check your connection and try again."}</Text>}
               </Animated.View>
             ) : canCrew ? (
               <Tap style={s.friends} onPress={() => { Haptics.selectionAsync(); setComposing(true); }}>
@@ -341,13 +341,13 @@ export function SpotSheet({ spot, city, me, unlocked, canAskLocation, locationRe
         {/* The fade covers the handle; draw it again on top (the one underneath still takes the drag). */}
         {!e.image && <View pointerEvents="none" style={s.grabber} />}
         <View pointerEvents="box-none" style={s.heroTop}>
-          <Tap style={s.glass} onPress={close} accessibilityLabel="Close"><Feather name="chevron-down" size={18} color={C.ink} /></Tap>
+          <Tap style={s.glass} hitSlop={4} onPress={close} accessibilityLabel="Close"><Feather name="chevron-down" size={18} color={C.ink} /></Tap>
           <View style={{ flexDirection: "row", gap: 8 }}>
-            <Tap style={[s.glass, isSaved && s.glassOn]} onPress={() => { Haptics.selectionAsync(); onToggleSave?.(e); }}
+            <Tap style={[s.glass, isSaved && s.glassOn]} hitSlop={4} onPress={() => { Haptics.selectionAsync(); onToggleSave?.(e); }}
               accessibilityLabel={isSaved ? "Remove from saved" : "Save for later"} accessibilityState={{ selected: !!isSaved }}>
               <Feather name="bookmark" size={17} color={isSaved ? C.bg : C.ink} />
             </Tap>
-            <Tap style={s.glass} onPress={share} accessibilityLabel={crew ? "Invite friends to your crew" : "Send this spot to a friend"}>
+            <Tap style={s.glass} hitSlop={4} onPress={share} accessibilityLabel={crew ? "Invite friends to your crew" : "Send this spot to a friend"}>
               <Feather name="share" size={17} color={C.ink} />
             </Tap>
           </View>
@@ -362,7 +362,7 @@ export function SpotSheet({ spot, city, me, unlocked, canAskLocation, locationRe
           </Tap>
           {e.deal && !unlocked && (
             <Tap style={[s.btn, s.btnQuiet]} onPress={unlock}>
-              <Text style={s.btnQuietText}>Deal</Text>
+              <Text style={s.btnQuietText}>Unlock deal</Text>
             </Tap>
           )}
         </View>
@@ -388,15 +388,15 @@ const s = StyleSheet.create({
   grabber: { position: "absolute", top: 8, alignSelf: "center", width: 36, height: 4, borderRadius: 2, backgroundColor: "rgba(255,255,255,0.35)" },
   heroTop: { position: "absolute", top: 20, left: 16, right: 16, flexDirection: "row", justifyContent: "space-between" },
   glassOn: { backgroundColor: C.ink, borderColor: C.ink },
-  glass: { width: 38, height: 38, borderRadius: 19, alignItems: "center", justifyContent: "center",
+  glass: { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center",
     backgroundColor: "rgba(21,21,19,0.7)", borderWidth: StyleSheet.hairlineWidth, borderColor: "rgba(255,255,255,0.14)" },
   heroText: { position: "absolute", left: 20, right: 20, bottom: 4 },
   plainHead: { paddingTop: 76, paddingHorizontal: 20 },
   eyebrowRow: { flexDirection: "row", alignItems: "center", gap: 8 },
   eyebrow: { flexShrink: 1, fontFamily: F.medium, fontSize: T.small, color: C.ink2 },
   partnerMark: { width: 6, height: 6, borderRadius: 3, backgroundColor: C.accent },
-  partner: { flexDirection: "row", alignItems: "center", gap: 6, height: 22, paddingHorizontal: 8, borderRadius: R.pill, justifyContent: "center", backgroundColor: "rgba(21,21,19,0.82)", borderWidth: StyleSheet.hairlineWidth, borderColor: C.d4 },
-  partnerText: { fontFamily: F.semibold, fontSize: 11, color: C.ink, letterSpacing: 0.2 },
+  partner: { flexDirection: "row", alignItems: "center", gap: 6, height: 24, paddingHorizontal: 8, borderRadius: R.pill, justifyContent: "center", backgroundColor: "rgba(21,21,19,0.82)", borderWidth: StyleSheet.hairlineWidth, borderColor: C.d4 },
+  partnerText: { fontFamily: F.semibold, fontSize: T.meta, color: C.ink },
   title: { fontFamily: F.display, fontSize: 48, lineHeight: 52, color: C.ink, marginBottom: 6 },
   content: { paddingHorizontal: 20, paddingTop: 12 },
   factsClip: { overflow: "hidden" },
@@ -419,7 +419,7 @@ const s = StyleSheet.create({
   face: { width: 30, height: 30, borderRadius: 15, alignItems: "center", justifyContent: "center",
     backgroundColor: C.d3, borderWidth: 2, borderColor: C.bg },
   faceOnWay: { backgroundColor: C.ink },
-  faceText: { fontFamily: F.semibold, fontSize: 10, color: C.ink },
+  faceText: { fontFamily: F.semibold, fontSize: T.meta, color: C.ink },
   pill: { flexDirection: "row", alignItems: "center", gap: 4, height: 36, paddingHorizontal: 16, borderRadius: R.pill,
     borderWidth: 1, borderColor: C.d4 },
   pillOn: { borderColor: C.d4, backgroundColor: C.surface },
@@ -429,22 +429,19 @@ const s = StyleSheet.create({
   crew: { marginTop: 16, padding: 16, borderRadius: R.md, backgroundColor: C.surface, borderWidth: StyleSheet.hairlineWidth, borderColor: C.d4, gap: 12 },
   crewHead: { flexDirection: "row", alignItems: "baseline", justifyContent: "space-between" },
   crewLabel: { fontFamily: F.medium, fontSize: T.small, color: C.ink3 },
-  crewTime: { fontFamily: F.display, fontSize: 22, color: C.ink },
+  crewTime: { fontFamily: F.semibold, fontSize: T.body, color: C.ink, fontVariant: ["tabular-nums"] }, // a time, so Inter, not the serif
   crewMembers: { gap: 8 },
-  member: { flexDirection: "row", alignItems: "center", gap: 10 },
+  member: { flexDirection: "row", alignItems: "center", gap: 8 },
   memberDot: { width: 8, height: 8, borderRadius: 4, borderWidth: 1.5, borderColor: C.ink3 },
   memberDotOn: { backgroundColor: C.ink, borderColor: C.ink },
   memberName: { flex: 1, fontFamily: F.medium, fontSize: T.small, color: C.ink },
   memberState: { fontFamily: F.regular, fontSize: T.meta, color: C.ink3 },
-  crewErr: { fontFamily: F.medium, fontSize: T.small, color: C.red, marginTop: 10 },
+  crewErr: { fontFamily: F.medium, fontSize: T.small, color: C.red },
   crewActions: { flexDirection: "row", gap: 8, alignItems: "center" },
   crewBtn: { flex: 1, height: 44, borderRadius: R.pill, alignItems: "center", justifyContent: "center", borderWidth: StyleSheet.hairlineWidth, borderColor: C.d4 },
   crewBtnMain: { backgroundColor: C.ink, borderColor: C.ink },
   crewBtnMainText: { fontFamily: F.semibold, fontSize: T.small, color: C.bg },
   crewBtnText: { fontFamily: F.semibold, fontSize: T.small, color: C.ink2 },
-  crewNote: { flex: 1, fontFamily: F.medium, fontSize: T.small, color: C.ink2 },
-  link: { fontFamily: F.semibold, fontSize: T.small, color: C.ink, textDecorationLine: "underline" },
-  linkQuiet: { fontFamily: F.semibold, fontSize: T.small, color: C.ink3 },
   rowNext: { marginTop: 16 },
   value: { fontFamily: F.semibold, fontSize: T.body, color: C.ink, fontVariant: ["tabular-nums"] },
   round: { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center",
@@ -456,7 +453,7 @@ const s = StyleSheet.create({
   dealLabel: { fontFamily: F.medium, fontSize: T.meta, color: C.ink3 },
   dealText: { fontFamily: F.semibold, fontSize: T.body, lineHeight: 23, color: C.ink, marginTop: 4 },
   source: { fontFamily: F.regular, fontSize: T.meta, color: C.ink3, marginTop: 24 },
-  dock: { position: "absolute", left: 0, right: 0, bottom: 0, flexDirection: "row", gap: 10, paddingHorizontal: 16, paddingTop: 28 },
+  dock: { position: "absolute", left: 0, right: 0, bottom: 0, flexDirection: "row", gap: 8, paddingHorizontal: 16, paddingTop: 32 },
   btn: { height: 54, borderRadius: R.pill, flexDirection: "row", gap: 8, alignItems: "center", justifyContent: "center", paddingHorizontal: 20 },
   btnPrimary: { flex: 1, backgroundColor: C.accent },
   btnPrimaryText: { fontFamily: F.semibold, fontSize: T.body, color: C.onAccent },

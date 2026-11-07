@@ -80,19 +80,22 @@ export function RoomsScreen({ visible, city, leads, setLeads, canSearch, onClose
   // The header scrolls with the list: on a small phone a fixed header left room for ~1.5 cards.
   const header = (
     <View style={s.head}>
-      <Tap onPress={onClose} hitSlop={12} style={s.close} accessibilityLabel="Close rooms">
-        <Feather name="chevron-down" size={22} color={C.ink} />
-      </Tap>
+      <View style={s.topRow}>
+        <Tap onPress={onClose} hitSlop={12} style={s.close} accessibilityLabel="Close rooms">
+          <Feather name="chevron-down" size={20} color={C.ink} />
+        </Tap>
+      </View>
       <Text style={s.title}>Rooms worth{"\n"}<Text style={s.titleAccent}>pitching.</Text></Text>
       <Text style={s.sub}>
         Independent rooms in {city.split(",")[0]} that could host a Yelo night, for the partner team.
       </Text>
-      <Tap onPress={find} disabled={busy || !canSearch} style={[s.findBtn, !canSearch && { opacity: 0.4 }]}
+      <Tap onPress={find} disabled={busy || !canSearch} style={[s.findBtn, !canSearch && s.findBtnOff]}
         accessibilityState={{ busy, disabled: busy || !canSearch }}>
-        {busy ? <ActivityIndicator color={C.surface} size="small" /> : <Text style={s.findText}>{leads.length ? "Find more rooms" : "Find rooms"}</Text>}
+        {busy ? <ActivityIndicator color={C.surface} size="small" /> : <Text style={[s.findText, !canSearch && { color: C.ink3 }]}>{leads.length ? "Find more rooms" : "Find rooms"}</Text>}
       </Tap>
-      {busy && <Text style={s.hint}>Searching venue sites and calendars · about a minute</Text>}
-      {error && <Text style={[s.hint, { color: C.red }]}>{error}</Text>}
+      {busy && <Text style={s.hint} accessibilityLiveRegion="polite">Searching venue sites and calendars. This takes about a minute.</Text>}
+      {!busy && !canSearch && <Text style={s.hint}>Searching isn't available right now. The rooms below are from the last search.</Text>}
+      {error && <Text style={[s.hint, { color: C.red }]} accessibilityLiveRegion="polite">{error}</Text>}
     </View>
   );
 
@@ -101,25 +104,29 @@ export function RoomsScreen({ visible, city, leads, setLeads, canSearch, onClose
       <View style={[s.root, Platform.OS === "android" && { paddingTop: insets.top }]}>
         <FlatList data={leads.filter((l) => inBrief(l.capacity)).sort((a, b) => Number(!!contacted[a.id]) - Number(!!contacted[b.id]) || (interest[b.venue] ?? 0) - (interest[a.venue] ?? 0))} keyExtractor={(l) => l.id} ListHeaderComponent={header}
           contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: Math.max(insets.bottom, 16) + 32 }}
-          ListEmptyComponent={busy ? undefined : <Text style={s.empty}>No rooms yet. Tap Find rooms to search this city.</Text>}
+          ListEmptyComponent={busy ? undefined : <Text style={s.empty}>{canSearch ? "No rooms yet. Tap Find rooms to search this city." : "No rooms saved for this city yet."}</Text>}
           ItemSeparatorComponent={() => <View style={s.rule} />}
           renderItem={({ item: l }) => (
             <View style={s.item}>
               <View style={{ flex: 1, minWidth: 0 }}>
-                <Text style={s.name} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75}>{l.venue}</Text>
+                <Text style={[s.name, !!contacted[l.id] && s.nameDone]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75}>{l.venue}</Text>
                 <Text style={s.meta} numberOfLines={1}>{[l.area?.replace(/\s*\([^)]*(\)|$)/g, ""), shortKind(l.kind)].filter(Boolean).join("  ·  ")}</Text>
                 <Text style={s.fit} numberOfLines={2}>{l.fit}</Text>
-                {contacted[l.id] ? (
-                  <Text style={s.contacted} numberOfLines={1}>Contacted {contactedWhen(contacted[l.id])}</Text>
+                {(contacted[l.id] || interest[l.venue] || l.quietNight || l.capacity) ? (
+                  <View style={s.notes}>
+                    {contacted[l.id] ? (
+                      <Text style={s.contacted} numberOfLines={1}>Contacted {contactedWhen(contacted[l.id])}</Text>
+                    ) : null}
+                    {interest[l.venue] ? (
+                      <Text style={s.warm} numberOfLines={1}>Riders opened it {interest[l.venue] === 1 ? "once" : `${interest[l.venue]} times`} this week</Text>
+                    ) : null}
+                    {(l.quietNight || l.capacity) && (
+                      <Text style={s.facts} numberOfLines={1}>
+                        {[l.quietNight && `Quiet ${l.quietNight}s`, l.capacity].filter(Boolean).join("  ·  ")}
+                      </Text>
+                    )}
+                  </View>
                 ) : null}
-                {interest[l.venue] ? (
-                  <Text style={s.warm} numberOfLines={1}>Riders opened it {interest[l.venue] === 1 ? "once" : `${interest[l.venue]} times`} this week</Text>
-                ) : null}
-                {(l.quietNight || l.capacity) && (
-                  <Text style={s.facts} numberOfLines={1}>
-                    {[l.quietNight && `Quiet ${l.quietNight}s`, l.capacity].filter(Boolean).join("   ·   ")}
-                  </Text>
-                )}
               </View>
               {(l.contact || l.url) && (
                 <Tap onPress={() => contact(l)} style={s.go} hitSlop={8}
@@ -136,31 +143,27 @@ export function RoomsScreen({ visible, city, leads, setLeads, canSearch, onClose
 
 const s = StyleSheet.create({
   root: { flex: 1, backgroundColor: C.bg },
-  head: { paddingTop: 16, paddingBottom: 8 },
-  close: { alignSelf: "flex-start", width: 36, height: 36, borderRadius: 18, backgroundColor: C.surface, alignItems: "center", justifyContent: "center", marginBottom: 16, borderWidth: 1, borderColor: C.hairline },
-  title: { fontFamily: F.display, fontSize: T.display, lineHeight: 44, color: C.ink, marginTop: 8 },
+  // Same header as Crews: round close, display title, one line of context, then the action.
+  head: { paddingTop: 12, paddingBottom: 8 },
+  topRow: { flexDirection: "row", marginBottom: 16 },
+  close: { width: 40, height: 40, borderRadius: 20, backgroundColor: C.surface, alignItems: "center", justifyContent: "center", borderWidth: StyleSheet.hairlineWidth, borderColor: C.d4 },
+  title: { fontFamily: F.display, fontSize: T.display, lineHeight: 44, color: C.ink, marginTop: 4 },
   titleAccent: { fontFamily: F.displayItalic },
-  sub: { fontFamily: F.regular, fontSize: T.body, lineHeight: 22, color: C.ink2, marginTop: 12 },
-  findBtn: { alignSelf: "flex-start", height: 44, paddingHorizontal: 20, borderRadius: R.pill, backgroundColor: C.ink, justifyContent: "center", marginTop: 16 },
+  sub: { fontFamily: F.regular, fontSize: T.small, lineHeight: 21, color: C.ink2, marginTop: 8 },
+  findBtn: { alignSelf: "flex-start", height: 44, paddingHorizontal: 20, borderRadius: R.pill, backgroundColor: C.ink, justifyContent: "center", marginTop: 20 },
+  findBtnOff: { backgroundColor: C.fill },
   findText: { fontFamily: F.semibold, fontSize: T.body, color: C.surface },
-  hint: { fontFamily: F.regular, fontSize: T.small, color: C.ink3, marginTop: 8 },
-  empty: { fontFamily: F.regular, fontSize: T.body, color: C.ink3, marginTop: 40 },
-  card: { backgroundColor: C.surface, borderRadius: R.lg, padding: 16, borderWidth: 1, borderColor: C.hairline },
+  hint: { fontFamily: F.regular, fontSize: T.small, lineHeight: 20, color: C.ink3, marginTop: 8 },
+  empty: { fontFamily: F.regular, fontSize: T.body, color: C.ink3, marginTop: 32 },
   meta: { fontFamily: F.medium, fontSize: T.small, color: C.ink2, marginTop: 2 },
   name: { fontFamily: F.display, fontSize: T.title, lineHeight: 32, color: C.ink },
-  fit: { fontFamily: F.regular, fontSize: T.small, lineHeight: 20, color: C.ink3, marginTop: 6 },
-  footer: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 8 },
-  tags: { flexDirection: "row", gap: 8, flexShrink: 1 },
-  cap: { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 8, paddingVertical: 4, borderRadius: R.pill, backgroundColor: C.fill },
-  capText: { fontFamily: F.medium, fontSize: T.meta, color: C.ink2 },
-  night: { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 8, paddingVertical: 4, borderRadius: R.pill, backgroundColor: C.fill },
-  nightText: { fontFamily: F.semibold, fontSize: T.meta, color: C.ink },
-  contact: { flexDirection: "row", alignItems: "center", gap: 4, minHeight: 44, paddingLeft: 12 },
-  contactText: { fontFamily: F.semibold, fontSize: T.small, color: C.ink },
+  fit: { fontFamily: F.regular, fontSize: T.small, lineHeight: 20, color: C.ink3, marginTop: 8 },
   rule: { height: StyleSheet.hairlineWidth, backgroundColor: C.hairline },
   item: { flexDirection: "row", alignItems: "flex-start", gap: 16, paddingVertical: 20 },
-  contacted: { fontFamily: F.medium, fontSize: T.meta, color: C.ink3, marginTop: 10 },
-  warm: { fontFamily: F.medium, fontSize: T.meta, color: C.ink, marginTop: 10 },
-  facts: { fontFamily: F.medium, fontSize: T.meta, color: C.ink2, marginTop: 10 },
-  go: { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center", borderWidth: StyleSheet.hairlineWidth, borderColor: C.d4, marginTop: 2 },
+  notes: { marginTop: 12, gap: 4 }, // contacted, warm and facts lines sit together as one group
+  nameDone: { color: C.ink2 }, // already contacted: still there, but the open leads read first
+  contacted: { fontFamily: F.medium, fontSize: T.meta, color: C.ink3 },
+  warm: { fontFamily: F.medium, fontSize: T.meta, color: C.ink },
+  facts: { fontFamily: F.medium, fontSize: T.meta, color: C.ink2 },
+  go: { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center", backgroundColor: C.surface, borderWidth: StyleSheet.hairlineWidth, borderColor: C.d4, marginTop: 4 },
 });

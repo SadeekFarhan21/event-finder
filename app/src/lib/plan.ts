@@ -2,7 +2,7 @@
 // who knows the city would: a happy hour that's on now, a show about an hour and a half later close by,
 // then somewhere late. No network and no AI call: it picks from what the agent already found.
 import { km } from "./fare";
-import { dealRank, isRecurring, nightEnd } from "./time";
+import { cityHour, dealRank, isRecurring, nightEnd } from "./time";
 import type { Spot } from "./types";
 
 // step: "Start here" / "Then" / "Late"; hop: how far from the stop before ("0.4 mi", "a short walk").
@@ -44,7 +44,9 @@ export function planNight(spots: Spot[], now = Date.now(), me?: { lat: number; l
     const next = cands.sort((a, b) => score(a) - score(b))[0];
     const d = at && stops.length ? km(at, next) : null;
     const hop = d === null ? null : d < 0.5 ? "a short walk" : `${(d * 0.621).toFixed(1)} mi`;
-    stops.push({ spot: next, step: stops.length === 0 ? "Start here" : stops.length === 2 ? "Late" : "Then", hop });
+    // "Late" only for what really is (9 PM to 6 AM in the city): a 7 PM set reads "Then".
+    const h = cityHour(Date.parse(next.start!)), late = h >= 21 || h < 6;
+    stops.push({ spot: next, step: stops.length === 0 ? "Start here" : late && stops.length === 2 ? "Late" : "Then", hop });
     at = next; free = Date.parse(next.start!) + STAY;
   }
   // One stop isn't a plan; the regular list already shows it.

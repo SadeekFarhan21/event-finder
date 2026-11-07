@@ -23,15 +23,16 @@ export function FirstRunHint({ top, city, dismissed }: { top: number; city: stri
         <Text style={s.title}>What's on tonight in {city.split(",")[0]}</Text>
         <Text style={s.body}>Swipe the cards or tap a pin to see who's going, then ride there. A number means a few spots close together.</Text>
       </View>
-      <Tap onPress={done} hitSlop={10} accessibilityLabel="Dismiss hint"><Text style={s.ok}>Got it</Text></Tap>
+      <Tap onPress={done} hitSlop={8} style={s.ok} accessibilityLabel="Dismiss hint"><Text style={s.okText}>Got it</Text></Tap>
     </Animated.View>
   );
 }
 
 const s = StyleSheet.create({
-  card: { position: "absolute", left: 16, right: 16, flexDirection: "row", alignItems: "center", gap: 16, paddingHorizontal: 16, paddingVertical: 14,
+  card: { position: "absolute", left: 16, right: 16, flexDirection: "row", alignItems: "center", gap: 16, paddingLeft: 16, paddingRight: 12, paddingVertical: 12,
     borderRadius: R.md, backgroundColor: C.surface, borderWidth: StyleSheet.hairlineWidth, borderColor: C.d4, ...shadow, zIndex: 15, elevation: 15 },
   title: { fontFamily: F.semibold, fontSize: T.small, color: C.ink },
-  body: { fontFamily: F.regular, fontSize: T.meta, lineHeight: 17, color: C.ink3, marginTop: 4 },
-  ok: { fontFamily: F.semibold, fontSize: T.small, color: C.ink, textDecorationLine: "underline" },
+  body: { fontFamily: F.regular, fontSize: T.meta, lineHeight: 17, color: C.ink2, marginTop: 4 },
+  ok: { height: 36, paddingHorizontal: 16, borderRadius: R.pill, justifyContent: "center", backgroundColor: C.d3, borderWidth: StyleSheet.hairlineWidth, borderColor: C.d4 },
+  okText: { fontFamily: F.semibold, fontSize: T.small, color: C.ink },
 });

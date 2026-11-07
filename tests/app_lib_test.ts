@@ -315,5 +315,8 @@ Deno.test("planNight: happy hour now, a show close by later, then somewhere late
   expect(plan[1].hop).toBe("a short walk");
   // Nothing to chain: a single spot is not a plan.
   expect(planNight([show], now)).toEqual([]);
+  // A third stop at 8:30 PM is "Then", not "Late".
+  const early = spot("early", "Club F", "music", at(18.5), 40.724), evening = spot("evening", "Room G", "nightlife", at(20.5), 40.726);
+  expect(planNight([hh, early, evening], now).map((p) => p.step)).toEqual(["Start here", "Then", "Then"]);
   setCityZone(null);
 });
