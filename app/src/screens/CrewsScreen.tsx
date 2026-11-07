@@ -65,10 +65,8 @@ export function CrewsScreen({ visible, crews, photos, linkCode, onJoin, onStatus
         </Tap>
       </View>
       <Text style={s.title}>Your <Text style={s.titleItalic}>crews.</Text></Text>
-      {live.length > 0 && (
-        <View style={s.eyebrowRow}><View style={s.liveDot} /><Text style={s.eyebrow}>{live.length} heading out tonight</Text></View>
-      )}
-      <Text style={s.sub}>Friends join from your link, and everyone sees who's coming and who's on the way.</Text>
+      {/* How crews work, until you're in one; after that the crews themselves show it. */}
+      {crews.length === 0 && <Text style={s.sub}>Friends join from your link, and everyone sees who's coming and who's on the way.</Text>}
 
       {/* No crews yet: no empty heading; the start card below leads. */}
       {crews.length > 0 && <View style={s.sectionRow}>
@@ -206,9 +204,6 @@ const s = StyleSheet.create({
   head: { paddingTop: 12, paddingBottom: 4 },
   topRow: { flexDirection: "row", marginBottom: 16 },
   close: { width: 40, height: 40, borderRadius: 20, backgroundColor: C.surface, alignItems: "center", justifyContent: "center", borderWidth: StyleSheet.hairlineWidth, borderColor: C.d4 },
-  eyebrowRow: { flexDirection: "row", alignItems: "center", gap: 8, marginTop: 4 },
-  liveDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: C.ink },
-  eyebrow: { fontFamily: F.medium, fontSize: T.small, color: C.ink2 },
   title: { fontFamily: F.display, fontSize: T.display, lineHeight: 46, color: C.ink, marginTop: 4 },
   titleItalic: { fontFamily: F.displayItalic },
   sub: { fontFamily: F.regular, fontSize: T.small, lineHeight: 21, color: C.ink2, marginTop: 8 },
@@ -223,7 +218,7 @@ const s = StyleSheet.create({
   joinBtn: { height: 48, borderRadius: R.pill, backgroundColor: C.ink, flexDirection: "row", gap: 8, alignItems: "center", justifyContent: "center", marginTop: 4 },
   joinBtnOff: { backgroundColor: C.fill },
   joinText: { fontFamily: F.semibold, fontSize: T.body, color: C.bg },
-  sectionRow: { flexDirection: "row", alignItems: "center", gap: 8, marginTop: 28 },
+  sectionRow: { flexDirection: "row", alignItems: "center", gap: 8, marginTop: 24 },
   section: { flexShrink: 1, fontFamily: F.display, fontSize: T.title, color: C.ink },
   countPill: { minWidth: 24, height: 24, paddingHorizontal: 8, borderRadius: 12, alignItems: "center", justifyContent: "center", backgroundColor: C.d3 },
   countText: { fontFamily: F.semibold, fontSize: T.meta, color: C.ink },
