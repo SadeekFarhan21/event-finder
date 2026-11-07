@@ -112,8 +112,10 @@ export function ScoutScreen() {
         if (m.me) p.me = true; else if (!p.others.includes(m.name)) p.others.push(m.name);
       }
     }
+    // Going without a crew counts as you too, so the card agrees with the sheet.
+    for (const id of myGoing) (by[id] ??= { others: [], me: false }).me = true;
     return by;
-  }, [crewsApi.crews]);
+  }, [crewsApi.crews, myGoing]);
   const [query, setQuery] = useState("");
   const parsed = useMemo(() => parseQuery(query), [query]);
   const { saved, toggle: toggleSave } = useSaved();
