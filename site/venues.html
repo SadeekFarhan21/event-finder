@@ -210,6 +210,7 @@
   // Publishable key: safe in the browser. Row-level security allows only aggregate reads and pending submissions.
   const db = supabase.createClient("https://ihxsdwpersowxxtgqcws.supabase.co", "sb_publishable_WGHco-ibd0wX9Jhe3x5vJQ_Rb5ys6UZ", { auth: { persistSession: false } });
   const $ = (id) => document.getElementById(id);
+  const zoneFor = (city) => /los angeles/i.test(city || "") ? "America/Los_Angeles" : /new york/i.test(city || "") ? "America/New_York" : undefined;
   const key = (city) => city.trim().toLowerCase();
   const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 
@@ -287,7 +288,8 @@
       }));
       return;
     }
-    const fmt = (s) => s ? new Date(s).toLocaleString(undefined, { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "Ongoing";
+    // Show times in the venue's city, not the browser's.
+    const fmt = (s) => s ? new Date(s).toLocaleString(undefined, { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZone: zoneFor(city) }) : "Ongoing";
     // Label the numbers with the name the listings use ("Nublu 151"), not whatever was typed.
     const name = list.find((s) => s.venue)?.venue ?? venue, anyPartner = list.some((s) => s.partner);
     // Per night: which of the venue's listings riders are opening and riding to (last 7 days).
@@ -344,8 +346,9 @@
     $("submit-note").innerHTML = `<span class="badge ${l.status}">${esc(label)}</span> ${esc(l.review_note ? `Reviewer's note: ${l.review_note}` : live)}`;
     // What a rider sees in Scout: the same card, set the same way.
     const t = l.start ? new Date(l.start) : null;
-    const time = t ? t.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" }).replace(":00", "") : "Any night";
-    const day = t ? t.toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" }) : "This week";
+    const tz = zoneFor(l.city);
+    const time = t ? t.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit", timeZone: tz }).replace(":00", "") : "Any night";
+    const day = t ? t.toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric", timeZone: tz }) : "This week";
     $("preview").hidden = false;
     $("preview").innerHTML = `<p class="preview-label">How riders see it</p>
       <div class="pcard"><div class="pband"><b>${esc(time)}</b><span>${esc(day)}</span></div>
