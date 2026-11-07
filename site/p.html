@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Scout · A plan for tonight</title>
+<meta name="description" content="Two or three spots close together, in order, with the times and the way between them.">
+<link rel="icon" href="favicon.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="theme-color" content="#0C0C0A">
+<meta property="og:title" content="A friend planned tonight · Scout">
+<meta property="og:description" content="Two or three spots close together, in order, with the times and the way between them.">
+<meta property="og:image" content="https://scout-download.vercel.app/og-card.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&display=swap">
+<style>
+  /* Same night palette and type as e.html: warm near-blacks, Yelo yellow for the one main action. */
+  :root {
+    --bg: #0C0C0A; --surface: #151513; --fill: #1D1C19; --line: #282723;
+    --ink: #F2F0E9; --ink-2: #C2BEB2; --ink-3: #8E8A7F;
+    --yellow: #FFE14A; --on-yellow: #14130F; --yellow-hover: #F5D63E; --red: #FF7A6B;
+    --display: "Instrument Serif", "Iowan Old Style", Georgia, serif;
+    --body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+    color-scheme: dark;
+  }
+  *,*::before,*::after { box-sizing: border-box }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 400 16px/1.55 var(--body); }
+  .wrap { max-width: 560px; margin: 0 auto; padding-inline: 16px; padding-block: 24px 64px; }
+  a { color: inherit; }
+  :focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; border-radius: 8px; }
+  .mark { display: inline-flex; align-items: baseline; min-height: 44px; padding: 8px 0; font: 400 28px/1 var(--display); color: var(--ink); text-decoration: none; }
+  .mark i { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--yellow); margin-left: 3px; }
+  .invite { font: 400 28px/1.2 var(--display); margin: 32px 0 0; text-wrap: balance; }
+  .sub { color: var(--ink-3); font-size: 14px; margin: 4px 0 0; }
+  h1 { font: 400 40px/1.05 var(--display); margin: 0; text-wrap: balance; }
+
+  /* The night as a route: a time column, a rail with a stop marker, then the stop. */
+  .route { list-style: none; margin: 24px 0 0; padding: 0; }
+  .stop { display: grid; grid-template-columns: 72px 20px 1fr; column-gap: 12px; }
+  .time { text-align: right; padding-top: 2px; }
+  .time b { display: block; font: 400 28px/1 var(--display); color: var(--ink); }
+  .time b.word { font-size: 22px; line-height: 1.05; }
+  .time span { display: block; font-size: 13px; color: var(--ink-3); margin-top: 4px; }
+  .rail { position: relative; display: flex; justify-content: center; }
+  .rail::before { content: ""; position: absolute; top: 0; bottom: 0; width: 1px; background: var(--line); }
+  .stop:first-child .rail::before { top: 10px; }
+  .stop:last-child .rail::before { bottom: auto; height: 10px; }
+  .dot { position: relative; margin-top: 6px; width: 12px; height: 12px; border-radius: 50%; border: 1.5px solid var(--ink); background: var(--bg); }
+  .stop:first-child .dot { background: var(--yellow); border-color: var(--yellow); }
+  .what { padding-bottom: 32px; min-width: 0; }
+  .step { font-size: 13px; font-weight: 500; color: var(--ink-3); margin: 0; }
+  .what h2 { font: 400 26px/1.1 var(--display); margin: 4px 0 0; overflow-wrap: anywhere; }
+  .bill { margin: 4px 0 0; color: var(--ink-2); }
+  .addr { margin: 4px 0 0; font-size: 14px; color: var(--ink-3); }
+  .more { display: inline-block; margin-top: 8px; padding: 6px 0; font-size: 14px; color: var(--ink-2); text-decoration: underline; text-underline-offset: 3px; }
+  .more:hover { color: var(--ink); }
+
+  .actions { display: grid; gap: 8px; margin-top: 8px; }
+  .btn { display: flex; align-items: center; justify-content: center; min-height: 48px; padding: 0 16px; border-radius: 999px; font: 600 16px var(--body); color: var(--ink); text-decoration: none; border: 0; cursor: pointer; }
+  .btn.primary { background: var(--yellow); color: var(--on-yellow); }
+  .btn.primary:hover { background: var(--yellow-hover); }
+  .btn.quiet { background: var(--surface); border: 1px solid var(--line); }
+  .btn.quiet:hover { border-color: var(--ink-3); }
+  .note { font-size: 14px; color: var(--ink-3); margin: 24px 0 0; }
+  .empty { margin-top: 48px; }
+  .empty .sub { font-size: 16px; color: var(--ink-2); margin-top: 12px; }
+  @media (max-width: 360px) { .stop { grid-template-columns: 60px 16px 1fr; column-gap: 8px; } .time b { font-size: 24px; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="mark" href="./">Scout<i aria-hidden="true"></i></a>
+  <main id="app"><p class="note" style="margin-top:32px">Loading the plan…</p></main>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.0/dist/umd/supabase.js"></script>
+<script>
+  // Publishable key: read-only access to public listings.
+  const db = supabase.createClient("https://ihxsdwpersowxxtgqcws.supabase.co", "sb_publishable_WGHco-ibd0wX9Jhe3x5vJQ_Rb5ys6UZ", { auth: { persistSession: false } });
+  const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+  const app = document.getElementById("app");
+  const isAndroid = /android/i.test(navigator.userAgent);
+  const SERVED = ["new york, ny", "los angeles, ca"];
+
+  // Times in the plan's city, like the app: an LA night reads LA times wherever it's opened.
+  let ZONE;
+  const zoneFor = (city) => /los angeles/i.test(city || "") ? "America/Los_Angeles" : /new york/i.test(city || "") ? "America/New_York" : undefined;
+  const fmtT = (d) => new Date(d).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit", timeZone: ZONE }).replace(":00", "");
+  const hourOf = (d) => Number(new Date(d).toLocaleTimeString("en-US", { hour: "numeric", hourCycle: "h23", timeZone: ZONE }));
+  const isDeal = (e) => e.category === "deal" || /happy hour|daily|every (day|night)|nightly/i.test(`${e.title} ${e.deal ?? ""}`);
+  const hours = (e) => `${e.deal ?? ""} ${e.title}`.match(/\b\d{1,2}(:\d\d)?\s*(am|pm)?\s*(-|–|to)\s*\d{1,2}(:\d\d)?\s*(am|pm)\b/i)?.[0]?.replace(/\s*(-|–|to)\s*/i, "–");
+  const calm = (t) => (t && t === t.toUpperCase() && /[A-Z]{4}/.test(t) ? t.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase()) : t);
+  const same = (a, b) => String(a).toLowerCase().replace(/[^a-z0-9]/g, "") === String(b).toLowerCase().replace(/[^a-z0-9]/g, "");
+  const km = (a, b) => {
+    const r = Math.PI / 180, x = (b.lng - a.lng) * r * Math.cos(((a.lat + b.lat) / 2) * r), y = (b.lat - a.lat) * r;
+    return Math.sqrt(x * x + y * y) * 6371;
+  };
+  const hop = (d) => (d < 0.5 ? "a short walk" : `${(d * 0.621).toFixed(1)} mi`);
+
+  function gone(kind) {
+    const copy = {
+      expired: ["This plan has passed.", "The spots in it are over. See what's on tonight in the app."],
+      missing: ["We couldn't find that plan.", "The link may have been copied incompletely. Ask your friend to send it again."],
+      offline: ["Couldn't load this right now.", "Check your connection and try again."],
+    }[kind];
+    app.innerHTML = `<section class="empty"><h1>${copy[0]}</h1><p class="sub">${copy[1]}</p>
+      <div class="actions" style="margin-top:24px">${kind === "offline"
+        ? `<button class="btn primary" type="button" onclick="location.reload()">Try again</button>`
+        : `<a class="btn ${isAndroid ? "primary" : "quiet"}" href="./">${isAndroid ? "Get Scout for Android" : "See what Scout is"}</a>`}</div></section>`;
+  }
+
+  async function render() {
+    const shorts = (new URLSearchParams(location.search).get("s") || "").toLowerCase().split(",").filter(Boolean).slice(0, 4);
+    if (!shorts.length || !shorts.every((s) => /^[a-f0-9]{8}$/.test(s))) return gone("missing");
+    const { data, error } = await db.from("upcoming_events").select("*").in("short", shorts);
+    if (error) return gone("offline");
+    // Keep the plan's order; a stop that has ended drops out.
+    const stops = shorts.map((s) => (data ?? []).find((e) => e.short === s)).filter((e) => e && SERVED.includes(e.city));
+    if (!stops.length) return gone("expired");
+    ZONE = zoneFor(stops[0].city);
+
+    const rows = stops.map((e, i) => {
+      const deal = isDeal(e) || !e.start;
+      const time = deal ? "Happy hour" : fmtT(e.start);
+      const sub = deal ? (hours(e) ?? "") : "";
+      const late = !deal && (hourOf(e.start) >= 21 || hourOf(e.start) < 6);
+      const step = i === 0 ? "Start here" : late && i === stops.length - 1 ? "Late" : "Then";
+      const away = i ? hop(km(stops[i - 1], e)) : null;
+      // A deal's first clause is the offer ("50% off every drink Mon–Fri 2–7pm"); the rest is on Details.
+      const bill = calm(deal ? String(e.deal || e.title).split(/;\s*/)[0] : e.title);
+      return `<li class="stop">
+        <div class="time"><b${deal ? ' class="word"' : ""}>${esc(time)}</b>${sub ? `<span>${esc(sub)}</span>` : ""}</div>
+        <div class="rail" aria-hidden="true"><span class="dot"></span></div>
+        <div class="what">
+          <p class="step">${esc(step)}${away ? ` · ${esc(away)} from the last stop` : ""}</p>
+          <h2>${esc(e.venue)}</h2>
+          ${bill && !same(bill, e.venue) ? `<p class="bill">${esc(bill)}</p>` : ""}
+          <p class="addr">${esc(e.address)}</p>
+          <a class="more" href="e.html?s=${esc(e.short)}">Details</a>
+        </div>
+      </li>`;
+    }).join("");
+
+    // Google Maps takes the whole route: the last stop as the destination, the rest as waypoints in order.
+    const place = (e) => `${e.venue}, ${e.address}`;
+    const dir = new URLSearchParams({ api: "1", destination: place(stops[stops.length - 1]) });
+    if (stops.length > 1) dir.set("waypoints", stops.slice(0, -1).map(place).join("|"));
+    const first = stops.find((e) => e.start && !isDeal(e));
+    document.title = `${stops.map((e) => e.venue).join(" → ")} · Scout`;
+    app.innerHTML = `
+      <p class="invite">A friend planned tonight.</p>
+      <p class="sub">${stops.length} stops${first ? ` · from ${esc(fmtT(first.start))}` : ""}, close together.</p>
+      <ol class="route">${rows}</ol>
+      <div class="actions">
+        <a class="btn primary" href="https://www.google.com/maps/dir/?${dir}" target="_blank" rel="noopener">Directions for the whole night</a>
+        ${isAndroid ? `<a class="btn quiet" href="./">Get Scout for the ride there</a>` : ""}
+      </div>
+      <p class="note">Scout finds what's on tonight in New York and Los Angeles and shows the ride there. An independent prototype, not an official Yelo app.</p>`;
+  }
+  render().catch(() => gone("offline"));
+</script>
+</body>
+</html>
