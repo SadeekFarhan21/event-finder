@@ -36,4 +36,4 @@ export const saveMine = (mine: Set<string>) =>
 export const spotLink = (e: Spot) => `${SITE}/e.html?id=${encodeURIComponent(e.id)}`;
 
 export const inviteMessage = (e: Spot, going: boolean) =>
-  `${going ? "I'm going to" : "Come to"} ${e.venue} ${whenPhrase(e)}: ${shortTitle(e.title)}. ${spotLink(e)}`;
+  `${going ? "I'm going to" : "Come to"} ${e.venue} ${whenPhrase(e)}: ${shortTitle(e.title)}.\n${spotLink(e)}`;

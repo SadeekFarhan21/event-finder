@@ -79,7 +79,7 @@ export async function loadCrews(): Promise<Crew[]> {
 }
 
 export const crewInvite = (c: { venue: string; title: string; leaveAt: string; code: string }) =>
-  `Heading to ${c.venue}, leaving ${leavePhrase(c.leaveAt)} (${shortTitle(c.title)}). Join my crew: ${crewLink(c.code)}`;
+  `Heading to ${c.venue}, leaving ${leavePhrase(c.leaveAt)} (${shortTitle(c.title)}). Join my crew:\n${crewLink(c.code)}`;
 
 // When the crew leaves, for sentences: "now", "in 20 min", "at 9:30 PM", "Sat at 9:30 PM".
 export function leavePhrase(iso: string) {
