@@ -68,9 +68,10 @@
   .member { display: inline-flex; align-items: center; gap: 8px; padding: 4px 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); font-size: 16px; font-weight: 500; }
   .member small { color: var(--ink-3); font-size: 14px; font-weight: 400; }
   .member.out { opacity: .5; }
-  .member i { width: 8px; height: 8px; border-radius: 50%; background: var(--ink); }
-  .member i.on_way { background: var(--yellow); box-shadow: 0 0 0 1px var(--ink); }
-  .member i.out { background: var(--line); }
+  /* Coming: a ring. On the way: the ring filled in. Yellow stays for the one main action. */
+  .member i { width: 8px; height: 8px; border-radius: 50%; box-sizing: border-box; border: 1.5px solid var(--ink); background: transparent; }
+  .member i.on_way { background: var(--ink); }
+  .member i.out { border-color: var(--line); background: var(--line); }
   .join { margin-top: 16px; }
   .join label { display: block; font-size: 14px; font-weight: 500; color: var(--ink-2); margin-bottom: 4px; }
   .joinrow { display: flex; gap: 8px; flex-wrap: wrap; }
