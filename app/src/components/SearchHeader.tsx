@@ -11,6 +11,8 @@ import { HEADER_GAP, HEADER_H } from "../layout";
 import { Tap } from "./Tap";
 import { lastRun } from "../data/api";
 
+const SUGGESTIONS = ["Free", "Live music", "Under $20", "Dance", "Drinks"];
+
 // Yelo's live markets (joinyelo.com/partner lists venues in both).
 const CITIES = ["New York, NY", "Los Angeles, CA"];
 
@@ -88,6 +90,7 @@ export function SearchHeader({ city, onCityChange, onSubmitCity, onScout, scouti
 
         {searching ? (
           // Search replaces the chips (the filter still applies: "jazz" on Tonight is jazz tonight).
+          <>
           <View style={[s.searchBox, open && { opacity: 0 }]}>
             <Feather name="search" size={16} color={C.ink3} />
             <TextInput value={query} onChangeText={onQuery} autoFocus placeholder={`Jazz, free, rooftop, under $20`}
@@ -95,6 +98,17 @@ export function SearchHeader({ city, onCityChange, onSubmitCity, onScout, scouti
               selectionColor={C.selection} cursorColor={C.accent} accessibilityLabel="Search spots" />
             {!!query && <Tap onPress={() => onQuery("")} hitSlop={10} accessibilityLabel="Clear search"><Feather name="x-circle" size={16} color={C.ink3} /></Tap>}
           </View>
+        {!query && !open && (
+          // One tap for the searches people make most; they also show what search understands.
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.chips} keyboardShouldPersistTaps="handled">
+            {SUGGESTIONS.map((q) => (
+              <Tap key={q} onPress={() => onQuery(q.toLowerCase())} style={s.chip} accessibilityLabel={`Search ${q}`}>
+                <Text style={s.chipText}>{q}</Text>
+              </Tap>
+            ))}
+          </ScrollView>
+        )}
+          </>
         ) : (
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.chips} style={open && { opacity: 0 }}
           pointerEvents={open ? "none" : "auto"}>
