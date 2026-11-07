@@ -96,6 +96,7 @@
   .bar-d { font-size: 12px; color: var(--ink-3); padding-top: 4px; }
   .bar.today .bar-d { color: var(--ink); font-weight: 500; }
   .bar-r { font-size: 11px; color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .spot-eng { display: block; margin-top: 2px; font-size: 14px; color: var(--ink-3); font-variant-numeric: tabular-nums; }
   .zeros { margin: 12px 0 0; font-size: 14px; color: var(--ink-3); }
   .stats.n1 { grid-template-columns: minmax(0, 1fr); } .stats.n2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .stats.n3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
@@ -271,6 +272,12 @@
     const fmt = (s) => s ? new Date(s).toLocaleString(undefined, { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "Ongoing";
     // Label the numbers with the name the listings use ("Nublu 151"), not whatever was typed.
     const name = list.find((s) => s.venue)?.venue ?? venue, anyPartner = list.some((s) => s.partner);
+    // Per night: which of the venue's listings riders are opening and riding to (last 7 days).
+    const engaged = (s) => {
+      const v = Number(s.views ?? 0), r = Number(s.rides ?? 0);
+      const parts = [v && `${v} view${v === 1 ? "" : "s"}`, r && `${r} ride tap${r === 1 ? "" : "s"}`].filter(Boolean);
+      return parts.length ? `<span class="spot-eng">${parts.join(" · ")}</span>` : "";
+    };
     const joinWords = (w) => w.length < 2 ? w.join("") : `${w.slice(0, -1).join(", ")} or ${w[w.length - 1]}`;
     $("result").innerHTML = `
       <p class="subject"><span class="nb"><b>${esc(name)}</b>${anyPartner ? '<span class="tag">Yelo partner</span>' : ""}</span> <span class="nb">· ${esc(cityName)} · last 7 days</span></p>
@@ -278,7 +285,7 @@
         `<div class="stat"><b>${v.toLocaleString()}</b><span>${label}</span></div>`).join("")}</div>` : ""}
       ${trend(daily.data ?? [])}
       ${zero.length ? `<p class="zeros">No ${joinWords(zero.map(([, , w]) => w))} yet this week.</p>` : ""}
-      ${list.length ? `<h3 class="subh">On the map now</h3><ul class="spots">${list.map((s) => `<li><span class="spot-title">${esc(s.title)}</span><small>${esc(fmt(s.start))}</small></li>`).join("")}</ul>`
+      ${list.length ? `<h3 class="subh">On the map now</h3><ul class="spots">${list.map((s) => `<li><span class="spot-title">${esc(s.title)}${engaged(s)}</span><small>${esc(fmt(s.start))}</small></li>`).join("")}</ul>`
         : `<p class="empty">${esc(name)} has no spots on the map right now. List one below.</p>`}`;
   });
 
