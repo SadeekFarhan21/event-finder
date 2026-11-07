@@ -50,7 +50,7 @@ jobs:
       - name: Agent unit tests
         run: deno test --config supabase/functions/scout/deno.json supabase/functions/tests/
       - name: App logic unit tests
-        run: deno test --unstable-sloppy-imports --no-check tests/app_lib_test.ts
+        run: deno test --unstable-sloppy-imports --no-check --allow-read=app/src tests/app_lib_test.ts
 
   integration:
     name: Integration (live Supabase)
