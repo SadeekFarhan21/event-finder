@@ -84,7 +84,7 @@ export function SearchHeader({ city, onCityChange, onSubmitCity, onScout, scouti
       {/* Tapping anywhere outside the open menu closes it (and doesn't reach the map). */}
       {open && (
         <Animated.View entering={FadeIn.duration(160)} exiting={FadeOut.duration(120)} style={s.backdrop}>
-          <Pressable style={{ flex: 1 }} onPress={() => setOpen(false)} accessibilityLabel="Close city menu" />
+          <Pressable style={{ flex: 1 }} onPress={() => setOpen(false)} accessibilityRole="button" accessibilityLabel="Close city menu" />
         </Animated.View>
       )}
       <View style={[s.top, { paddingTop: insets.top + HEADER_GAP }, open && { zIndex: 21, elevation: 21 }]}>
@@ -99,7 +99,7 @@ export function SearchHeader({ city, onCityChange, onSubmitCity, onScout, scouti
             accessibilityLabel={searching ? "Close search" : "Search spots"}>
             <Feather name={searching ? "x" : "search"} size={17} color={C.ink2} />
           </Tap>
-          <Tap onPress={onRooms} style={s.iconBtn} accessibilityLabel="Rooms for Yelo nights (partner team)">
+          <Tap onPress={onRooms} style={s.iconBtn} hitSlop={4} accessibilityLabel="Rooms for Yelo nights (partner team)">
             <Text style={s.roomsText}>Rooms</Text>
           </Tap>
         </View>
@@ -107,23 +107,23 @@ export function SearchHeader({ city, onCityChange, onSubmitCity, onScout, scouti
         {searching ? (
           // Search replaces the chips (the filter still applies: "jazz" on Tonight is jazz tonight).
           <>
-          <View style={[s.searchBox, open && { opacity: 0 }]}>
-            <Feather name="search" size={16} color={C.ink3} />
-            <TextInput value={query} onChangeText={onQuery} autoFocus placeholder={`Jazz, free, rooftop, under $20`}
-              placeholderTextColor={C.placeholder} style={s.searchInput} returnKeyType="search" onSubmitEditing={() => remember(query)} autoCorrect={false}
-              selectionColor={C.selection} cursorColor={C.accent} accessibilityLabel="Search spots" />
-            {!!query && <Tap onPress={() => onQuery("")} hitSlop={10} accessibilityLabel="Clear search"><Feather name="x-circle" size={16} color={C.ink3} /></Tap>}
-          </View>
-        {!query && !open && (
-          // One tap for the searches people make most; they also show what search understands.
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.chips} keyboardShouldPersistTaps="handled">
-            {[...recent, ...SUGGESTIONS.filter((x) => !recent.includes(x.toLowerCase()))].map((q) => (
-              <Tap key={q} onPress={() => onQuery(q.toLowerCase())} style={s.chip} accessibilityLabel={`Search ${q}`}>
-                <Text style={s.chipText}>{q.charAt(0).toUpperCase() + q.slice(1)}</Text>
-              </Tap>
-            ))}
-          </ScrollView>
-        )}
+            <View style={[s.searchBox, open && { opacity: 0 }]}>
+              <Feather name="search" size={16} color={C.ink3} />
+              <TextInput value={query} onChangeText={onQuery} autoFocus placeholder="Jazz, free, rooftop, under $20"
+                placeholderTextColor={C.placeholder} style={s.searchInput} returnKeyType="search" onSubmitEditing={() => remember(query)} autoCorrect={false}
+                selectionColor={C.selection} cursorColor={C.accent} accessibilityLabel="Search spots" />
+              {!!query && <Tap onPress={() => onQuery("")} hitSlop={12} accessibilityLabel="Clear search"><Feather name="x-circle" size={16} color={C.ink3} /></Tap>}
+            </View>
+            {!query && !open && (
+              // One tap for the searches people make most; they also show what search understands.
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.suggestions} keyboardShouldPersistTaps="handled">
+                {[...recent, ...SUGGESTIONS.filter((x) => !recent.includes(x.toLowerCase()))].map((q) => (
+                  <Tap key={q} onPress={() => onQuery(q.toLowerCase())} style={s.chip} accessibilityLabel={`Search ${q}`}>
+                    <Text style={s.chipText}>{q.charAt(0).toUpperCase() + q.slice(1)}</Text>
+                  </Tap>
+                ))}
+              </ScrollView>
+            )}
           </>
         ) : (
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.chips} style={open && { opacity: 0 }}
@@ -172,28 +172,30 @@ function agoLine({ ranAt, added }: { ranAt: string; added: number }) {
 
 const s = StyleSheet.create({
   fade: { position: "absolute", top: 0, left: 0, right: 0 },
-  backdrop: { position: "absolute", top: 0, right: 0, bottom: 0, left: 0, backgroundColor: "rgba(0,0,0,0.45)", zIndex: 20, elevation: 20 },
+  backdrop: { position: "absolute", top: 0, right: 0, bottom: 0, left: 0, backgroundColor: C.scrim, zIndex: 20, elevation: 20 },
   top: { position: "absolute", top: 0, left: 0, right: 0 },
-  row: { flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 20, height: 48 },
+  row: { flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 16, height: 48 }, // same 16 gutter as the chips under it
   cityBtn: { flex: 1, flexDirection: "row", alignItems: "center", gap: 6 },
-  city: { flexShrink: 1, fontFamily: F.display, fontSize: 36, lineHeight: 44, color: C.ink },
-  iconBtn: { height: 36, paddingHorizontal: 14, borderRadius: R.pill, alignItems: "center", justifyContent: "center",
+  city: { flexShrink: 1, fontFamily: F.display, fontSize: T.display, lineHeight: 46, color: C.ink },
+  iconBtn: { height: 36, paddingHorizontal: 16, borderRadius: R.pill, alignItems: "center", justifyContent: "center",
     backgroundColor: "rgba(21,21,19,0.75)", borderWidth: StyleSheet.hairlineWidth, borderColor: C.d4 },
   roomsText: { fontFamily: F.medium, fontSize: T.small, color: C.ink2 },
   menu: { position: "absolute", left: 16, right: 16, zIndex: 22, backgroundColor: C.surface, borderRadius: R.md, paddingVertical: 4,
     borderWidth: StyleSheet.hairlineWidth, borderColor: C.d4, ...shadow, elevation: 22 },
   menuRow: { flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 16, minHeight: 48 },
   menuDivider: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: C.hairline },
-  menuText: { fontFamily: F.display, fontSize: 24, lineHeight: 30, color: C.ink2, flex: 1 },
+  menuText: { fontFamily: F.display, fontSize: T.title, lineHeight: 32, color: C.ink2, flex: 1 },
   menuAction: { fontFamily: F.medium, fontSize: T.small, color: C.ink3 },
-  lastRun: { fontFamily: F.regular, fontSize: T.meta, color: C.ink3, paddingHorizontal: 16, paddingTop: 4, paddingBottom: 10 },
+  lastRun: { fontFamily: F.regular, fontSize: T.meta, color: C.ink3, paddingHorizontal: 16, paddingTop: 4, paddingBottom: 12 },
   menuHint: { fontFamily: F.regular, fontSize: T.meta, color: C.ink3 },
   roundBtn: { width: 36, height: 36, borderRadius: 18, alignItems: "center", justifyContent: "center",
     backgroundColor: "rgba(21,21,19,0.75)", borderWidth: StyleSheet.hairlineWidth, borderColor: C.d4 },
-  searchBox: { flexDirection: "row", alignItems: "center", gap: 10, height: 44, marginHorizontal: 16, marginTop: 10, marginBottom: 6,
-    paddingHorizontal: 14, borderRadius: R.pill, backgroundColor: C.surface, borderWidth: StyleSheet.hairlineWidth, borderColor: C.d4 },
+  // 8 + 44 = 52, the chip row's height, so opening search doesn't move the header.
+  searchBox: { flexDirection: "row", alignItems: "center", gap: 8, height: 44, marginHorizontal: 16, marginTop: 8,
+    paddingHorizontal: 16, borderRadius: R.pill, backgroundColor: C.surface, borderWidth: StyleSheet.hairlineWidth, borderColor: C.d4 },
   searchInput: { flex: 1, fontFamily: F.regular, fontSize: T.body, color: C.ink, paddingVertical: 0 },
-  chips: { gap: 6, paddingHorizontal: 16, paddingTop: 12, paddingBottom: 8 },
+  chips: { gap: 8, paddingHorizontal: 16, paddingTop: 12, paddingBottom: 8 },
+  suggestions: { gap: 8, paddingHorizontal: 16, paddingTop: 8, paddingBottom: 8 },
   chip: { height: 32, paddingHorizontal: 12, justifyContent: "center", borderRadius: R.pill, backgroundColor: "rgba(21,21,19,0.75)",
     borderWidth: StyleSheet.hairlineWidth, borderColor: C.d4 },
   chipOn: { backgroundColor: C.ink, borderColor: C.ink },
