@@ -16,7 +16,7 @@ const ALIASES: Record<string, string[]> = {
 };
 
 export type When = "tonight" | "tomorrow" | "weekend";
-export type Query = { words: string[]; maxPrice: number | null; when: When | null };
+export type Query = { words: string[]; maxPrice: number | null; when: When | null; near?: boolean };
 
 export function parseQuery(text: string): Query {
   let t = fold(text);
@@ -28,8 +28,11 @@ export function parseQuery(text: string): Query {
   t = t.replace(/\b(this\s+)?(tonight|today|tomorrow|weekend)\b/g, (_, __, w) => {
     when = w === "today" ? "tonight" : (w as When); return " ";
   });
+  // "jazz near me", "free nearby", "drinks close by": a place to filter by, not words to match.
+  let near = false;
+  t = t.replace(/\b(near me|nearby|close by|around me|walking distance)\b/g, () => { near = true; return " "; });
   const words = t.split(/[^a-z0-9$&+]+/).filter((w) => w.length > 1);
-  return { words, maxPrice, when };
+  return { words, maxPrice, when, near };
 }
 
 // Lowest dollar amount the listing mentions; free entry counts as 0; unknown is null.
@@ -41,7 +44,7 @@ export function priceOf(e: Pick<Spot, "price" | "deal">): number | null {
 }
 
 export function matchesQuery(e: Spot, q: Query, now = Date.now()): boolean {
-  if (!q.words.length && q.maxPrice === null && !q.when) return true;
+  if (!q.words.length && q.maxPrice === null && !q.when) return true; // "near me" alone: the screen narrows by distance
   if (q.when && !isRecurring(e)) { // standing deals run every day, so they fit any day
     if (!e.start) return false;
     const t = Date.parse(e.start), d = nightOffset(t, now);
