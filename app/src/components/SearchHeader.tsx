@@ -12,7 +12,7 @@ import { Tap } from "./Tap";
 import { lastRun } from "../data/api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const SUGGESTIONS = ["Free", "Live music", "Under $20", "Dance", "Drinks"];
+const SUGGESTIONS = ["Free", "This weekend", "Live music", "Under $20", "Dance", "Drinks"];
 const RECENT_KEY = "scout.recentSearches";
 
 // Yelo's live markets (joinyelo.com/partner lists venues in both).

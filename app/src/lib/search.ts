@@ -3,6 +3,7 @@
 // so adding words narrows. No network, no AI: instant, and it works offline.
 import type { Spot } from "./types";
 import { CATEGORY } from "../theme";
+import { isRecurring, nightOffset, nightWeekday } from "./time";
 
 const fold = (s: string) => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
 
@@ -14,15 +15,21 @@ const ALIASES: Record<string, string[]> = {
   live: ["live", "band", "concert", "music"],
 };
 
-export type Query = { words: string[]; maxPrice: number | null };
+export type When = "tonight" | "tomorrow" | "weekend";
+export type Query = { words: string[]; maxPrice: number | null; when: When | null };
 
 export function parseQuery(text: string): Query {
   let t = fold(text);
   let maxPrice: number | null = null;
   // "under $20", "below 15", "< $30"
   t = t.replace(/(?:under|below|less than|<)\s*\$?\s*(\d+)/g, (_, n) => { maxPrice = Number(n); return " "; });
+  // "jazz tomorrow", "free tonight", "this weekend": a day, not a word to match in the listing.
+  let when: When | null = null;
+  t = t.replace(/\b(this\s+)?(tonight|today|tomorrow|weekend)\b/g, (_, __, w) => {
+    when = w === "today" ? "tonight" : (w as When); return " ";
+  });
   const words = t.split(/[^a-z0-9$&+]+/).filter((w) => w.length > 1);
-  return { words, maxPrice };
+  return { words, maxPrice, when };
 }
 
 // Lowest dollar amount the listing mentions; free entry counts as 0; unknown is null.
@@ -33,8 +40,15 @@ export function priceOf(e: Pick<Spot, "price" | "deal">): number | null {
   return n?.length ? Math.min(...n) : null;
 }
 
-export function matchesQuery(e: Spot, q: Query): boolean {
-  if (!q.words.length && q.maxPrice === null) return true;
+export function matchesQuery(e: Spot, q: Query, now = Date.now()): boolean {
+  if (!q.words.length && q.maxPrice === null && !q.when) return true;
+  if (q.when && !isRecurring(e)) { // standing deals run every day, so they fit any day
+    if (!e.start) return false;
+    const t = Date.parse(e.start), d = nightOffset(t, now);
+    if (q.when === "tonight" && d !== 0) return false;
+    if (q.when === "tomorrow" && d !== 1) return false;
+    if (q.when === "weekend" && (d < 0 || d > 6 || ![5, 6, 0].includes(nightWeekday(t)))) return false; // Fri, Sat, Sun nights
+  }
   if (q.maxPrice !== null) {
     const p = priceOf(e);
     if (p === null || p > q.maxPrice) return false;
