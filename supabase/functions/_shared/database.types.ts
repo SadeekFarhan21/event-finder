@@ -544,9 +544,11 @@ export type Database = {
           category: string
           deal: string
           partner: boolean
+          rides: number
           start: string
           title: string
           venue: string
+          views: number
         }[]
       }
       venue_stats: {
