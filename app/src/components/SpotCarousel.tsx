@@ -9,7 +9,7 @@ import Animated, {
   Extrapolation, FadeInDown, interpolate, useAnimatedRef, useAnimatedScrollHandler, useAnimatedStyle, useSharedValue,
   type SharedValue,
 } from "react-native-reanimated";
-import { clock, isRecurring, whenLabel } from "../lib/time";
+import { clock, isRecurring, whenLabel, dealStatus } from "../lib/time";
 import { calmCaps, similar } from "../lib/case";
 import { goingLine, type CrewPeople } from "../lib/friends";
 import type { Spot } from "../lib/types";
@@ -59,7 +59,7 @@ export function SpotCarousel({ ref, spots, fresh, going, crewPeople, activeId, o
 
 // "10 PM" / "Tonight"; standing deals read "Happy hour" / "Every night".
 const bigTime = (e: Spot) => (isRecurring(e) || !e.start ? (/happy hour/i.test(`${e.title} ${e.deal ?? ""}`) ? "Happy hour" : "Any night") : clock(new Date(e.start)));
-const bigDay = (e: Spot) => (isRecurring(e) || !e.start ? "Standing deal" : whenLabel(e).split(" · ")[0]);
+const bigDay = (e: Spot) => (isRecurring(e) || !e.start ? (dealStatus(e) ?? "Standing deal") : whenLabel(e).split(" · ")[0]);
 
 // One line under the venue, with nothing said twice: category (unless the Deal tag says it),
 // then the title (unless it's just "Happy hour" again), then the price.
