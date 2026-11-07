@@ -23,7 +23,7 @@ import { useMyLocation } from "../hooks/useMyLocation";
 import { useGoing } from "../hooks/useGoing";
 import { useCrews } from "../hooks/useCrews";
 import { leavingSoon, type CrewPeople } from "../lib/friends";
-import { planMessage, planNight } from "../lib/plan";
+import { planAhead, planMessage } from "../lib/plan";
 import { openRide } from "../lib/ride";
 import { newIds, newSince } from "../lib/fresh";
 import { isOffline, onNetworkChange } from "../lib/net";
@@ -126,7 +126,7 @@ export function ScoutScreen() {
   // Stops the rider swapped out of tonight's plan; forgotten when they leave the plan or the city.
   const [skipped, setSkipped] = useState<Set<string>>(new Set());
   const planFrom = useCallback((skip: Set<string>) => spots.filter((e) => matchesQuery(e, parsed) && !skip.has(e.id)), [spots, parsed]);
-  const plan = useMemo(() => (filter === "plan" && minute ? planNight(planFrom(skipped), minute, me) : []), [filter, planFrom, skipped, minute, me]);
+  const plan = useMemo(() => (filter === "plan" && minute ? planAhead(planFrom(skipped), minute, me) : []), [filter, planFrom, skipped, minute, me]);
   const steps = useMemo(() => Object.fromEntries(plan.map((p) => [p.spot.id, p])), [plan]);
   const route = useMemo(() => (plan.length > 1 ? plan.map((p) => ({ latitude: p.spot.lat, longitude: p.spot.lng })) : undefined), [plan]);
   const shown = useMemo(() => {
@@ -299,7 +299,7 @@ export function ScoutScreen() {
   // Swap one stop: plan again without it. If nothing else fits, keep the plan and say so.
   const swapStop = (e: Spot) => {
     const skip = new Set(skipped).add(e.id);
-    const next = planNight(planFrom(skip), Date.now(), me);
+    const next = planAhead(planFrom(skip), Date.now(), me);
     if (!next.length) { show("Nothing else close enough to swap in"); return; }
     Haptics.selectionAsync();
     setSkipped(skip);
@@ -315,7 +315,7 @@ export function ScoutScreen() {
     setFilter(f);
     setActive(null);
     carousel.current?.scrollTo(0, false);
-    fit(f === "plan" ? planNight(spots.filter((e) => matchesQuery(e, parsed)), Date.now(), me).map((p) => p.spot) : f === "saved" ? spots.filter((e) => saved.has(e.id)) : f === "near" ? spots.filter((e) => dist(e) <= 3.2) : spots.filter((e) => matches(e, f)), f === "saved" || f === "plan"); // a short list: frame every stop
+    fit(f === "plan" ? planAhead(spots.filter((e) => matchesQuery(e, parsed)), Date.now(), me).map((p) => p.spot) : f === "saved" ? spots.filter((e) => saved.has(e.id)) : f === "near" ? spots.filter((e) => dist(e) <= 3.2) : spots.filter((e) => matches(e, f)), f === "saved" || f === "plan"); // a short list: frame every stop
   };
 
   const cityName = cityInput.split(",")[0];
@@ -342,7 +342,7 @@ export function ScoutScreen() {
 
       {loading && !spots.length ? <LoadingCard /> : !shown.length && !scouting ? (
         <EmptyCard
-          title={loadFailed ? "Couldn't load spots" : filter === "plan" && spots.length ? "Not enough on tonight to plan" : query.trim() && spots.length ? `Nothing matches "${query.trim()}"` : spots.length ? "Nothing here yet" : `No spots in ${cityName} yet`}
+          title={loadFailed ? "Couldn't load spots" : filter === "plan" && spots.length ? "Not enough on to plan a night" : query.trim() && spots.length ? `Nothing matches "${query.trim()}"` : spots.length ? "Nothing here yet" : `No spots in ${cityName} yet`}
           body={loadFailed ? "Check your connection. Scout will try again as soon as you're back online."
             : filter === "plan" && spots.length ? (query.trim() ? `Not enough "${query.trim()}" tonight for two stops close together. Try fewer words.` : `A plan needs two spots close together, still to come tonight. Try ${nowWord()} or This week.`)
             : query.trim() && spots.length ? (filter === "all" ? "Try another word, like a venue, a genre or a neighborhood." : "Try This week, or another word.")

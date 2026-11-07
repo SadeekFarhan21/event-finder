@@ -4,11 +4,12 @@
 import { calmCaps } from "./case";
 import { inviteBill } from "./invite";
 import { km } from "./fare";
-import { cityHour, clock, dealRank, dealStatus, isRecurring, nightEnd, shortTitle } from "./time";
+import { cityHour, clock, dealRank, dealStatus, eveningAfter, isRecurring, nightEnd, shortTitle } from "./time";
 import type { Spot } from "./types";
 
 // step: "Start here" / "Then" / "Late"; hop: how far from the stop before ("0.4 mi", "a short walk").
-export type Stop = { spot: Spot; step: string; hop: string | null };
+// day: set when the plan is for a later night ("Tomorrow"), so every card and the text say so.
+export type Stop = { spot: Spot; step: string; hop: string | null; day?: string };
 
 const MAX_KM = 4; // further than this between stops and it stops feeling like one night out
 const STAY = 90 * 60000; // time at a set before moving on
@@ -73,19 +74,27 @@ export function planNight(spots: Spot[], now = Date.now(), me?: { lat: number; l
 // With a whole-plan link the stops read as a short list and the one link goes last; otherwise
 // each stop carries its own link.
 export function planMessage(stops: Stop[], link: (e: Spot) => string, whole?: string | null): string {
+  const head = stops[0]?.day ? `${stops[0].day}'s plan:` : "Tonight's plan:";
   // The billing by the same rule as every shared message: calm caps, never just the venue's name again
   // ("Nublu · 8 PM", not "…, Nublu").
   const bill = (e: Spot) => inviteBill(e.title, e.venue, 40) || null;
-  const when = (e: Spot) => {
+  const when = (e: Spot, day?: string) => {
     if (isRecurring(e) || !e.start) {
       // A deal says what it is ("$5 drafts"), then its hours when the listing states them.
       const what = /happy hour/i.test(`${e.title} ${e.deal ?? ""}`) ? "happy hour" : e.deal ? shortTitle(calmCaps(e.deal), 40) : bill(e);
-      const hours = dealStatus(e)?.replace(/^On /, "").replace(/^From/, "from");
+      const hours = dealStatus(e, day ? eveningAfter() : undefined)?.replace(/^On /, "").replace(/^From/, "from"); // a later night: its evening, not now
       return [what, hours].filter(Boolean).join(", ");
     }
     return [clock(new Date(e.start)), bill(e)].filter(Boolean).join(", ");
   };
-  const line = (s: Stop, i: number) => `${i + 1}. ${[s.spot.venue, when(s.spot)].filter(Boolean).join(" · ")}`;
-  if (whole) return ["Tonight's plan:", ...stops.map(line), whole].join("\n");
-  return ["Tonight's plan:", ...stops.map((s, i) => `${line(s, i)}\n${link(s.spot)}`)].join("\n");
+  const line = (s: Stop, i: number) => `${i + 1}. ${[s.spot.venue, when(s.spot, s.day)].filter(Boolean).join(" · ")}`;
+  if (whole) return [head, ...stops.map(line), whole].join("\n");
+  return [head, ...stops.map((s, i) => `${line(s, i)}\n${link(s.spot)}`)].join("\n");
+}
+
+// Tonight's plan, or when tonight can't make one (late, or little left), tomorrow evening's.
+export function planAhead(spots: Spot[], now = Date.now(), me?: { lat: number; lng: number } | null): Stop[] {
+  const tonight = planNight(spots, now, me);
+  if (tonight.length) return tonight;
+  return planNight(spots, eveningAfter(now), me).map((s) => ({ ...s, day: "Tomorrow" }));
 }
