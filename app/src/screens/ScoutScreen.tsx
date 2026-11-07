@@ -337,7 +337,12 @@ export function ScoutScreen() {
             )}
             {filter === "plan" && plan.length > 0 && (
               <Tap hitSlop={4} style={s.rooms} accessibilityLabel="Share this plan with friends"
-                onPress={() => { Haptics.selectionAsync(); Share.share({ message: planMessage(plan, spotLink, planLink(plan.map((p) => p.spot))) }).catch(() => {}); }}>
+                onPress={async () => {
+                  Haptics.selectionAsync();
+                  const r = await Share.share({ message: planMessage(plan, spotLink, planLink(plan.map((p) => p.spot))) }).catch(() => null);
+                  // Each stop was just recommended to friends: count it for the venue, as the sheet's share does.
+                  if (r?.action === Share.sharedAction) plan.forEach((p) => track(p.spot, "share", mapCity ?? cityInput));
+                }}>
                 <Feather name="share" size={15} color={C.ink} />
                 <Text style={s.roomsText}>Share plan</Text>
               </Tap>
