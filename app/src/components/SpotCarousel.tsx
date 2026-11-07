@@ -13,7 +13,7 @@ import { clock, isRecurring, whenLabel, dealStatus } from "../lib/time";
 import type { Stop } from "../lib/plan";
 import { calmCaps, similar } from "../lib/case";
 import { goingLine, type CrewPeople } from "../lib/friends";
-import { estimateFare, type Point } from "../lib/fare";
+import { estimateFare, type Point, milesLabel } from "../lib/fare";
 import type { Spot } from "../lib/types";
 import { CARD_GAP, CARD_INSET, CARD_STEP, CARD_W, CAROUSEL_BOTTOM, MEDIA_H } from "../layout";
 import { CATEGORY, color as C, font as F, radius as R, shadow, text as T } from "../theme";
@@ -128,7 +128,7 @@ function Card({ spot: e, step, onSwap, isNew, going, crew, me, index, x, onPress
           </Text>
           <View style={s.footer}>
             <View style={s.going}>
-              {miles !== null && <Text style={s.dist}>{miles < 0.95 ? miles.toFixed(1) : Math.round(miles)} mi</Text>}
+              {miles !== null && <Text style={s.dist}>{milesLabel(miles)}</Text>}
               {miles !== null && <View style={s.distDot} />}
               {goingLine(going, crew) ? (
                 <Text style={[s.goingText, crew?.others.length ? s.goingFriends : null]} numberOfLines={1}>{goingLine(going, crew)}</Text>

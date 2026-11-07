@@ -24,3 +24,6 @@ export function estimateFare(from: Point, to: Point): Fare | null {
   const typical = Math.max(9, 5.5 + 1.9 * miles + 0.4 * minutes);
   return { miles, minutes, typical: Math.round(typical), yelo: Math.round(typical * (1 - YELO_DISCOUNT)) };
 }
+
+// Distance as people say it: "0.4 mi", "3 mi", and "Under 0.1 mi" right next door ("0.0 mi" read as a glitch).
+export const milesLabel = (m: number) => (m < 0.05 ? "Under 0.1 mi" : m < 0.95 ? `${m.toFixed(1)} mi` : `${Math.round(m)} mi`);
