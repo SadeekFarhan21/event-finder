@@ -170,10 +170,13 @@ export function ScoutScreen() {
   }, []);
 
   // Searching: once typing pauses, frame the matches. A handful are all framed; dozens get the dense
-  // core, like the city view ("under $20" in New York zoomed out to a speck otherwise).
+  // core, like the city view ("under $20" in New York zoomed out to a speck otherwise). The first
+  // match is always in the frame: it's the card on screen, and its pin was left off the map when it
+  // sat outside the core (Baja Sharkeez in Manhattan Beach for "under $20" in LA).
   useEffect(() => {
     if (!query.trim() || !shown.length) return;
-    const t = setTimeout(() => fit(shown, shown.length <= 12), 450);
+    const frame = shown.length <= 12 ? shown : [...new Set([...coreOf(shown), shown[0]])];
+    const t = setTimeout(() => fit(frame, true), 450);
     return () => clearTimeout(t);
   }, [query, shown, fit]);
 
