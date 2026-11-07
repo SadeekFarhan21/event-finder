@@ -290,6 +290,7 @@ Deno.test("leavingSoon: soonest crew you haven't left for, within 45 min", () =>
   expect(leavingSoon([crew("Nublu", 30), crew("Elsewhere", 18)], now)).toEqual({ crew: crew("Elsewhere", 18), mins: 18 });
   expect(leavingSoon([crew("Nublu", 18, "on_way")], now)).toBeNull(); // already on the way
   expect(leavingSoon([crew("Nublu", 60)], now)).toBeNull(); // too far off
-  expect(leavingSoon([crew("Nublu", -5)], now)).toBeNull(); // leave time passed
+  expect(leavingSoon([crew("Nublu", -5)], now)?.mins).toBe(-5); // just past: still nudging
+  expect(leavingSoon([crew("Nublu", -15)], now)).toBeNull(); // long past
   expect(leavingSoon([{ venue: "X", leaveAt: at(10), members: [{ me: false, status: "in" }] }], now)).toBeNull(); // not your crew
 });
