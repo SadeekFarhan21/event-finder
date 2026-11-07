@@ -8,3 +8,7 @@ export const isNew = (e: Spot, now = Date.now()) =>
   !!e.discovered_at && now - Date.parse(e.discovered_at) < NEW_WINDOW_MS;
 
 export const newIds = (spots: Spot[], now = Date.now()) => new Set(spots.filter((e) => isNew(e, now)).map((e) => e.id));
+
+// Spots the agent first found after the rider's previous visit to this city.
+export const newSince = (spots: Spot[], since: number) =>
+  spots.filter((e) => !!e.discovered_at && Date.parse(e.discovered_at) > since);

@@ -11,6 +11,7 @@ import { estimateFare, km } from "../app/src/lib/fare";
 import { canonicalCity, cityKey } from "../app/src/lib/cities";
 import { similar } from "../app/src/lib/case";
 import { goingLine, initials } from "../app/src/lib/friends";
+import { newSince } from "../app/src/lib/fresh";
 import { matchesQuery, parseQuery, priceOf, rankByVenue } from "../app/src/lib/search";
 
 const spot = (over: Partial<Spot>): Spot => ({
@@ -232,4 +233,10 @@ Deno.test("deals: on now first, then soonest, then over or unknown", () => {
     const out = sortSpots([d("none", "Half off"), d("later", "Happy hour 6-8pm"), d("now", "Happy hour 4-7pm"), d("over", "Happy hour 2-4pm")]);
     expect(out.map((e) => e.id)).toEqual(["now", "later", "none", "over"]);
   } finally { setCityZone(null); t.restore(); }
+});
+
+Deno.test("newSince counts spots first found after the last visit", () => {
+  const at = (id: string, d: string | null) => ({ id, discovered_at: d }) as unknown as Spot;
+  const list = [at("a", "2026-11-07T10:00:00Z"), at("b", "2026-11-07T15:00:00Z"), at("c", null)];
+  expect(newSince(list, Date.parse("2026-11-07T12:00:00Z")).map((e) => e.id)).toEqual(["b"]);
 });
