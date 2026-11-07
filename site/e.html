@@ -61,7 +61,7 @@
   .empty .desc { margin-top: 12px; }
   .empty .note { margin-top: 32px; }
   .invite { font: 400 28px/1.2 var(--display); margin: 32px 0 0; text-wrap: balance; }
-  .crew { margin-top: 16px; padding: 16px; border-radius: 12px; border: 1px solid var(--line); background: var(--fill); }
+  .crew { margin-top: 16px; padding: 16px; border-radius: 12px; background: var(--fill); } /* a fill, not a second border inside the card */
   .crewhead { margin: 0; font-size: 16px; color: var(--ink-2); }
   .crewhead b { color: var(--ink); }
   .members { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
@@ -242,7 +242,7 @@
     const dest = encodeURIComponent(`${e.venue}, ${e.address}`);
     document.title = crew ? `Crew to ${e.venue} · Scout` : `${e.venue} · ${when(e)} · Scout`;
     app.innerHTML = `
-      ${crew ? `<p class="invite">${esc(crew.members[0]?.name ?? "A friend")} is heading out. Come with.</p>` : ""}
+      <p class="invite">${crew ? `${esc(crew.members[0]?.name ?? "A friend")} is heading out. Come with.` : "A friend sent you a night out."}</p>
       <article class="card">
         ${e.image ? `<img class="hero" src="${esc(e.image)}" alt="" referrerpolicy="no-referrer" onerror="this.remove()">` : band(e)}
         <div class="body">
