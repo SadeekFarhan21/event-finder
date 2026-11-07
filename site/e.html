@@ -132,7 +132,7 @@
     if (!e.start) return "Ongoing";
     const d = new Date(e.start);
     const days = Math.round(nightKey(d.getTime()) - nightKey(Date.now()));
-    const day = days === 0 ? "Tonight" : days === 1 ? "Tomorrow" : fmtD(d, { weekday: "long", month: "short", day: "numeric" });
+    const day = d.getTime() <= Date.now() ? "Started" : days === 0 ? "Tonight" : days === 1 ? "Tomorrow" : fmtD(d, { weekday: "long", month: "short", day: "numeric" });
     return `${day} · ${fmtT(d, { hour: "numeric", minute: "2-digit" })}`;
   }
 
@@ -192,7 +192,7 @@
     if (!e.start) return "";
     const d = new Date(e.start);
     const time = fmtT(d, { hour: "numeric", minute: "2-digit" }).replace(":00", "");
-    const day = nightKey(d.getTime()) === nightKey(Date.now()) ? "Tonight" : fmtD(d, { weekday: "long", month: "short", day: "numeric" });
+    const day = d.getTime() <= Date.now() ? "Started" : nightKey(d.getTime()) === nightKey(Date.now()) ? "Tonight" : fmtD(d, { weekday: "long", month: "short", day: "numeric" });
     return `<div class="band" aria-hidden="true"><b>${esc(time)}</b><span>${esc(day)}</span></div>`;
   }
 
