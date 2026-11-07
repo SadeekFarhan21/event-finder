@@ -21,7 +21,6 @@ import { HeadingOutSheet } from "./HeadingOutSheet";
 import { isRecurring, whenLabel } from "../lib/time";
 import { calendarUrl } from "../lib/calendar";
 import { calmCaps, similar } from "../lib/case";
-import { goingLine } from "../lib/friends";
 import type { Spot } from "../lib/types";
 import { CATEGORY, color as C, font as F, radius as R, shadow, text as T } from "../theme";
 import { Tap } from "./Tap";
@@ -102,11 +101,6 @@ export function SpotSheet({ spot, city, me, unlocked, canAskLocation, locationRe
   const backdropStyle = useAnimatedStyle(() => ({ opacity: interpolate(y.value, [0, 400], [1, 0], "clamp") }));
 
   const insets = useSafeAreaInsets();
-  // Friends by name when your crew is heading here, as on the map cards ("Maya and you · 2 more").
-  const crewOthers = crew?.members.filter((m) => !m.me && m.status !== "out").map((m) => m.name) ?? [];
-  const crewLine = crewOthers.length
-    ? goingLine(going, { others: crewOthers, me: isGoing || !!crew?.members.some((m) => m.me && m.status !== "out") })
-    : null;
   const scroll = useRef<React.ComponentRef<typeof ScrollView>>(null); // hooks stay above the early return
   if (!shown) return null;
   const e = shown;
@@ -192,7 +186,8 @@ export function SpotSheet({ spot, city, me, unlocked, canAskLocation, locationRe
             {/* Who's going, and getting your people there (your crew's names and status are in the crew box below) */}
             <View style={s.row}>
               <Text style={[s.rowText, !going && { color: C.ink2, fontFamily: F.medium }]} numberOfLines={1}>
-                {crewLine ?? (isGoing && going <= 1 ? "You're going" : going ? `${going} going${isGoing ? ", including you" : ""}` : "No one going yet")}
+                {/* The total only: your crew's names are in the crew box right below. */}
+                {(isGoing && going <= 1 ? "You're going" : going ? `${going} going${isGoing ? ", including you" : ""}` : "No one going yet")}
               </Text>
               <Tap style={[s.pill, isGoing && s.pillOn]} disabled={isGoing && !onUnGo} accessibilityState={{ selected: isGoing }}
                 accessibilityHint={isGoing && onUnGo ? "Tap to take it back" : undefined}
