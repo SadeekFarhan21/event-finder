@@ -276,6 +276,9 @@ Deno.test("search understands tonight, tomorrow and the weekend", () => {
     expect(matchesQuery(sun, q("tomorrow"), now)).toBe(true);
     expect(matchesQuery(tue, q("this weekend"), now)).toBe(false);
     expect(matchesQuery(sun, q("this weekend"), now)).toBe(true);
+    const nextFri = at("2026-11-14T00:00:00Z"); // Fri Nov 13, 7 PM
+    expect(matchesQuery(nextFri, q("this weekend"), now)).toBe(false); // on a Saturday, next Friday isn't this weekend
+    expect(matchesQuery(nextFri, q("this weekend"), Date.parse("2026-11-10T18:00:00Z"))).toBe(true); // from Tuesday it is
     expect(matchesQuery(hh, q("tomorrow"), now)).toBe(true); // standing deals fit any day
   } finally { setCityZone(null); }
 });
