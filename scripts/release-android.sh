@@ -28,7 +28,14 @@ print(fp(done[0]) if done else "-", "yes" if any(fp(b) == os.environ["LOCAL"] fo
 
 if [[ "$local_fp" == "$latest_fp" ]]; then
   echo "Native code unchanged (fingerprint ${local_fp:0:12}): publishing an over-the-air update."
-  $EAS update --channel preview --environment preview --message "$MSG" --non-interactive 2>&1 | grep -E "Published|Error" || true
+  out="$($EAS update --channel preview --environment preview --message "$MSG" --non-interactive 2>&1 || true)"
+  printf '%s\n' "$out" | grep -E "Published|Error" || true
+  # eas update works out the runtime itself. If app files changed after the check above (a new
+  # dev dependency once added a package.json script), the update lands on a runtime no APK has
+  # and installed apps silently keep the old code. Say so loudly.
+  if ! printf '%s' "$out" | grep -q "Runtime version *$local_fp"; then
+    echo "WARNING: the update was not published for the APK's runtime ${local_fp:0:12}. Installed apps will NOT get it." >&2
+  fi
   # Installed apps get that update right away. The downloadable APK should be current too, so
   # rebuild it when app/ changed since the newest APK's commit, at most once every 3 hours
   # (Expo's free plan has a monthly build quota, and a build takes a while to queue).
