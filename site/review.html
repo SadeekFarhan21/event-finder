@@ -51,6 +51,11 @@
   dd a { color: var(--blue); }
   .actions { display: flex; gap: 8px; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--line); flex-wrap: wrap; align-items: center; }
   .actions input { flex: 1 1 200px; }
+  /* Phones: the note gets its own row, then Approve and Reject side by side. */
+  @media (max-width: 560px) {
+    .actions { display: grid; grid-template-columns: 1fr 1fr; }
+    .actions input { grid-column: 1 / -1; grid-row: 1; }
+  }
   .empty { color: var(--ink-3); margin: 0; }
   .err { color: var(--red); margin: 12px 0 0; }
   .err:empty { margin: 0; }
