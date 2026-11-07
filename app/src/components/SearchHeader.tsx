@@ -14,6 +14,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const SUGGESTIONS = ["Free", "This weekend", "Live music", "Under $20", "Dance", "Drinks"];
 const RECENT_KEY = "scout.recentSearches";
+// Controls over the map: near-solid d1, so street names don't read through the chip text.
+const OVER_MAP = "rgba(21,21,19,0.94)";
 
 // Yelo's live markets (joinyelo.com/partner lists venues in both).
 const CITIES = ["New York, NY", "Los Angeles, CA"];
@@ -178,7 +180,7 @@ const s = StyleSheet.create({
   cityBtn: { flex: 1, flexDirection: "row", alignItems: "center", gap: 6 },
   city: { flexShrink: 1, fontFamily: F.display, fontSize: T.display, lineHeight: 46, color: C.ink },
   iconBtn: { height: 36, paddingHorizontal: 16, borderRadius: R.pill, alignItems: "center", justifyContent: "center",
-    backgroundColor: "rgba(21,21,19,0.75)", borderWidth: StyleSheet.hairlineWidth, borderColor: C.d4 },
+    backgroundColor: OVER_MAP, borderWidth: StyleSheet.hairlineWidth, borderColor: C.d4 },
   roomsText: { fontFamily: F.medium, fontSize: T.small, color: C.ink2 },
   menu: { position: "absolute", left: 16, right: 16, zIndex: 22, backgroundColor: C.surface, borderRadius: R.md, paddingVertical: 4,
     borderWidth: StyleSheet.hairlineWidth, borderColor: C.d4, ...shadow, elevation: 22 },
@@ -189,14 +191,14 @@ const s = StyleSheet.create({
   lastRun: { fontFamily: F.regular, fontSize: T.meta, color: C.ink3, paddingHorizontal: 16, paddingTop: 4, paddingBottom: 12 },
   menuHint: { fontFamily: F.regular, fontSize: T.meta, color: C.ink3 },
   roundBtn: { width: 36, height: 36, borderRadius: 18, alignItems: "center", justifyContent: "center",
-    backgroundColor: "rgba(21,21,19,0.75)", borderWidth: StyleSheet.hairlineWidth, borderColor: C.d4 },
+    backgroundColor: OVER_MAP, borderWidth: StyleSheet.hairlineWidth, borderColor: C.d4 },
   // 8 + 44 = 52, the chip row's height, so opening search doesn't move the header.
   searchBox: { flexDirection: "row", alignItems: "center", gap: 8, height: 44, marginHorizontal: 16, marginTop: 8,
     paddingHorizontal: 16, borderRadius: R.pill, backgroundColor: C.surface, borderWidth: StyleSheet.hairlineWidth, borderColor: C.d4 },
   searchInput: { flex: 1, fontFamily: F.regular, fontSize: T.body, color: C.ink, paddingVertical: 0 },
   chips: { gap: 8, paddingHorizontal: 16, paddingTop: 12, paddingBottom: 8 },
   suggestions: { gap: 8, paddingHorizontal: 16, paddingTop: 8, paddingBottom: 8 },
-  chip: { height: 32, paddingHorizontal: 12, justifyContent: "center", borderRadius: R.pill, backgroundColor: "rgba(21,21,19,0.75)",
+  chip: { height: 32, paddingHorizontal: 12, justifyContent: "center", borderRadius: R.pill, backgroundColor: OVER_MAP,
     borderWidth: StyleSheet.hairlineWidth, borderColor: C.d4 },
   chipOn: { backgroundColor: C.ink, borderColor: C.ink },
   chipText: { fontFamily: F.medium, fontSize: T.small, color: C.ink2 },
