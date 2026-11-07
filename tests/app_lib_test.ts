@@ -10,7 +10,7 @@ import { clusterEvents, coreOf } from "../app/src/lib/cluster";
 import { estimateFare, km } from "../app/src/lib/fare";
 import { canonicalCity, cityKey } from "../app/src/lib/cities";
 import { similar } from "../app/src/lib/case";
-import { goingLine } from "../app/src/lib/friends";
+import { goingLine, initials } from "../app/src/lib/friends";
 
 const spot = (over: Partial<Spot>): Spot => ({
   id: "s", city: "new york, ny", title: "Jazz", venue: "Nublu", address: "151 Avenue C", start: null, category: "music",
@@ -168,4 +168,10 @@ Deno.test("a partner's standing deal doesn't lead dated events", () => {
     const pset = { id: "pset", start: "2026-11-07T08:00:00Z", category: "music", title: "Set", deal: null, partner: true } as unknown as Spot;
     expect(sortSpots([hh, set, pset]).map((e) => e.id)).toEqual(["pset", "set", "hh"]);
   } finally { t.restore(); }
+});
+
+Deno.test("initials: first letter of each word, at most two", () => {
+  expect(initials("Maya")).toBe("M");
+  expect(initials("maya lin")).toBe("ML");
+  expect(initials("  Ana Maria Lopez ")).toBe("AM");
 });

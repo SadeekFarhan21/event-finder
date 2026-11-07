@@ -14,3 +14,6 @@ export function goingLine(total: number, crew?: CrewPeople): string | null {
   const rest = hidden + strangers;
   return rest > 0 ? `${list} · ${rest} more` : list;
 }
+
+// A friend's initials for face circles: first letter of each word, at most two ("Maya" M, "Maya Lin" ML).
+export const initials = (name: string) => name.trim().split(/\s+/).map((w) => w[0] ?? "").join("").slice(0, 2).toUpperCase();

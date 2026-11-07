@@ -20,7 +20,7 @@ import { crewInvite, leaveLabel, type Crew, type CrewStatus } from "../data/crew
 import { HeadingOutSheet } from "./HeadingOutSheet";
 import { whenLabel } from "../lib/time";
 import { calmCaps, similar } from "../lib/case";
-import { goingLine } from "../lib/friends";
+import { goingLine, initials } from "../lib/friends";
 import type { Spot } from "../lib/types";
 import { CATEGORY, color as C, font as F, radius as R, shadow, text as T } from "../theme";
 import { Tap } from "./Tap";
@@ -48,7 +48,6 @@ function splitAddress(address: string) {
   return { street, rest: rest.join(", "), area };
 }
 
-const initials = (name: string) => name.split(/\s+/).map((w) => w[0]).join("").slice(0, 2).toUpperCase();
 
 export function SpotSheet({ spot, city, me, unlocked, canAskLocation, locationRefused, onAskLocation, onUnlock, onClose, going, isGoing, onGo, onUnGo,
   crew, canCrew, onStartCrew, onCrewStatus }: Props) {

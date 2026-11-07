@@ -10,6 +10,7 @@ import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { crewInvite, leaveLabel, savedName, type Crew, type CrewStatus } from "../data/crews";
 import { Tap } from "../components/Tap";
+import { initials } from "../lib/friends";
 import { color as C, font as F, radius as R, text as T } from "../theme";
 
 const ACCENT_TINT = C.d3;
@@ -174,7 +175,7 @@ function CrewTile({ crew, photo, onStatus, onRide, onOpen }: {
         <View style={s.faces}>
           {coming.slice(0, 4).map((m, i) => (
             <View key={i} style={[s.face, { marginLeft: i ? -8 : 0, zIndex: 4 - i }, m.status === "on_way" && s.faceOnWay]}>
-              <Text style={[s.faceText, m.status === "on_way" && { color: C.bg }]}>{m.me ? "You" : m.name.slice(0, 2).toUpperCase()}</Text>
+              <Text style={[s.faceText, m.status === "on_way" && { color: C.bg }]}>{m.me ? "You" : initials(m.name)}</Text>
             </View>
           ))}
           {coming.length > 4 && <View style={[s.face, { marginLeft: -8 }]}><Text style={s.faceText}>+{coming.length - 4}</Text></View>}
