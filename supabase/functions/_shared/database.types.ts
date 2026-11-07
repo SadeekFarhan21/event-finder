@@ -467,6 +467,18 @@ export type Database = {
         Args: { p_code: string; p_device_id: string; p_name: string }
         Returns: undefined
       }
+      listing_stats: {
+        Args: { p_token: string }
+        Returns: {
+          crews: number
+          going: number
+          people: number
+          rides: number
+          shares: number
+          unlocks: number
+          views: number
+        }[]
+      }
       prune_events: { Args: never; Returns: number }
       same_venue: { Args: { a: string; b: string }; Returns: boolean }
       scout_tick: { Args: never; Returns: undefined }
