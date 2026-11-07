@@ -2,6 +2,7 @@
 // who knows the city would: a happy hour that's on now, a show about an hour and a half later close by,
 // then somewhere late. No network and no AI call: it picks from what the agent already found.
 import { calmCaps } from "./case";
+import { inviteBill } from "./invite";
 import { km } from "./fare";
 import { cityHour, clock, dealRank, dealStatus, isRecurring, nightEnd, shortTitle } from "./time";
 import type { Spot } from "./types";
@@ -62,9 +63,9 @@ export function planNight(spots: Spot[], now = Date.now(), me?: { lat: number; l
 // With a whole-plan link the stops read as a short list and the one link goes last; otherwise
 // each stop carries its own link.
 export function planMessage(stops: Stop[], link: (e: Spot) => string, whole?: string | null): string {
-  const same = (a: string, b: string) => a.toLowerCase().replace(/[^a-z0-9]/g, "") === b.toLowerCase().replace(/[^a-z0-9]/g, "");
-  // The billing in calm caps, unless it's just the venue's name again ("Nublu · 8 PM", not "…, Nublu").
-  const bill = (e: Spot) => { const t = calmCaps(e.title).trim(); return !t || same(t, e.venue) ? null : shortTitle(t, 40); };
+  // The billing by the same rule as every shared message: calm caps, never just the venue's name again
+  // ("Nublu · 8 PM", not "…, Nublu").
+  const bill = (e: Spot) => inviteBill(e.title, e.venue, 40) || null;
   const when = (e: Spot) => {
     if (isRecurring(e) || !e.start) {
       // A deal says what it is ("$5 drafts"), then its hours when the listing states them.
