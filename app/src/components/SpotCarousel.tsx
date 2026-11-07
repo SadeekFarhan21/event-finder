@@ -9,7 +9,7 @@ import Animated, {
   Extrapolation, FadeInDown, interpolate, useAnimatedRef, useAnimatedScrollHandler, useAnimatedStyle, useSharedValue,
   type SharedValue,
 } from "react-native-reanimated";
-import { clock, isRecurring, whenLabel, dealStatus } from "../lib/time";
+import { clock, eveningAfter, isRecurring, whenLabel, dealStatus } from "../lib/time";
 import type { Stop } from "../lib/plan";
 import { calmCaps, similar } from "../lib/case";
 import { goingLine, type CrewPeople } from "../lib/friends";
@@ -19,7 +19,7 @@ import { CARD_GAP, CARD_INSET, CARD_STEP, CARD_W, CAROUSEL_BOTTOM, MEDIA_H } fro
 import { CATEGORY, color as C, font as F, radius as R, shadow, text as T } from "../theme";
 import { Tap } from "./Tap";
 
-type Step = Pick<Stop, "step" | "hop">;
+type Step = Pick<Stop, "step" | "hop" | "day">;
 export type CarouselRef = { scrollTo: (index: number, animated?: boolean) => void };
 
 type Props = {
@@ -68,7 +68,9 @@ const bigTime = (e: Spot) => (isRecurring(e) || !e.start ? (/happy hour/i.test(`
 const bigDay = (e: Spot) => (isRecurring(e) || !e.start ? (dealStatus(e) ?? "Standing deal") : whenLabel(e).split(" · ")[0]);
 
 // In a plan, the photo pill says the step instead of the day: "Then · 8 PM · 0.4 mi".
-const stepLine = (e: Spot, st: Step) => [st.step, bigTime(e) === "Happy hour" || bigTime(e) === "Any night" ? dealStatus(e) : bigTime(e), st.hop].filter(Boolean).join(" · ");
+// A plan for a later night says so on every card ("Tomorrow · Then · 8 PM"), deal hours as of that evening.
+const stepStatus = (e: Spot, st: Step) => dealStatus(e, st.day ? eveningAfter() : undefined);
+const stepLine = (e: Spot, st: Step) => [st.day, st.step, bigTime(e) === "Happy hour" || bigTime(e) === "Any night" ? stepStatus(e, st) : bigTime(e), st.hop].filter(Boolean).join(" · ");
 
 // One line under the venue, with nothing said twice: category (unless the Deal tag says it),
 // then the title (unless it's just "Happy hour" again), then the price.
@@ -114,7 +116,7 @@ function Card({ spot: e, step, onSwap, isNew, going, crew, me, index, x, onPress
           <LinearGradient colors={[C.d3, C.d1]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={[s.media, s.typeBand]}>
             <View style={{ flex: 1 }}>
               <Text style={s.bigTime} numberOfLines={1} adjustsFontSizeToFit>{bigTime(e)}</Text>
-              <Text style={s.bigDay} numberOfLines={1}>{step ? [step.step, isRecurring(e) ? dealStatus(e)?.replace(/^On /, "") : null, step.hop].filter(Boolean).join("  ·  ") : `${bigDay(e)}${isNew ? "  ·  New" : ""}`}</Text>
+              <Text style={s.bigDay} numberOfLines={1}>{step ? [step.day, step.step, isRecurring(e) ? stepStatus(e, step)?.replace(/^On /, "") : null, step.hop].filter(Boolean).join("  ·  ") : `${bigDay(e)}${isNew ? "  ·  New" : ""}`}</Text>
             </View>
             <View style={s.bandSide}>
               {e.partner && <View style={s.partner}><View style={s.partnerMark} /><Text style={s.partnerText}>Yelo partner</Text></View>}

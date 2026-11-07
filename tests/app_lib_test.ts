@@ -4,7 +4,7 @@
 import { expect } from "jsr:@std/expect@1";
 import { FakeTime } from "jsr:@std/testing@1/time";
 import type { Spot } from "../app/src/lib/types";
-import { clock, shortTitle, dealDays, dealHours, dealStatus, isRecurring, nightEnd, otherDayPrefix, setCityZone, whenLabel } from "../app/src/lib/time";
+import { clock, eveningAfter, shortTitle, dealDays, dealHours, dealStatus, isRecurring, nightEnd, otherDayPrefix, setCityZone, whenLabel } from "../app/src/lib/time";
 import { matches, sortSpots } from "../app/src/lib/filters";
 import { clusterEvents, coreOf } from "../app/src/lib/cluster";
 import { estimateFare, km, milesLabel } from "../app/src/lib/fare";
@@ -12,7 +12,7 @@ import { canonicalCity, cityKey } from "../app/src/lib/cities";
 import { similar } from "../app/src/lib/case";
 import { inviteBill, withBill } from "../app/src/lib/invite";
 import { goingLine, initials, leavingSoon } from "../app/src/lib/friends";
-import { planMessage, planNight } from "../app/src/lib/plan";
+import { planAhead, planMessage, planNight } from "../app/src/lib/plan";
 import { newSince } from "../app/src/lib/fresh";
 import { pitchEmail } from "../app/src/lib/pitch";
 import { calendarUrl } from "../app/src/lib/calendar";
@@ -409,4 +409,20 @@ Deno.test("milesLabel: no 0.0 mi", () => {
   expect(milesLabel(0.02)).toBe("Under 0.1 mi");
   expect(milesLabel(0.4)).toBe("0.4 mi");
   expect(milesLabel(2.6)).toBe("3 mi");
+});
+
+Deno.test("planAhead: tonight's plan, else tomorrow evening's, marked as such", () => {
+  setCityZone("New York, NY");
+  try {
+    const late = Date.parse("2026-11-08T07:30:00Z"); // 2:30 AM Sunday in New York: tonight is over
+    // 6 PM tomorrow in New York: the night of Sat→Sun counts as "tonight" until 6 AM, so tomorrow is Sunday.
+    expect(new Date(eveningAfter(late)).toISOString()).toBe("2026-11-08T23:00:00.000Z");
+    const base = { address: "", price: null, deal: null, description: "", url: null, confidence: "high" as const, source: "exa" as const, lng: -73.98 };
+    const at = (iso: string) => iso;
+    const a = { ...base, id: "a", title: "A", venue: "Club A", category: "music" as const, start: at("2026-11-09T00:00:00Z"), lat: 40.724 }; // Sun 7 PM
+    const b = { ...base, id: "b", title: "B", venue: "Room B", category: "nightlife" as const, start: at("2026-11-09T03:00:00Z"), lat: 40.726 }; // Sun 10 PM
+    const plan = planAhead([a, b], late);
+    expect(plan.map((p) => [p.spot.id, p.day])).toEqual([["a", "Tomorrow"], ["b", "Tomorrow"]]);
+    expect(planMessage(plan, () => "L", "W").split("\n")[0]).toBe("Tomorrow's plan:");
+  } finally { setCityZone(null); }
 });

@@ -32,6 +32,12 @@ const nightDay = (t: number) => { const p = parts(t - 6 * 3600e3); return Date.U
 export const nightOffset = (t: number, now = Date.now()) => nightDay(t) - nightDay(now);
 export const nightWeekday = (t: number) => new Date(nightDay(t) * 864e5).getUTCDay();
 
+// An evening on a coming night, in the city: 6 PM tomorrow by default (Plan my night's fallback).
+export const eveningAfter = (now = Date.now(), days = 1, hour = 18) => {
+  const wall = (nightDay(now) + days) * 864e5 + hour * 3600e3;
+  return wall - offset(wall);
+};
+
 // End of the current night (6am in the city), shared by the "Tonight" filter and the labels.
 export const nightEnd = (now = Date.now()) => {
   const wall = (nightDay(now) + 1) * 864e5 + 6 * 3600e3; // 6am the next morning, as wall-clock ms
