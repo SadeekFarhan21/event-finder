@@ -36,7 +36,7 @@ Deno.test("dedupe merges the same room under two names and keeps distinct places
     ev({ id: "d", venue: "Bar", lat: 40.72381, lng: -73.97851, address: "1 Main St" }),
     ev({ id: "e", venue: "Bar Lunatico", lat: 40.72381, lng: -73.97851, address: "1 Main St" }), // "bar" is too short a prefix
   ]);
-  assertEquals(out.map((e) => e.id).sort(), ["a", "c", "d", "e"]);
+  assertEquals(out.map((e) => e.id).sort(), ["b", "c", "d", "e"]); // a and b merge under b, the first found (its share link survives)
 });
 
 Deno.test("dedupe keeps the higher-confidence listing and carries a missing deal over", () => {
@@ -47,6 +47,16 @@ Deno.test("dedupe keeps the higher-confidence listing and carries a missing deal
   assertEquals(out.length, 1);
   assertEquals(out[0].id, "high");
   assertEquals(out[0].deal, "$5 beers");
+});
+
+Deno.test("dedupe keeps the first id, so share links survive a re-find", () => {
+  // A standing deal re-found with a new placeholder start gets a new slug; the merged spot keeps the old one.
+  const out = dedupeEvents([
+    ev({ id: "hh-old", category: "deal", title: "Happy Hour", deal: "Happy hour 4-7pm", start: "2026-11-07T14:00:00Z", discoveredAt: "2026-11-06T10:00:00Z" }),
+    ev({ id: "hh-new", category: "deal", title: "Happy Hour", deal: "Happy hour 4-7pm", start: "2026-11-07T17:00:00Z", discoveredAt: "2026-11-07T21:00:00Z" }),
+  ]);
+  assertEquals(out.map((e) => e.id), ["hh-old"]);
+  assertEquals(out[0].discoveredAt, "2026-11-06T10:00:00Z");
 });
 
 Deno.test("dedupe keeps two nights at one venue apart", () => {
