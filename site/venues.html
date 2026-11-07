@@ -79,6 +79,7 @@
   .manage a { color: var(--blue); }
   .share-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin: 0; font-size: 16px; }
   .share-row a { color: var(--ink); overflow-wrap: anywhere; }
+  .share-row .copy { margin-left: 0; } /* the gap handles spacing; wrapped, it lines up with the link */
   .copy { font: 600 14px var(--body); min-height: 44px; border: 1px solid var(--ink); background: var(--surface); color: var(--ink); border-radius: 999px; padding: 0 16px; margin-left: 4px; cursor: pointer; }
   .badge { display: inline-block; font-size: 14px; font-weight: 600; padding: 0 8px; border-radius: 999px; border: 1px solid var(--line); background: var(--fill); color: var(--ink); margin-right: 8px; }
   .badge.approved { background: var(--ink); border-color: var(--ink); color: var(--surface); }
