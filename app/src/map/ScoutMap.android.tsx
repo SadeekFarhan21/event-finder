@@ -6,7 +6,7 @@ import Animated, { FadeOut } from "react-native-reanimated";
 import { Linking, StyleSheet, Text, View } from "react-native";
 import { CARD_H, CAROUSEL_BOTTOM } from "../layout";
 import { color as C, font as F } from "../theme";
-import { Camera, Layer, Map, Marker, UserLocation, type CameraRef } from "@maplibre/maplibre-react-native";
+import { Camera, GeoJSONSource, Layer, Map, Marker, UserLocation, type CameraRef } from "@maplibre/maplibre-react-native";
 import type { Region, ScoutMapProps, ScoutMarkerProps } from "./types";
 import { config } from "../config";
 
@@ -15,7 +15,7 @@ const STYLE = config.mapStyleUrl;
 // react-native-maps regions use deltas; MapLibre uses zoom. Close enough for an initial view.
 const zoomFor = (r: Region) => Math.log2(360 / Math.max(r.longitudeDelta, 0.0001));
 
-export function ScoutMap({ ref, initialRegion, showsUserLocation, onRegionChange, onPress, children }: ScoutMapProps) {
+export function ScoutMap({ ref, initialRegion, showsUserLocation, onRegionChange, onPress, route, children }: ScoutMapProps) {
   const camera = useRef<CameraRef>(null);
   useImperativeHandle(ref, () => ({
     fitTo: (points, padding) => {
@@ -58,6 +58,12 @@ export function ScoutMap({ ref, initialRegion, showsUserLocation, onRegionChange
           <Layer type="circle" id="scout-me-dot" source="mlrn-user-location"
             paint={{ "circle-radius": 4, "circle-color": C.bg, "circle-pitch-alignment": "map" }} />
         </UserLocation>
+      )}
+      {route && route.length > 1 && (
+        <GeoJSONSource id="scout-route" data={{ type: "Feature", properties: {}, geometry: { type: "LineString", coordinates: route.map((p) => [p.longitude, p.latitude]) } }}>
+          <Layer type="line" id="scout-route-line" layout={{ "line-cap": "round", "line-join": "round" }}
+            paint={{ "line-color": C.ink, "line-width": 2, "line-opacity": 0.7, "line-dasharray": [1, 2.5] }} />
+        </GeoJSONSource>
       )}
       {children}
     </Map>

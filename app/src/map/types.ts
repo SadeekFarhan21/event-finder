@@ -19,6 +19,8 @@ export type ScoutMapProps = {
   showsUserLocation?: boolean;
   onRegionChange?: (region: Region) => void;
   onPress?: () => void;
+  // Plan my night: the stops in order, drawn as a quiet dashed line under the pins.
+  route?: LatLng[];
   children?: ReactNode;
 };
 
