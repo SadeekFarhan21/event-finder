@@ -48,7 +48,7 @@
   .lookup input, .lookup select { min-height: 48px; }
   @media (max-width: 560px) { .lookup { grid-template-columns: minmax(0, 1fr) auto; } .lk-city { grid-column: 1 / -1; } }
   .row { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 16px; }
-  label { display: grid; gap: 4px; font-size: 14px; font-weight: 500; color: var(--ink-2); min-width: 0; }
+  label { display: grid; align-content: start; gap: 4px; font-size: 14px; font-weight: 500; color: var(--ink-2); min-width: 0; }
   input, select, textarea { font: 400 16px/1.4 var(--body); color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; min-height: 44px; width: 100%; }
   input:hover, select:hover, textarea:hover { border-color: var(--ink-3); }
   input::placeholder, textarea::placeholder { color: var(--placeholder); }
@@ -103,8 +103,18 @@
   .zeros { margin: 12px 0 0; font-size: 14px; color: var(--ink-3); }
   .stats.n1 { grid-template-columns: minmax(0, 1fr); } .stats.n2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .stats.n3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  ul.spots li { align-items: baseline; }
+  ul.spots .spot-title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .spot-meta { flex: none; display: grid; justify-items: end; gap: 2px; text-align: right; }
+  .spot-meta .spot-eng { display: block; margin: 0; }
+  .showall { font: 600 14px var(--body); color: var(--ink); background: none; border: 0; padding: 12px 0; min-height: 44px; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+  .form > label { align-self: start; } /* a hint under one field doesn't stretch its neighbour */
+  label .hint { display: block; margin-top: 4px; font-size: 14px; font-weight: 400; color: var(--ink-3); }
+  .trend-line { margin: 24px 0 0; padding: 16px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); color: var(--ink-2); font-size: 16px; }
+  /* One column for the whole venue workflow: lookup, results and the form share an edge. */
+  .lookup, #result { max-width: 720px; }
   .spot-title { min-width: 0; }
-  @media (max-width: 560px) { ul.spots li { flex-direction: column; gap: 4px; } ul.spots small { white-space: normal; } }
+  @media (max-width: 560px) { ul.spots li { flex-direction: column; gap: 4px; } ul.spots small { white-space: normal; } .spot-meta { justify-items: start; text-align: left; } ul.spots .spot-title { white-space: normal; } }
   #preview { margin-top: 24px; max-width: 720px; }
   #preview .pcard { max-width: 380px; }
   #preview .preview-label + .stats, #preview .preview-label + .zeros { margin-top: 8px; }
@@ -136,7 +146,7 @@
     color-scheme: dark;
   }
   /* An empty date field reads like a placeholder, not like filled-in text. */
-  input[type="datetime-local"].empty::-webkit-datetime-edit { color: var(--placeholder); }
+  input[type="datetime-local"].is-empty::-webkit-datetime-edit { color: var(--placeholder); }
   input[type="datetime-local"]::-webkit-calendar-picker-indicator { opacity: .6; cursor: pointer; }
   footer { margin-top: 64px; padding-top: 16px; border-top: 1px solid var(--line); font-size: 14px; color: var(--ink-3);
     display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 24px; }
@@ -194,7 +204,7 @@
         <option value="music">Live music</option><option value="nightlife">Nightlife</option><option value="deal">Deal / happy hour</option>
         <option value="food_drink">Food &amp; drink</option><option value="arts">Arts &amp; comedy</option><option value="community">Community</option><option value="sports">Sports</option>
       </select></label>
-      <label>Starts (leave empty for a standing deal)<input name="start" type="datetime-local"></label>
+      <label>Starts<input name="start" type="datetime-local" aria-describedby="start-hint"><span class="hint" id="start-hint">Leave empty for a standing deal</span></label>
       <label class="full">Deal for Scout riders (optional)<input name="deal" maxlength="200" placeholder="e.g. Free entry before 11pm"></label>
       <label class="full">Description (optional)<textarea name="description" rows="2" maxlength="400"></textarea></label>
       <label>Link (optional)<input name="url" type="url" maxlength="300" placeholder="https://"></label>
@@ -231,6 +241,12 @@
     const week = days.slice(-7), prev = days.slice(-14, -7);
     const sum = (ds, k) => ds.reduce((n, d) => n + Number(d[k]), 0);
     if (!sum(week, "views")) return "";
+    const active = week.filter((d) => Number(d.views) > 0);
+    if (active.length < 3) {
+      const first = new Date(active[0].day + "T12:00:00").toLocaleDateString(undefined, { weekday: "long" });
+      const v = sum(week, "views"), r = sum(week, "rides");
+      return `<p class="trend-line">${v} spot view${v === 1 ? "" : "s"}${r ? ` and ${r} ride tap${r === 1 ? "" : "s"}` : ""} since ${esc(first)}. A day-by-day chart appears once there are a few days of activity.</p>`;
+    }
     const max = Math.max(...week.map((d) => Number(d.views)));
     const label = (d) => new Date(d.day + "T12:00:00").toLocaleDateString(undefined, { weekday: "short" });
     const was = sum(prev, "views"), now = sum(week, "views");
@@ -243,14 +259,14 @@
         return `<div class="bar${i === week.length - 1 ? " today" : ""}"><span class="bar-n">${v || ""}</span>
           <i style="height:${v ? Math.max(6, Math.round((v / max) * 100)) : 0}%"></i>
           <span class="bar-d">${i === week.length - 1 ? "Today" : esc(label(d))}</span>
-          <span class="bar-r">${r ? `${r} ride${r === 1 ? "" : "s"}` : ""}</span></div>`;
+          <span class="bar-r">${r ? `${r} ride tap${r === 1 ? "" : "s"}` : ""}</span></div>`;
       }).join("")}</div>
     </div>`;
   }
 
   // Dim every empty date field like a placeholder (browsers show "mm/dd/yyyy" in full text colour).
   document.querySelectorAll('input[type="datetime-local"]').forEach((el) => {
-    const sync = () => el.classList.toggle("empty", !el.value);
+    const sync = () => el.classList.toggle("is-empty", !el.value);
     sync(); el.addEventListener("input", sync); el.addEventListener("change", sync);
   });
 
@@ -308,8 +324,13 @@
         `<div class="stat"><b>${v.toLocaleString()}</b><span>${label}</span></div>`).join("")}</div>` : ""}
       ${trend(daily.data ?? [])}
       ${zero.length ? `<p class="zeros">No ${joinWords(zero.map(([, , w]) => w))} yet this week.</p>` : ""}
-      ${list.length ? `<h3 class="subh">On the map now</h3><ul class="spots">${list.map((s) => `<li><span class="spot-title">${esc(s.title)}${engaged(s)}</span><small>${esc(fmt(s.start))}</small></li>`).join("")}</ul>`
+      ${list.length ? `<h3 class="subh">On the map now</h3><ul class="spots">${list.map((s, i) => `<li${i >= 5 ? ' class="more" hidden' : ""}><span class="spot-title">${esc(s.title)}</span><span class="spot-meta"><small>${esc(fmt(s.start))}</small>${engaged(s) || '<span class="spot-eng">–</span>'}</span></li>`).join("")}</ul>${list.length > 5 ? `<button type="button" class="showall" id="showall">Show all ${list.length}</button>` : ""}`
         : `<p class="empty">${esc(name)} has no spots on the map right now. List one below.</p>`}`;
+  });
+
+  document.addEventListener("click", (ev) => {
+    if (ev.target.id !== "showall") return;
+    document.querySelectorAll("ul.spots li.more").forEach((li) => (li.hidden = false)); ev.target.remove();
   });
 
   // Shareable stats link: venues.html?venue=Nublu&city=New%20York%2C%20NY opens straight to the numbers.
