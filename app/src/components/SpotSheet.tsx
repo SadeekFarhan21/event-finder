@@ -21,6 +21,7 @@ import { HeadingOutSheet } from "./HeadingOutSheet";
 import { isRecurring, whenLabel } from "../lib/time";
 import { calendarUrl } from "../lib/calendar";
 import { calmCaps, similar } from "../lib/case";
+import { goingLine } from "../lib/friends";
 import type { Spot } from "../lib/types";
 import { CATEGORY, color as C, font as F, radius as R, shadow, text as T } from "../theme";
 import { Tap } from "./Tap";
@@ -192,8 +193,8 @@ export function SpotSheet({ spot, city, me, unlocked, canAskLocation, locationRe
             {/* Who's going, and getting your people there (your crew's names and status are in the crew box below) */}
             <View style={s.row}>
               <Text style={[s.rowText, !going && { color: C.ink2, fontFamily: F.medium }]} numberOfLines={1}>
-                {/* The total only: your crew's names are in the crew box right below. */}
-                {(isGoing && going <= 1 ? "You're going" : going ? `${going} going${isGoing ? ", including you" : ""}` : "No one going yet")}
+                {/* Same words as the map card ("You and 2 more"); your crew's names are in the crew box right below. */}
+                {going || isGoing ? goingLine(Math.max(going, 1), { others: [], me: isGoing }) : "No one going yet"}
               </Text>
               <Tap style={[s.pill, isGoing && s.pillOn]} disabled={isGoing && !onUnGo} accessibilityState={{ selected: isGoing }}
                 accessibilityHint={isGoing && onUnGo ? "Tap to take it back" : undefined}
