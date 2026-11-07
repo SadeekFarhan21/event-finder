@@ -295,6 +295,13 @@ export function SpotSheet({ spot, city, me, unlocked, canAskLocation, onAskLocat
         </ScrollView>
 
         {/* Close and share stay pinned to the sheet; inside the scroll they slid up and were sliced at its edge. */}
+        {/* Without a photo nothing sits behind the pinned buttons, so scrolled text ran under them; fade it out first. */}
+        {!e.image && (
+          <LinearGradient pointerEvents="none" colors={[C.bg, C.bg, "rgba(12,12,10,0)"]} locations={[0, 0.55, 1]}
+            style={{ position: "absolute", top: 0, left: 0, right: 0, height: 88, borderTopLeftRadius: R.sheet, borderTopRightRadius: R.sheet }} />
+        )}
+        {/* The fade covers the handle; draw it again on top (the one underneath still takes the drag). */}
+        {!e.image && <View pointerEvents="none" style={s.grabber} />}
         <View pointerEvents="box-none" style={s.heroTop}>
           <Tap style={s.glass} onPress={close} accessibilityLabel="Close"><Feather name="chevron-down" size={18} color={C.ink} /></Tap>
           <Tap style={s.glass} onPress={share} accessibilityLabel={crew ? "Invite friends to your crew" : "Send this spot to a friend"}>
