@@ -206,7 +206,7 @@
 
   <footer>
     <span>Scout is an independent prototype. It is not an official Yelo app.</span>
-    <span>Spots refreshed every few minutes</span>
+    <span id="fresh">Spots refreshed every few minutes</span>
   </footer>
 </div>
 
@@ -227,6 +227,19 @@
     document.getElementById("ios").hidden = false;
     document.querySelector(".get .btn")?.classList.add("quiet");
   }
+</script>
+<script>
+  // Proof the agent is live: when Scout last searched the web (either city). Falls back to the static line.
+  fetch("https://ihxsdwpersowxxtgqcws.supabase.co/rest/v1/scout_runs?select=ran_at&kind=eq.events&error=is.null&order=ran_at.desc&limit=1",
+    { headers: { apikey: "sb_publishable_WGHco-ibd0wX9Jhe3x5vJQ_Rb5ys6UZ" } })
+    .then((r) => (r.ok ? r.json() : []))
+    .then(([run]) => {
+      if (!run) return;
+      const mins = Math.max(0, Math.round((Date.now() - Date.parse(run.ran_at)) / 60000));
+      if (mins > 180) return; // overnight pause: keep the general line
+      document.getElementById("fresh").textContent = `Scout last searched the web ${mins < 1 ? "just now" : `${mins} min ago`}`;
+    })
+    .catch(() => {});
 </script>
 </body>
 </html>
