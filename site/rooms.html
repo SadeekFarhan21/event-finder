@@ -46,7 +46,7 @@
 
   /* Rows: room, size, quiet night, rider views, action. On phones each row stacks. */
   .rooms { list-style: none; margin: 16px 0 0; padding: 0; border-top: 1px solid var(--line); }
-  .room { display: grid; grid-template-columns: minmax(0, 1fr) 96px 120px 88px 132px; gap: 16px; align-items: center; padding: 16px 0; border-bottom: 1px solid var(--line); }
+  .room { display: grid; grid-template-columns: minmax(0, 1fr) 80px 104px 88px 252px; gap: 16px; align-items: center; padding: 16px 0; border-bottom: 1px solid var(--line); }
   .head { padding-block: 10px; font-size: 13px; font-weight: 500; color: var(--ink-3); }
   .name { min-width: 0; }
   .name b { display: block; font: 400 24px/1.15 var(--display); overflow-wrap: anywhere; }
@@ -61,17 +61,22 @@
   .act.pitch:hover { background: var(--yellow-hover); }
   .act.quiet { border: 1px solid var(--line); color: var(--ink); }
   .act.quiet:hover { border-color: var(--ink-3); }
+  .acts { display: flex; gap: 8px; justify-content: flex-end; }
+  button.act { border: 0; cursor: pointer; }
   .muted { color: var(--ink-3); }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
   .note { margin: 24px 0 0; font-size: 14px; color: var(--ink-3); max-width: 65ch; }
   .empty { padding: 32px 0; color: var(--ink-2); }
   @media (max-width: 760px) {
     .head { display: none; }
-    .room { grid-template-columns: 1fr auto; grid-template-areas: "name name" "meta act"; gap: 10px 12px; }
+    .room { grid-template-columns: 1fr; grid-template-areas: "name" "meta" "act"; gap: 10px; }
+    .room > .acts { justify-content: flex-start; }
     .name { grid-area: name; }
     .meta { grid-area: meta; display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 14px; }
-    .room > .act { grid-area: act; }
+    .room > .acts { grid-area: act; }
     .num[data-l]::before, .views[data-l]::before { content: attr(data-l) " "; color: var(--ink-3); }
-    .meta .blank { display: none; } /* a phone row shows what it knows; the desktop table keeps its dashes */
+    .meta .blank { display: none; }
+    .meta:not(:has(> :not(.blank))) { display: none; } /* nothing known: no empty line */ /* a phone row shows what it knows; the desktop table keeps its dashes */
   }
   @media (min-width: 761px) { .meta { display: contents; } }
 </style>
@@ -92,8 +97,9 @@
     <input class="find" id="find" type="search" placeholder="Filter by name, area or type" aria-label="Filter rooms">
   </div>
   <p class="summary" id="summary" aria-live="polite">Loading rooms…</p>
+  <p class="sr" id="live" aria-live="polite"></p>
   <ul class="rooms" id="rooms"></ul>
-  <p class="note">Pitch opens a first draft in your mail app, the same one the Scout app writes; edit it before sending. Rider views count people who opened that venue's spots on Scout in the last 7 days.</p>
+  <p class="note">Pitch opens a first draft in your mail app, the same one the Scout app writes; Copy pitch puts that draft on your clipboard for a contact form or a DM. Edit it before sending. Rider views count people who opened that venue's spots on Scout in the last 7 days.</p>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.0/dist/umd/supabase.js"></script>
 <script>
@@ -108,7 +114,7 @@
   const shortKind = (k) => { const s = String(k || "").split("(")[0].split(/\s+with\s+/i)[0].trim(); return s.split(/\s+/).length <= 3 && s.length <= 22 && !/[\/–—]/.test(s) ? s : ""; };
   const email = (s) => String(s || "").match(/[\w.+-]+@[\w-]+\.[\w.]+/)?.[0]?.replace(/[.;,]+$/, "") ?? null;
   const insta = (s) => String(s || "").match(/(^|\s)@([\w.]{2,30})/)?.[2] ?? null;
-  function pitch(r, city, views) {
+  function pitchText(r, city, views) {
     const town = city.startsWith("los") ? "Los Angeles" : "New York";
     const night = r.quiet_night ? `${r.quiet_night}s` : "a quieter weeknight";
     const lines = [`Hi ${r.venue} team,`, "",
@@ -116,15 +122,18 @@
       `${r.venue} looks like a great fit${r.capacity ? ` (${String(r.capacity).replace(/^Up to/i, "up to")} people)` : ""}, and ${night} could be a good night to start.`];
     if (views > 0) lines.push("", `Riders on Scout, our discovery app, already looked at your nights ${views === 1 ? "once" : `${views} times`} this week.`);
     lines.push("", "Would you be open to a quick call this week?", "", "Thanks,");
-    return `mailto:${email(r.contact)}?subject=${encodeURIComponent(`A Yelo night at ${r.venue}`)}&body=${encodeURIComponent(lines.join("\n"))}`;
+    return lines.join("\n");
   }
-  // One action per room: a pitch when there's an email, else the room's own contact page or Instagram.
-  function action(r, city, views) {
-    if (email(r.contact)) return `<a class="act pitch" href="${esc(pitch(r, city, views))}">Pitch</a>`;
+  const pitch = (r, city, views) => `mailto:${email(r.contact)}?subject=${encodeURIComponent(`A Yelo night at ${r.venue}`)}&body=${encodeURIComponent(pitchText(r, city, views))}`;
+  // One way in per room: a drafted email when there's an address; otherwise the draft to copy into
+  // the room's contact form or Instagram DMs, next to the link that gets you there.
+  function action(r, city, views, i) {
+    if (email(r.contact)) return `<div class="acts"><a class="act pitch" href="${esc(pitch(r, city, views))}">Pitch</a></div>`;
     const ig = insta(r.contact), page = safeHref(r.contact) || safeHref(r.url);
-    if (ig) return `<a class="act quiet" href="https://instagram.com/${esc(ig)}" target="_blank" rel="noopener">Instagram</a>`;
-    if (page) return `<a class="act quiet" href="${esc(page)}" target="_blank" rel="noopener">Contact page</a>`;
-    return `<span class="act muted">No contact</span>`;
+    const copy = `<button type="button" class="act pitch copy" data-i="${i}" aria-label="Copy a pitch for ${esc(r.venue)}">Copy pitch</button>`;
+    if (ig) return `<div class="acts">${copy}<a class="act quiet" href="https://instagram.com/${esc(ig)}" target="_blank" rel="noopener">Instagram</a></div>`;
+    if (page) return `<div class="acts">${copy}<a class="act quiet" href="${esc(page)}" target="_blank" rel="noopener">Contact page</a></div>`;
+    return `<div class="acts"><span class="act muted">No contact</span></div>`;
   }
 
   let city = "new york, ny", all = [], views = {};
@@ -140,15 +149,16 @@
       .sort((a, b) => (views[b.venue] ?? 0) - (views[a.venue] ?? 0) || a.venue.localeCompare(b.venue));
     render();
   }
+  let list = [];
   function render() {
     const q = $("find").value.trim().toLowerCase();
-    const list = q ? all.filter((r) => `${r.venue} ${r.area} ${r.kind}`.toLowerCase().includes(q)) : all;
+    list = q ? all.filter((r) => `${r.venue} ${r.area} ${r.kind}`.toLowerCase().includes(q)) : all;
     const opened = all.filter((r) => views[r.venue]).length;
     const town = city.startsWith("los") ? "Los Angeles" : "New York";
     $("summary").textContent = `${all.length} rooms in ${town}${opened ? ` · ${opened} that riders opened this week` : ""}${q ? ` · ${list.length} match "${$("find").value.trim()}"` : ""}`;
     if (!list.length) { $("rooms").innerHTML = `<li class="empty">${q ? "No rooms match that. Try a neighborhood or a type, like \"Bushwick\" or \"DJ bar\"." : "No rooms for this city yet."}</li>`; return; }
     $("rooms").innerHTML = `<li class="room head" aria-hidden="true"><span>Room</span><span>Capacity</span><span>Quiet night</span><span>Rider views</span><span></span></li>` +
-      list.map((r) => {
+      list.map((r, i) => {
         const v = views[r.venue] ?? 0, k = shortKind(r.kind), kind = k && k[0].toUpperCase() + k.slice(1); // "Small live-music bar"
         const cap = String(r.capacity ?? "").match(/\d+/)?.[0];
         return `<li class="room">
@@ -158,7 +168,7 @@
             <span class="num${r.quiet_night ? "" : " blank"}" data-l="Quiet">${r.quiet_night ? esc(r.quiet_night) + "s" : '<span class="muted">–</span>'}</span>
             <span class="views${v ? "" : " none blank"}" data-l="Rider views">${v ? `<b>${v}</b>` : "–"}</span>
           </div>
-          ${action(r, city, v)}
+          ${action(r, city, v, i)}
         </li>`;
       }).join("");
   }
@@ -168,6 +178,15 @@
     load();
   }));
   $("find").addEventListener("input", render);
+  // Copy pitch: the same draft as the email, to paste into a contact form or a DM.
+  $("rooms").addEventListener("click", async (ev) => {
+    const b = ev.target.closest("button.copy");
+    if (!b) return;
+    const r = list[Number(b.dataset.i)];
+    try { await navigator.clipboard.writeText(pitchText(r, city, views[r.venue] ?? 0)); b.textContent = "Copied"; $("live").textContent = `Pitch for ${r.venue} copied`; }
+    catch { b.textContent = "Couldn't copy"; }
+    setTimeout(() => { b.textContent = "Copy pitch"; }, 2000);
+  });
   load();
 </script>
 </body>
