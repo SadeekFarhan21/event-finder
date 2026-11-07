@@ -4,6 +4,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getDeviceId } from "./activity";
 import { SITE } from "./social";
 import { supabase } from "./supabase";
+import { isOffline } from "../lib/net";
 import { clock, shortTitle, otherDayPrefix } from "../lib/time";
 import type { Spot } from "../lib/types";
 
@@ -36,7 +37,8 @@ const saveName = (name: string) => AsyncStorage.setItem(NAME_KEY, name.trim()).c
 // the network) gets a plain sentence instead of database text.
 const fail = (error: { message: string; code?: string } | null) => {
   if (!error) return;
-  throw new Error(error.code === "P0001" ? error.message : "Something went wrong. Try again in a moment.");
+  throw new Error(error.code === "P0001" ? error.message
+    : isOffline() ? "No connection. Try again when you're back online." : "Something went wrong. Try again in a moment.");
 };
 
 // The crew stores a copy of the spot, so it survives the scout re-merging or pruning listings.
