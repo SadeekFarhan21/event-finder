@@ -61,9 +61,10 @@ export function SpotSheet({ spot, city, me, unlocked, canAskLocation, locationRe
   const [composing, setComposing] = useState(false); // the "Go with friends" sheet is open
   const [more, setMore] = useState(false); // full description
   const [crewFailed, setCrewFailed] = useState(false); // last crew update couldn't be saved
-  // How far the sheet has scrolled: once the photo has gone by, the pinned buttons need the top fade.
+  // How far the sheet has scrolled: the top fade must be full before the venue name reaches the pinned
+  // buttons (tuned on the emulator; at -120..-60 the name still ghosted through the glass).
   const scrollY = useSharedValue(0);
-  const topFade = useAnimatedStyle(() => ({ opacity: interpolate(scrollY.value, [HERO_H - 120, HERO_H - 60], [0, 1], "clamp") }));
+  const topFade = useAnimatedStyle(() => ({ opacity: interpolate(scrollY.value, [HERO_H - 160, HERO_H - 100], [0, 1], "clamp") }));
 
   useEffect(() => {
     if (!spot) return;
