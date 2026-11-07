@@ -82,5 +82,7 @@ export function ScoutMarker({ coordinate, onPress, anchor, zIndex, children }: S
 const toAnchor = (a?: { x: number; y: number }) => (!a || a.y >= 0.5 ? "center" : "top");
 
 const s = StyleSheet.create({
-  credit: { position: "absolute", right: 16, fontFamily: F.regular, fontSize: 10, color: C.ink3, opacity: 0.7 },
+  // A dark backing so the credit never collides with a map label behind it ("LA CANADA FLINTRIDGE").
+  credit: { position: "absolute", right: 12, fontFamily: F.regular, fontSize: 10, color: C.ink3, paddingHorizontal: 6, paddingVertical: 2,
+    borderRadius: 4, overflow: "hidden", backgroundColor: "rgba(12,12,10,0.8)" },
 });
