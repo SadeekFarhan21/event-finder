@@ -29,6 +29,12 @@ export async function ungo(spotId: string) {
   if (error) throw new Error(error.message);
 }
 
+// Unsave: removes this device's save for one spot, so a venue's "saved" count stays honest.
+export async function unsave(spotId: string) {
+  if (!supabase) return;
+  await supabase.rpc("unsave", { p_spot_id: spotId, p_device_id: await getDeviceId() });
+}
+
 export const saveMine = (mine: Set<string>) =>
   AsyncStorage.setItem(MINE_KEY, JSON.stringify([...mine].slice(-200))).catch(() => {});
 

@@ -341,7 +341,7 @@ export function ScoutScreen() {
         onUnGo={detail && myGoing.has(detail.id) && !crewsApi.crews.some((c) => c.spotId === detail.id && c.members.some((m) => m.me && m.status !== "out"))
           ? (e) => { unGo(e); show("You're no longer going"); } : undefined}
         crew={detail ? crewsApi.crews.find((c) => c.spotId === detail.id) : undefined} canCrew={crewsApi.available}
-        onStartCrew={(e, leaveAt, name) => crewsApi.start(e, leaveAt, name)} onCrewStatus={crewsApi.status} isSaved={!!detail && saved.has(detail.id)} onToggleSave={toggleSave} moreNights={moreNights} onOpenSpot={(n) => { setDetail(n); focus(n); }} onClose={() => setDetail(null)} />
+        onStartCrew={(e, leaveAt, name) => crewsApi.start(e, leaveAt, name)} onCrewStatus={crewsApi.status} isSaved={!!detail && saved.has(detail.id)} onToggleSave={(sp) => toggleSave(sp, mapCity ?? cityInput)} moreNights={moreNights} onOpenSpot={(n) => { setDetail(n); focus(n); }} onClose={() => setDetail(null)} />
     </View>
   );
 }

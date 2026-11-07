@@ -40,7 +40,7 @@ type Props = {
   crew?: Crew; canCrew: boolean; // my crew for this spot, if any
   onStartCrew: (spot: Spot, leaveAt: Date, name: string) => Promise<string>;
   onCrewStatus: (code: string, s: CrewStatus) => Promise<boolean>;
-  isSaved?: boolean; onToggleSave?: (id: string) => void;
+  isSaved?: boolean; onToggleSave?: (spot: Spot) => void;
   moreNights?: Spot[]; onOpenSpot?: (spot: Spot) => void; // the venue's other upcoming nights
 };
 
@@ -343,7 +343,7 @@ export function SpotSheet({ spot, city, me, unlocked, canAskLocation, locationRe
         <View pointerEvents="box-none" style={s.heroTop}>
           <Tap style={s.glass} onPress={close} accessibilityLabel="Close"><Feather name="chevron-down" size={18} color={C.ink} /></Tap>
           <View style={{ flexDirection: "row", gap: 8 }}>
-            <Tap style={[s.glass, isSaved && s.glassOn]} onPress={() => { Haptics.selectionAsync(); onToggleSave?.(e.id); }}
+            <Tap style={[s.glass, isSaved && s.glassOn]} onPress={() => { Haptics.selectionAsync(); onToggleSave?.(e); }}
               accessibilityLabel={isSaved ? "Remove from saved" : "Save for later"} accessibilityState={{ selected: !!isSaved }}>
               <Feather name="bookmark" size={17} color={isSaved ? C.bg : C.ink} />
             </Tap>

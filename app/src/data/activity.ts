@@ -7,7 +7,7 @@ import type { Spot } from "../lib/types";
 import { supabase } from "./supabase";
 import { onNetworkChange } from "../lib/net";
 
-export type ActivityKind = "view" | "ride" | "unlock" | "share" | "going";
+export type ActivityKind = "view" | "ride" | "unlock" | "share" | "going" | "save";
 
 let deviceId: Promise<string> | null = null;
 
