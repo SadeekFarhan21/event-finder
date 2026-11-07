@@ -130,7 +130,15 @@ export function ScoutScreen() {
   // don't zoom the whole city out.
   const fit = useCallback((list: Spot[], all = false) => {
     const core = all ? list : coreOf(list);
-    if (core.length) map.current?.fitTo(core.map((e) => ({ latitude: e.lat, longitude: e.lng })), FIT_PADDING);
+    if (!core.length) return;
+    // Everything at one place (one saved spot, a venue's nights): fitting a single point zooms past the
+    // map tiles to a blank screen, so fly there at street level instead, like tapping a card.
+    const lats = core.map((e) => e.lat), lngs = core.map((e) => e.lng);
+    if (Math.max(...lats) - Math.min(...lats) < 0.002 && Math.max(...lngs) - Math.min(...lngs) < 0.002) {
+      map.current?.flyTo({ latitude: core[0].lat - 0.0025, longitude: core[0].lng }, 15);
+      return;
+    }
+    map.current?.fitTo(core.map((e) => ({ latitude: e.lat, longitude: e.lng })), FIT_PADDING);
   }, []);
 
   // Searching: once typing pauses, frame the matches. A handful are all framed; dozens get the dense
