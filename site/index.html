@@ -59,7 +59,8 @@
   .mark { display: inline-flex; align-items: baseline; min-height: 44px; padding: 8px 0; gap: 0; font: 400 28px/1 var(--display); color: var(--ink); text-decoration: none; }
   .mark i { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--yellow); margin-left: 3px; }
   .mark-sub { font: 500 14px var(--body); color: var(--ink-3); margin-left: 10px; }
-  .badge { font-size: 14px; color: var(--ink-3); }
+  nav a { display: inline-flex; align-items: center; min-height: 44px; font-size: 16px; color: var(--ink-2); }
+  nav a:hover { color: var(--ink); }
 
   .hero { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr); gap: 48px; align-items: start; margin-top: 48px; }
   @media (min-width: 861px) { .hero > :first-child { padding-top: 48px; } }
@@ -71,7 +72,7 @@
   /* The button, then one quiet line under it: nothing competes beside the main action. */
   .get { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; margin-top: 32px; }
   .get .meta { display: block; margin: 0; font-size: 14px; color: var(--ink-3); }
-  .get .meta a { display: inline; min-height: 0; padding: 12px 0; color: var(--ink-2); } /* padding keeps a finger-sized target */
+  .get .meta a { display: inline; min-height: 0; padding: 12px 0; color: var(--ink-2); white-space: nowrap; } /* padding keeps a finger-sized target */
   .btn { display: inline-flex; align-items: center; gap: 8px; min-height: 48px; background: var(--yellow); color: var(--on-yellow);
     text-decoration: none; font: 600 16px var(--body); padding: 12px 24px; border-radius: 999px; }
   .btn:hover { background: var(--yellow-hover); }
@@ -136,7 +137,7 @@
 <div class="wrap">
   <header>
     <a class="mark" href="./">Scout<i aria-hidden="true"></i></a>
-    <span class="badge">Android · v1.0.0 · Nov 6, 2026</span>
+    <nav><a href="venues.html">For venues</a></nav>
   </header>
 
   <div class="hero">
@@ -154,7 +155,7 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11"/><path d="m7 10 5 5 5-5"/><path d="M5 20h14"/></svg>
           Download for Android
         </a>
-        <p class="meta">Android APK, no Play Store needed · <a href="https://expo.dev/accounts/fsadeek/projects/scout/builds/26fb2201-a817-44ef-9214-6a2c1f0c370a" target="_blank" rel="noopener">Install page</a></p>
+        <p class="meta">Android APK, v1.0.0, no Play Store needed · <a href="https://expo.dev/accounts/fsadeek/projects/scout/builds/26fb2201-a817-44ef-9214-6a2c1f0c370a" target="_blank" rel="noopener">Install page</a></p>
       </div>
 
       <div class="qr">
