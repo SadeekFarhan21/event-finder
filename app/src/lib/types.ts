@@ -6,6 +6,7 @@ export type Confidence = "low" | "medium" | "high";
 // A spot on the map: an event, or a standing deal like a happy hour.
 export type Spot = {
   id: string;
+  short?: string | null; // 8-character share code (events.short)
   title: string;
   venue: string;
   address: string;

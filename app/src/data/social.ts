@@ -33,7 +33,8 @@ export const saveMine = (mine: Set<string>) =>
   AsyncStorage.setItem(MINE_KEY, JSON.stringify([...mine].slice(-200))).catch(() => {});
 
 // The link opens a web page for the night (works without the app), with a ride and download link.
-export const spotLink = (e: Spot) => `${SITE}/e.html?id=${encodeURIComponent(e.id)}`;
+// Short links (?s=3f9a1c2e) when the spot has a code; the long id link still works too.
+export const spotLink = (e: Spot) => (e.short ? `${SITE}/e.html?s=${e.short}` : `${SITE}/e.html?id=${encodeURIComponent(e.id)}`);
 
 export const inviteMessage = (e: Spot, going: boolean) =>
   `${going ? "I'm going to" : "Come to"} ${e.venue} ${whenPhrase(e)}: ${shortTitle(e.title)}.\n${spotLink(e)}`;
