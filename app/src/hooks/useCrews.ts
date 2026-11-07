@@ -60,11 +60,14 @@ export function useCrews(onNews?: (message: string) => void) {
   }, [refresh]);
 
   const status = useCallback(async (code: string, s: CrewStatus) => {
-    // Show it right away; the next refresh confirms.
-    setCrews((all) => all.map((c) => c.code !== code ? c
-      : { ...c, members: c.members.map((m) => (m.me ? { ...m, status: s } : m)) }));
-    await setStatus(code, s).catch(refresh);
-  }, [refresh]);
+    // Show it right away. If it can't be saved (offline), put the old status back and say so,
+    // rather than showing friends a status they'll never see.
+    let before: Crew[] = [];
+    setCrews((all) => { before = all; return all.map((c) => c.code !== code ? c
+      : { ...c, members: c.members.map((m) => (m.me ? { ...m, status: s } : m)) }); });
+    try { await setStatus(code, s); }
+    catch { setCrews(before); news.current?.("No connection. Your crew didn't get that update, try again."); }
+  }, []);
 
   return { crews, refresh, start, join, status, available: crewsAvailable() };
 }
