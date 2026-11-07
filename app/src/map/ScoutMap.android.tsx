@@ -30,9 +30,10 @@ export function ScoutMap({ ref, initialRegion, showsUserLocation, onRegionChange
 
   const insets = useSafeAreaInsets();
   // Until the dark style arrives MapLibre paints its default cream background, a bright flash at night.
-  // Cover the map in the night colour until the style has loaded (or 4 s, so it can never stick).
+  // Cover the map in the night colour until the style has loaded. The fallback is long (20 s): at 4 s it
+  // lifted mid-load on slow connections and showed the cream map anyway. Load errors lift it at once.
   const [styled, setStyled] = useState(false);
-  useEffect(() => { const t = setTimeout(() => setStyled(true), 4000); return () => clearTimeout(t); }, []);
+  useEffect(() => { const t = setTimeout(() => setStyled(true), 20000); return () => clearTimeout(t); }, []);
   // MapLibre's own attribution button is a bright blue "i"; credit OpenStreetMap in the palette instead.
   return (
     <View style={StyleSheet.absoluteFill}>
