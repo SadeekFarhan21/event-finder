@@ -158,7 +158,7 @@ async function review(auth: string | null, body: Extract<ScoutRequest, { task: "
   if (!key || auth !== `Bearer ${key}`) return json(401, errorBody("UNAUTHORIZED", "Wrong review key."));
   if (body.action === "list") {
     const { data, error } = await db.from("submissions")
-      .select("id, city, venue, address, title, category, start, deal, description, url, contact_email, status, created_at, updated_at")
+      .select("id, city, venue, address, title, category, start, deal, description, url, contact_email, status, review_note, created_at, updated_at")
       .in("status", ["pending", "approved", "rejected"]).order("status").order("updated_at", { ascending: false }).limit(100);
     return error ? json(500, errorBody("INTERNAL", describe(error))) : json(200, { submissions: data });
   }
