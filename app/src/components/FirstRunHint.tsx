@@ -5,6 +5,7 @@ import { StyleSheet, Text, View } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Animated, { FadeInUp, FadeOutUp } from "react-native-reanimated";
 import { HEADER_GAP, HEADER_H } from "../layout";
+import { useOffline } from "../hooks/useOffline";
 import { color as C, font as F, radius as R, shadow, text as T } from "../theme";
 import { Tap } from "./Tap";
 
@@ -15,7 +16,9 @@ export function FirstRunHint({ top, city, dismissed }: { top: number; city: stri
   useEffect(() => { AsyncStorage.getItem(KEY).then((v) => setShow(!v)).catch(() => {}); }, []);
   const done = () => { setShow(false); AsyncStorage.setItem(KEY, "1").catch(() => {}); };
   useEffect(() => { if (dismissed && show) done(); }, [dismissed]);
-  if (!show) return null;
+  // Offline, the banner holds this spot and the map can't load anyway; the hint waits its turn.
+  const offline = useOffline();
+  if (!show || offline) return null;
   return (
     <Animated.View entering={FadeInUp.delay(600)} exiting={FadeOutUp} style={[s.card, { top: top + HEADER_GAP + HEADER_H + 8 }]}
       accessibilityRole="summary">
