@@ -185,7 +185,7 @@ export function SpotSheet({ spot, city, me, unlocked, canAskLocation, locationRe
               {people.length ? (
                 <View style={s.faces}>
                   {people.slice(0, 3).map((m, i) => (
-                    <View key={i} style={[s.face, { marginLeft: i ? -10 : 0, zIndex: 3 - i }, m.status === "on_way" && s.faceOnWay]}>
+                    <View key={i} style={[s.face, { marginLeft: i ? -8 : 0, zIndex: 3 - i }, m.status === "on_way" && s.faceOnWay]}>
                       <Text style={[s.faceText, m.status === "on_way" && { color: C.bg }]}>{m.me ? "You" : initials(m.name)}</Text>
                     </View>
                   ))}
@@ -371,7 +371,7 @@ const s = StyleSheet.create({
   rowText: { flex: 1, fontFamily: F.semibold, fontSize: T.small, color: C.ink },
   rowSub: { fontFamily: F.regular, fontSize: T.meta, color: C.ink3, marginTop: 2 },
   faces: { flexDirection: "row" },
-  face: { minWidth: 30, height: 30, paddingHorizontal: 2, borderRadius: 15, alignItems: "center", justifyContent: "center",
+  face: { width: 30, height: 30, borderRadius: 15, alignItems: "center", justifyContent: "center",
     backgroundColor: C.d3, borderWidth: 2, borderColor: C.bg },
   faceOnWay: { backgroundColor: C.ink },
   faceText: { fontFamily: F.semibold, fontSize: 10, color: C.ink },
