@@ -111,6 +111,14 @@
     .hero { grid-template-columns: minmax(0, 1fr); gap: 32px; margin-top: 32px; }
     .screens { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   }
+  /* Phones: a swipeable row of large shots instead of four thumbnails too small to read. */
+  @media (max-width: 560px) {
+    .screens { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: 72%; overflow-x: auto;
+      scroll-snap-type: x mandatory; margin-inline: -16px; padding-inline: 16px; scroll-padding-inline: 16px;
+      scrollbar-width: none; overscroll-behavior-x: contain; }
+    .screens::-webkit-scrollbar { display: none; }
+    .screens figure { scroll-snap-align: start; }
+  }
 </style>
 </head>
 <body>
@@ -159,7 +167,7 @@
     <div class="screens">
       <figure><img src="shot-map-la.jpg" alt="Los Angeles tonight: numbered bubbles across the city, a bubble ringed for a Yelo partner, and a card for Gold-Diggers at 10 PM" loading="lazy" width="414" height="900">
         <figcaption><b>One map for the night</b>New York and Los Angeles, refreshed every few minutes and grouped so the map stays readable.</figcaption></figure>
-      <figure><img src="shot-spot.jpg" alt="Spot details for Nublu with a photo header, time, address, who is going, and Ride there" loading="lazy" width="414" height="900">
+      <figure><img src="shot-spot.jpg" alt="Nublu 151 tonight at 7 PM, 1 mile away: 2 going including you, your crew leaving in a minute, and Ride with Yelo for about $9" loading="lazy" width="414" height="900">
         <figcaption><b>Ride there</b>Each spot shows the time, the address, the price, who's going, and a ride button.</figcaption></figure>
       <figure><img src="shot-crew.jpg" alt="Your crews tonight: Nublu 151 leaving now and Gold-Diggers leaving at 11:30 PM, each with who's coming, an invite button, Can't make it and I'm on my way" loading="lazy" width="414" height="900">
         <figcaption><b>Head out together</b>Start a crew, send the link, and see who's coming and who's on the way.</figcaption></figure>
