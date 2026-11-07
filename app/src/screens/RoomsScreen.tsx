@@ -7,6 +7,7 @@ import { Tap } from "../components/Tap";
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { roomInterest, runLeads } from "../data/api";
+import { pitchEmail } from "../lib/pitch";
 import type { Lead } from "../lib/types";
 import { color as C, font as F, radius as R, text as T } from "../theme";
 
@@ -48,7 +49,10 @@ export function RoomsScreen({ visible, city, leads, setLeads, canSearch, onClose
 
   const contact = (l: Lead) => {
     const c = l.contact ?? "";
-    if (c.includes("@") && !c.startsWith("@")) return Linking.openURL(`mailto:${c}`);
+    if (c.includes("@") && !c.startsWith("@")) {
+      const { subject, body } = pitchEmail(l, city, interest[l.venue] ?? 0);
+      return Linking.openURL(`mailto:${c}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`);
+    }
     if (c.startsWith("@")) return Linking.openURL(`https://instagram.com/${c.slice(1)}`);
     if (/^https?:\/\//.test(c)) return Linking.openURL(c);
     if (l.url) return Linking.openURL(l.url);
