@@ -52,8 +52,34 @@ export const nowWord = () => todayWord(new Date());
 
 // A standing deal's daily hours from its own text ("Happy Hour 3-7pm", "4 to 6:30 PM"), as minutes
 // after midnight. Never guessed: no stated hours, no status.
+// The part of a deal's text that's about the happy hour, when it says so: in "Happy Hour Tue-Fri
+// open-7pm; Saturday open 12pm-4am" the hours after the semicolon are Saturday's opening hours, not
+// a happy hour, and reading them as one put a closed happy hour at the top of a Saturday plan.
+const hhClause = (text: string) => text.split(/[;\n]|\s[–—]\s/).find((c) => /happy hour/i.test(c)) ?? text;
+
+// The days a deal's clause names ("Tue-Fri", "Mon–Thu", "weekdays", "Sat & Sun", "Sundays") as
+// weekday numbers (0 Sun ... 6 Sat); null when it names none (then it's every day).
+const DAY = "(mon(?:day)?|tue(?:s|sday)?|wed(?:nesday)?|thu(?:r|rs|rsday)?|fri(?:day)?|sat(?:urday)?|sun(?:day)?)s?";
+const DAYS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
+export function dealDays(text: string): Set<number> | null {
+  const c = hhClause(text).toLowerCase();
+  if (/\bweekdays?\b/.test(c)) return new Set([1, 2, 3, 4, 5]);
+  if (/\bweekends?\b/.test(c)) return new Set([0, 6]);
+  const range = c.match(new RegExp(`\\b${DAY}\\s*(?:-|–|to|through|thru)\\s*${DAY}\\b`));
+  if (range) {
+    const out = new Set<number>(), a = DAYS.indexOf(range[1].slice(0, 3)), b = DAYS.indexOf(range[2].slice(0, 3));
+    for (let i = a; ; i = (i + 1) % 7) { out.add(i); if (i === b) break; }
+    return out;
+  }
+  const named = [...c.matchAll(new RegExp(`\\b${DAY}\\b`, "g"))].map((m) => DAYS.indexOf(m[1].slice(0, 3)));
+  return named.length ? new Set(named) : null;
+}
+// Today's weekday on the city's clock.
+const cityWeekday = (t: number) => { const p = parts(t); return new Date(Date.UTC(+p.year, +p.month - 1, +p.day)).getUTCDay(); };
+const dealToday = (text: string, now: number) => { const d = dealDays(text); return !d || d.has(cityWeekday(now)); };
+
 export function dealHours(text: string): { from: number; to: number } | null {
-  const m = text.match(/\b(\d{1,2})(?::(\d\d))?\s*(am|pm)?\s*(?:-|–|to)\s*(\d{1,2})(?::(\d\d))?\s*(am|pm)\b/i);
+  const m = hhClause(text).match(/\b(\d{1,2})(?::(\d\d))?\s*(am|pm)?\s*(?:-|–|to)\s*(\d{1,2})(?::(\d\d))?\s*(am|pm)\b/i);
   if (!m) return null;
   const toMin = (h: string, mm: string | undefined, ap: string) => ((+h % 12) + (/pm/i.test(ap) ? 12 : 0)) * 60 + (+(mm ?? 0));
   const to = toMin(m[4], m[5], m[6]);
@@ -65,8 +91,9 @@ export function dealHours(text: string): { from: number; to: number } | null {
 
 // "On until 7 PM" while a happy hour is running, "From 3 PM" before it starts, null after or unknown.
 export function dealStatus(e: Pick<WhenFields, "title" | "deal">, now = Date.now()): string | null {
-  const h = dealHours(`${e.deal ?? ""} ${e.title}`);
-  if (!h) return null;
+  const text = `${e.deal ?? ""} ${e.title}`;
+  const h = dealHours(text);
+  if (!h || !dealToday(text, now)) return null; // "Tue-Fri" on a Saturday: no status, not a wrong one
   const p = parts(now), mins = +p.hour * 60 + +p.minute;
   const on = h.to > h.from ? mins >= h.from && mins < h.to : mins >= h.from || mins < h.to; // "11-2am" crosses midnight
   if (on) return `On until ${sayUTC(h.to)}`;
@@ -77,8 +104,9 @@ export function dealStatus(e: Pick<WhenFields, "title" | "deal">, now = Date.now
 
 // For ordering standing deals: running now (0), starting later today (1, by start), over or no hours (2).
 export function dealRank(e: Pick<WhenFields, "title" | "deal">, now = Date.now()): number {
-  const h = dealHours(`${e.deal ?? ""} ${e.title}`);
-  if (!h) return 3000;
+  const text = `${e.deal ?? ""} ${e.title}`;
+  const h = dealHours(text);
+  if (!h || !dealToday(text, now)) return 3000;
   const p = parts(now), mins = +p.hour * 60 + +p.minute;
   const on = h.to > h.from ? mins >= h.from && mins < h.to : mins >= h.from || mins < h.to;
   if (on) return 0;

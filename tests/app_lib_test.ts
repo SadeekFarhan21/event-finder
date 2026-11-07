@@ -4,7 +4,7 @@
 import { expect } from "jsr:@std/expect@1";
 import { FakeTime } from "jsr:@std/testing@1/time";
 import type { Spot } from "../app/src/lib/types";
-import { clock, shortTitle, dealHours, dealStatus, isRecurring, nightEnd, otherDayPrefix, setCityZone, whenLabel } from "../app/src/lib/time";
+import { clock, shortTitle, dealDays, dealHours, dealStatus, isRecurring, nightEnd, otherDayPrefix, setCityZone, whenLabel } from "../app/src/lib/time";
 import { matches, sortSpots } from "../app/src/lib/filters";
 import { clusterEvents, coreOf } from "../app/src/lib/cluster";
 import { estimateFare, km } from "../app/src/lib/fare";
@@ -377,4 +377,24 @@ Deno.test("no element followed by a same-line JSX comment", async () => {
   }
   await walk(new URL("../app/src", import.meta.url).pathname);
   expect(bad).toEqual([]);
+});
+
+Deno.test("deal hours come from the happy-hour clause, on its days", () => {
+  setCityZone("Los Angeles, CA");
+  try {
+    // Mattie's, LA: the hours after the semicolon are Saturday opening hours, not a happy hour.
+    const mattie = { title: "West Hollywood — Happy Hour & Nightlife", deal: "Happy Hour Tue-Fri open-7pm; Saturday open 12pm-4am with drag brunch and DJ sets" };
+    const sat2pm = Date.parse("2026-11-07T22:00:00Z"), fri5pm = Date.parse("2026-11-07T01:00:00Z");
+    expect(dealHours(`${mattie.deal} ${mattie.title}`)).toBe(null);
+    expect(dealStatus(mattie, sat2pm)).toBe(null);
+    // Named days are respected; "Sunset" isn't Sunday.
+    const wk = { title: "Happy Hour", deal: "Happy hour Mon-Fri 4-7pm" };
+    expect(dealStatus(wk, sat2pm)).toBe(null);
+    expect(dealStatus(wk, fri5pm)).toBe("On until 7 PM");
+    expect(dealDays("Sunset happy hour 5-7pm")).toBe(null);
+    expect(dealHours("Happy hour $5.50 wells 4-7pm")).toEqual({ from: 960, to: 1140 }); // a "." inside the clause doesn't split it
+    expect([...dealDays("Happy hour weekdays 3-6pm")!]).toEqual([1, 2, 3, 4, 5]);
+    expect([...dealDays("Happy hour Sat & Sun 2-9PM")!].sort()).toEqual([0, 6]);
+    expect([...dealDays("Happy Hour Fri-Mon 3-6")!].sort()).toEqual([0, 1, 5, 6]);
+  } finally { setCityZone(null); }
 });
