@@ -43,7 +43,6 @@ import os, re, sys
 p = sys.argv[1]; s = open(p).read()
 s = re.sub(r"https://expo\.dev/artifacts/eas/[A-Za-z0-9_-]+\.apk", os.environ["APK_URL"], s)
 s = re.sub(r"(/projects/scout/builds/)[0-9a-f-]{36}", r"\g<1>" + os.environ["BUILD_ID"], s)
-s = re.sub(r"Build (\d+)", lambda m: f"Build {int(m.group(1)) + 1}", s, count=1)
 open(p, "w").write(s)
 PY
 git -C "$tmp" commit -qam "Download: newest APK (build ${build_id:0:8})"
