@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Scout · Rooms worth pitching</title>
+<meta name="description" content="Independent rooms in New York and Los Angeles that could host a Yelo night, with capacity, a quiet weeknight, a contact, and which ones riders already open.">
+<meta name="robots" content="noindex">
+<link rel="icon" href="favicon.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="theme-color" content="#0C0C0A">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&display=swap">
+<style>
+  /* Night palette and type shared with the other Scout pages. A working list for Yelo's partner
+     team: scannable rows, one action per room, numbers in even-width digits. */
+  :root {
+    --bg: #0C0C0A; --surface: #151513; --fill: #1D1C19; --line: #282723;
+    --ink: #F2F0E9; --ink-2: #C2BEB2; --ink-3: #8E8A7F;
+    --yellow: #FFE14A; --on-yellow: #14130F; --yellow-hover: #F5D63E;
+    --display: "Instrument Serif", "Iowan Old Style", Georgia, serif;
+    --body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+    color-scheme: dark;
+  }
+  *,*::before,*::after { box-sizing: border-box }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 400 16px/1.55 var(--body); }
+  .wrap { max-width: 1040px; margin: 0 auto; padding-inline: 16px; padding-block: 16px 64px; }
+  a { color: inherit; }
+  :focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; border-radius: 8px; }
+  header { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+  .mark { display: inline-flex; align-items: baseline; min-height: 44px; padding: 8px 0; font: 400 28px/1 var(--display); color: var(--ink); text-decoration: none; }
+  .mark i { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--yellow); margin-left: 3px; }
+  .mark-sub { font: 500 14px var(--body); color: var(--ink-3); margin-left: 10px; }
+  nav a { display: inline-flex; align-items: center; min-height: 44px; color: var(--ink-2); font-size: 16px; }
+  h1 { font: 400 clamp(40px, 6vw, 56px)/1.02 var(--display); margin: 32px 0 0; text-wrap: balance; }
+  h1 em { font-style: italic; }
+  .lede { color: var(--ink-2); margin: 12px 0 0; max-width: 60ch; }
+
+  .controls { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; margin-top: 32px; }
+  .seg { display: inline-flex; padding: 4px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); }
+  .seg button { min-height: 40px; padding: 0 16px; border: 0; border-radius: 999px; background: transparent; color: var(--ink-2); font: 500 15px var(--body); cursor: pointer; }
+  .seg button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+  .find { flex: 1 1 220px; max-width: 320px; height: 48px; padding: 0 16px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font: inherit; }
+  .find::placeholder { color: var(--ink-3); }
+  .summary { margin: 16px 0 0; color: var(--ink-3); font-size: 14px; font-variant-numeric: tabular-nums; }
+
+  /* Rows: room, size, quiet night, rider views, action. On phones each row stacks. */
+  .rooms { list-style: none; margin: 16px 0 0; padding: 0; border-top: 1px solid var(--line); }
+  .room { display: grid; grid-template-columns: minmax(0, 1fr) 96px 120px 88px 132px; gap: 16px; align-items: center; padding: 16px 0; border-bottom: 1px solid var(--line); }
+  .head { padding-block: 10px; font-size: 13px; font-weight: 500; color: var(--ink-3); }
+  .name { min-width: 0; }
+  .name b { display: block; font: 400 24px/1.15 var(--display); overflow-wrap: anywhere; }
+  .name span { display: block; margin-top: 2px; font-size: 14px; color: var(--ink-3); }
+  .name p { margin: 6px 0 0; font-size: 14px; color: var(--ink-2); max-width: 62ch; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .num { font-variant-numeric: tabular-nums; color: var(--ink-2); }
+  .views { font-variant-numeric: tabular-nums; }
+  .views b { font-weight: 600; color: var(--ink); }
+  .views.none { color: var(--ink-3); }
+  .act { display: inline-flex; align-items: center; justify-content: center; min-height: 40px; padding: 0 16px; border-radius: 999px; font: 600 15px var(--body); text-decoration: none; white-space: nowrap; }
+  .act.pitch { background: var(--yellow); color: var(--on-yellow); }
+  .act.pitch:hover { background: var(--yellow-hover); }
+  .act.quiet { border: 1px solid var(--line); color: var(--ink); }
+  .act.quiet:hover { border-color: var(--ink-3); }
+  .muted { color: var(--ink-3); }
+  .note { margin: 24px 0 0; font-size: 14px; color: var(--ink-3); max-width: 65ch; }
+  .empty { padding: 32px 0; color: var(--ink-2); }
+  @media (max-width: 760px) {
+    .head { display: none; }
+    .room { grid-template-columns: 1fr auto; grid-template-areas: "name name" "meta act"; gap: 10px 12px; }
+    .name { grid-area: name; }
+    .meta { grid-area: meta; display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 14px; }
+    .room > .act { grid-area: act; }
+    .num[data-l]::before, .views[data-l]::before { content: attr(data-l) " "; color: var(--ink-3); }
+    .meta .blank { display: none; } /* a phone row shows what it knows; the desktop table keeps its dashes */
+  }
+  @media (min-width: 761px) { .meta { display: contents; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <a class="mark" href="./">Scout<i aria-hidden="true"></i><span class="mark-sub">for Yelo's partner team</span></a>
+    <nav><a href="venues.html">For venues</a></nav>
+  </header>
+  <h1>Rooms worth <em>pitching.</em></h1>
+  <p class="lede">Independent rooms Scout found that could host a Yelo night: 50 to 400 people, with a quiet weeknight when the listing says one. Rooms riders already opened on Scout this week come first.</p>
+  <div class="controls">
+    <div class="seg" role="group" aria-label="City">
+      <button type="button" data-city="new york, ny" aria-pressed="true">New York</button>
+      <button type="button" data-city="los angeles, ca" aria-pressed="false">Los Angeles</button>
+    </div>
+    <input class="find" id="find" type="search" placeholder="Filter by name, area or type" aria-label="Filter rooms">
+  </div>
+  <p class="summary" id="summary" aria-live="polite">Loading rooms…</p>
+  <ul class="rooms" id="rooms"></ul>
+  <p class="note">Pitch opens a first draft in your mail app, the same one the Scout app writes; edit it before sending. Rider views count people who opened that venue's spots on Scout in the last 7 days.</p>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.0/dist/umd/supabase.js"></script>
+<script>
+  // Publishable key: read-only access to public rooms and aggregate counts.
+  const db = supabase.createClient("https://ihxsdwpersowxxtgqcws.supabase.co", "sb_publishable_WGHco-ibd0wX9Jhe3x5vJQ_Rb5ys6UZ", { auth: { persistSession: false } });
+  const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+  const $ = (id) => document.getElementById(id);
+  const safeHref = (u) => (/^https?:\/\//i.test(String(u || "")) ? String(u) : null);
+
+  // Same rules as the app (supabase/functions/_shared/leads.ts and app/src/lib/pitch.ts).
+  const inBrief = (cap) => { const n = Number(String(cap ?? "").match(/\d+/)?.[0]); return !n || (n >= 50 && n <= 400); };
+  const shortKind = (k) => { const s = String(k || "").split("(")[0].split(/\s+with\s+/i)[0].trim(); return s.split(/\s+/).length <= 3 && s.length <= 22 && !/[\/–—]/.test(s) ? s : ""; };
+  const email = (s) => String(s || "").match(/[\w.+-]+@[\w-]+\.[\w.]+/)?.[0]?.replace(/[.;,]+$/, "") ?? null;
+  const insta = (s) => String(s || "").match(/(^|\s)@([\w.]{2,30})/)?.[2] ?? null;
+  function pitch(r, city, views) {
+    const town = city.startsWith("los") ? "Los Angeles" : "New York";
+    const night = r.quiet_night ? `${r.quiet_night}s` : "a quieter weeknight";
+    const lines = [`Hi ${r.venue} team,`, "",
+      `I'm with Yelo, the rideshare for students and twenty-somethings in ${town}. We partner with independent venues to fill a quiet night: we build the event with you and bring our riders to your door.`, "",
+      `${r.venue} looks like a great fit${r.capacity ? ` (${String(r.capacity).replace(/^Up to/i, "up to")} people)` : ""}, and ${night} could be a good night to start.`];
+    if (views > 0) lines.push("", `Riders on Scout, our discovery app, already looked at your nights ${views === 1 ? "once" : `${views} times`} this week.`);
+    lines.push("", "Would you be open to a quick call this week?", "", "Thanks,");
+    return `mailto:${email(r.contact)}?subject=${encodeURIComponent(`A Yelo night at ${r.venue}`)}&body=${encodeURIComponent(lines.join("\n"))}`;
+  }
+  // One action per room: a pitch when there's an email, else the room's own contact page or Instagram.
+  function action(r, city, views) {
+    if (email(r.contact)) return `<a class="act pitch" href="${esc(pitch(r, city, views))}">Pitch</a>`;
+    const ig = insta(r.contact), page = safeHref(r.contact) || safeHref(r.url);
+    if (ig) return `<a class="act quiet" href="https://instagram.com/${esc(ig)}" target="_blank" rel="noopener">Instagram</a>`;
+    if (page) return `<a class="act quiet" href="${esc(page)}" target="_blank" rel="noopener">Contact page</a>`;
+    return `<span class="act muted">No contact</span>`;
+  }
+
+  let city = "new york, ny", all = [], views = {};
+  async function load() {
+    $("summary").textContent = "Loading rooms…";
+    const [{ data, error }, { data: iv }] = await Promise.all([
+      db.from("rooms").select("venue,area,kind,capacity,fit,quiet_night,contact,url").eq("city", city),
+      db.rpc("room_interest", { p_city: city }),
+    ]);
+    if (error) { $("summary").textContent = "Couldn't load rooms. Check your connection and try again."; $("rooms").innerHTML = ""; return; }
+    views = Object.fromEntries((iv ?? []).map((r) => [r.venue, Number(r.views)]));
+    all = (data ?? []).filter((r) => inBrief(r.capacity))
+      .sort((a, b) => (views[b.venue] ?? 0) - (views[a.venue] ?? 0) || a.venue.localeCompare(b.venue));
+    render();
+  }
+  function render() {
+    const q = $("find").value.trim().toLowerCase();
+    const list = q ? all.filter((r) => `${r.venue} ${r.area} ${r.kind}`.toLowerCase().includes(q)) : all;
+    const opened = all.filter((r) => views[r.venue]).length;
+    const town = city.startsWith("los") ? "Los Angeles" : "New York";
+    $("summary").textContent = `${all.length} rooms in ${town}${opened ? ` · ${opened} that riders opened this week` : ""}${q ? ` · ${list.length} match "${$("find").value.trim()}"` : ""}`;
+    if (!list.length) { $("rooms").innerHTML = `<li class="empty">${q ? "No rooms match that. Try a neighborhood or a type, like \"Bushwick\" or \"DJ bar\"." : "No rooms for this city yet."}</li>`; return; }
+    $("rooms").innerHTML = `<li class="room head" aria-hidden="true"><span>Room</span><span>Capacity</span><span>Quiet night</span><span>Rider views</span><span></span></li>` +
+      list.map((r) => {
+        const v = views[r.venue] ?? 0, k = shortKind(r.kind), kind = k && k[0].toUpperCase() + k.slice(1); // "Small live-music bar"
+        const cap = String(r.capacity ?? "").match(/\d+/)?.[0];
+        return `<li class="room">
+          <div class="name"><b>${esc(r.venue)}</b><span>${esc([r.area, kind].filter(Boolean).join(" · "))}</span>${r.fit ? `<p>${esc(r.fit)}</p>` : ""}</div>
+          <div class="meta">
+            <span class="num${cap ? "" : " blank"}" data-l="Up to">${cap ? esc(cap) : '<span class="muted">–</span>'}</span>
+            <span class="num${r.quiet_night ? "" : " blank"}" data-l="Quiet">${r.quiet_night ? esc(r.quiet_night) + "s" : '<span class="muted">–</span>'}</span>
+            <span class="views${v ? "" : " none blank"}" data-l="Rider views">${v ? `<b>${v}</b>` : "–"}</span>
+          </div>
+          ${action(r, city, v)}
+        </li>`;
+      }).join("");
+  }
+  document.querySelectorAll(".seg button").forEach((b) => b.addEventListener("click", () => {
+    city = b.dataset.city;
+    document.querySelectorAll(".seg button").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+    load();
+  }));
+  $("find").addEventListener("input", render);
+  load();
+</script>
+</body>
+</html>
