@@ -58,6 +58,8 @@
   .band span { font-size: 14px; color: var(--ink-3); }
   .note { font-size: 14px; color: var(--ink-3); margin: 16px 0 0; }
   .empty { margin-top: 48px; }
+  .empty .desc { margin-top: 12px; }
+  .empty .note { margin-top: 32px; }
   .invite { font: 400 28px/1.2 var(--display); margin: 32px 0 0; text-wrap: balance; }
   .crew { margin-top: 16px; padding: 16px; border-radius: 12px; border: 1px solid var(--line); background: var(--fill); }
   .crewhead { margin: 0; font-size: 16px; color: var(--ink-2); }
@@ -135,7 +137,8 @@
     app.innerHTML = `<section class="empty"><h1>${copy[0]}</h1><p class="desc">${copy[1]}</p>
       <div class="actions">${kind === "offline"
         ? `<button class="btn primary" type="button" onclick="location.reload()">Try again</button>`
-        : isAndroid ? `<a class="btn primary" href="./">Get Scout for Android</a>` : `<a class="btn quiet" href="./">About Scout</a>`}</div></section>`;
+        : isAndroid ? `<a class="btn primary" href="./">Get Scout for Android</a>` : `<a class="btn quiet" href="./">See what Scout is</a>`}</div>
+      <p class="note">Scout finds what's on tonight in New York and Los Angeles and shows the ride there. An independent prototype, not an official Yelo app.</p></section>`;
   }
 
   // A browser joining a crew gets its own random id (kept in this browser), like a phone does.
