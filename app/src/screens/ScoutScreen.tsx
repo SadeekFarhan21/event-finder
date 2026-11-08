@@ -440,7 +440,7 @@ export function ScoutScreen() {
                 }}
                 accessibilityLabel={soon ? `Your crew leaves for ${soon.crew.venue} ${soon.mins <= 1 ? "now" : `in ${soon.mins} minutes`}. Open crews`
                   : nudge ? `${nudge.spot.venue}, which you saved, starts ${nudge.mins <= 1 ? "now" : `in ${nudge.mins} minutes`}. Open it`
-                  : `Crews${liveCrews.length ? `, ${liveCrews.length} on` : ""}`}>
+                  : `Crews${liveCrews.length ? `, ${liveCrews.length} active` : ""}`}>
                 <Text numberOfLines={1} style={[s.roomsText, (liveCrews.length > 0 || !!nudge) && s.crewsOnText]}>
                   {soon ? `Leave for ${soon.crew.venue} ${soon.mins <= 1 ? "now" : `in ${soon.mins} min`}`
                     : nudge ? `${nudge.spot.venue} starts ${nudge.mins <= 1 ? "now" : `in ${nudge.mins} min`}`
