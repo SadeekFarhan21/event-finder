@@ -91,6 +91,15 @@
 
   h2 { font: 400 clamp(32px, 4vw, 40px)/1.1 var(--display); margin: 0; text-wrap: balance; }
   section { margin-top: 64px; }
+  .live { list-style: none; margin: 16px 0 0; padding: 0; border-top: 1px solid var(--line); max-width: 720px; }
+  .live a { display: grid; grid-template-columns: 84px 1fr auto; gap: 16px; align-items: baseline; padding: 16px 0; border-bottom: 1px solid var(--line); text-decoration: none; color: inherit; }
+  .live b { font: 400 24px/1 var(--display); }
+  .live strong { display: block; font-weight: 600; }
+  .live small { display: block; color: var(--ink-3); font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .live span { min-width: 0; }
+  .live a:hover strong { text-decoration: underline; text-underline-offset: 3px; }
+  .live em { font-style: normal; font-size: 13px; color: var(--ink-3); white-space: nowrap; }
+  .live em.p::before { content: ""; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--yellow); margin-right: 6px; vertical-align: 1px; }
   .section-head { display: grid; gap: 8px; margin-bottom: 24px; }
   .section-head p { margin: 0; color: var(--ink-2); max-width: 60ch; }
 
@@ -167,6 +176,14 @@
     <div class="phone"><img src="shot-map.jpg" alt="Scout in New York with Plan my night on: three stops on the map, a Share plan button, and the first stop, Dos Caminos, a happy hour until 5 PM marked Start here" width="414" height="920"></div>
   </div>
 
+  <section aria-labelledby="live" id="livesec" hidden>
+    <div class="section-head">
+      <h2 id="live">On tonight in New York</h2>
+      <p id="livesub">What the agent found for tonight, from the live map.</p>
+    </div>
+    <ul class="live" id="livelist"></ul>
+  </section>
+
   <section aria-labelledby="inside">
     <div class="section-head">
       <h2 id="inside">What's inside</h2>
@@ -233,6 +250,24 @@
   }
 </script>
 <script>
+  // Proof the agent works, in its own output: three spots still to come tonight in New York, Yelo partners
+  // first, each opening its spot page. Shown only once real data is in; any error leaves it hidden.
+  (async () => {
+    const H = { headers: { apikey: "sb_publishable_WGHco-ibd0wX9Jhe3x5vJQ_Rb5ys6UZ" } };
+    const now = Date.now(), from = new Date(now - 15 * 60000).toISOString(), to = new Date(now + 8 * 3600e3).toISOString();
+    const q = `select=short,venue,title,start,partner&city=eq.new%20york,%20ny&category=neq.deal&confidence=neq.low&start=gte.${from}&start=lt.${to}&order=partner.desc,start.asc&limit=12`;
+    const r = await fetch(`https://ihxsdwpersowxxtgqcws.supabase.co/rest/v1/upcoming_events?${q}`, H);
+    if (!r.ok) return;
+    const seen = new Set(), rows = (await r.json()).filter((e) => e.short && !seen.has(e.venue) && seen.add(e.venue)).slice(0, 3);
+    if (rows.length < 2) return; // late at night: nothing worth showing
+    const esc = (t) => String(t ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+    const time = (t) => new Date(t).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: "America/New_York" }).replace(":00", "");
+    const calm = (t) => (t && t === t.toUpperCase() && /[A-Z]{4}/.test(t) ? t.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase()) : t);
+    document.getElementById("livelist").innerHTML = rows.sort((a, b) => Date.parse(a.start) - Date.parse(b.start)).map((e) =>
+      `<li><a href="e.html?s=${esc(e.short)}"><b>${esc(time(e.start))}</b><span><strong>${esc(e.venue)}</strong><small>${esc(calm(e.title))}</small></span>${e.partner ? '<em class="p">Yelo partner</em>' : "<em></em>"}</a></li>`).join("");
+    document.getElementById("livesec").hidden = false;
+  })().catch(() => {});
+
   // Proof the agent is live: when Scout last searched the web (either city). Falls back to the static line.
   fetch("https://ihxsdwpersowxxtgqcws.supabase.co/rest/v1/scout_runs?select=ran_at&kind=eq.events&error=is.null&order=ran_at.desc&limit=1",
     { headers: { apikey: "sb_publishable_WGHco-ibd0wX9Jhe3x5vJQ_Rb5ys6UZ" } })
