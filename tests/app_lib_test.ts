@@ -16,7 +16,7 @@ import { closeBy, planAhead, planDirectionsUrl, planFromShorts, planMessage, pla
 import { newSince } from "../app/src/lib/fresh";
 import { pitchEmail } from "../app/src/lib/pitch";
 import { calendarUrl } from "../app/src/lib/calendar";
-import { matchesQuery, parseQuery, priceOf, rankByVenue, relaxHint } from "../app/src/lib/search";
+import { matchesQuery, parseQuery, priceOf, rankByVenue, relaxHint, withoutLimit } from "../app/src/lib/search";
 
 const spot = (over: Partial<Spot>): Spot => ({
   id: "s", city: "new york, ny", title: "Jazz", venue: "Nublu", address: "151 Avenue C", start: null, category: "music",
@@ -546,8 +546,16 @@ Deno.test("relaxHint: names the one limit to drop", () => {
     const now = Date.parse("2026-11-07T22:00:00Z");
     const s = (start: string, extra = {}) => ({ id: start, title: "Jazz trio", venue: "V", address: "", start, category: "music", price: "$25", deal: null, description: "", url: null, lat: 0, lng: 0, confidence: "high", source: "exa", ...extra }) as unknown as Spot;
     const spots = [s("2026-11-14T03:30:00Z")]; // Fri 10:30 PM, $25
-    expect(relaxHint(spots, parseQuery("cheap jazz friday late"), now)).toEqual({ drop: "the price limit", count: 1 });
-    expect(relaxHint([s("2026-11-14T01:00:00Z", { price: "Free" })], parseQuery("cheap jazz friday late"), now)).toEqual({ drop: "late", count: 1 });
+    expect(relaxHint(spots, parseQuery("cheap jazz friday late"), now)).toEqual({ drop: "the price limit", count: 1, limit: "price" });
+    expect(relaxHint([s("2026-11-14T01:00:00Z", { price: "Free" })], parseQuery("cheap jazz friday late"), now)).toEqual({ drop: "late", count: 1, limit: "after" });
     expect(relaxHint(spots, parseQuery("techno"), now)).toBeNull();
   } finally { setCityZone(null); }
+});
+
+Deno.test("withoutLimit: removes just that kind of limit from the text", () => {
+  expect(withoutLimit("cheap jazz friday late", "after")).toBe("cheap jazz friday");
+  expect(withoutLimit("cheap jazz friday late", "price")).toBe("jazz friday late");
+  expect(withoutLimit("techno on Saturday after 11pm", "weekday")).toBe("techno after 11pm");
+  expect(withoutLimit("jazz under $20 tonight", "price")).toBe("jazz tonight");
+  expect(withoutLimit("free jazz this weekend", "when")).toBe("free jazz");
 });
