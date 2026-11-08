@@ -1,8 +1,8 @@
 // "Crews": the friends side of Scout. Every crew you're in tonight (who's coming, who's on the
 // way), joining a friend's crew from the link they sent, and a nudge to start one.
 // Real data only: crews, members and spot photos from Scout; no invented tables, chats or perks.
-import { useEffect, useState } from "react";
-import { ActivityIndicator, FlatList, Modal, Platform, Share, StyleSheet, Text, TextInput, View } from "react-native";
+import { useEffect, useRef, useState } from "react";
+import { ActivityIndicator, FlatList, Keyboard, KeyboardAvoidingView, Modal, Platform, Share, StyleSheet, Text, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
@@ -38,6 +38,16 @@ export function CrewsScreen({ visible, crews, photos, linkCode, onJoin, onStatus
     const mine = crews.some((c) => c.code === linkCode);
     setCode((cur) => (mine ? (cur === linkCode ? "" : cur) : cur || linkCode));
   }, [linkCode, crews]);
+
+  // The join form sits at the end of the list. With crews above it, the keyboard used to cover the field
+  // and the Join button; once the keyboard is up, bring the form into view.
+  const list = useRef<FlatList<Crew>>(null);
+  const joining = useRef(false); // a join field has focus
+  useEffect(() => {
+    const sub = Keyboard.addListener("keyboardDidShow", () => { if (joining.current) list.current?.scrollToEnd({ animated: true }); });
+    return () => sub.remove();
+  }, []);
+  const joinFocus = { onFocus: () => { joining.current = true; }, onBlur: () => { joining.current = false; } };
 
   const live = crews.filter((c) => c.members.some((m) => m.me && m.status !== "out"));
   const ready = !!code.trim() && !!name.trim();
@@ -92,11 +102,11 @@ export function CrewsScreen({ visible, crews, photos, linkCode, onJoin, onStatus
         <Field label="Crew link or code">
           <TextInput selectionColor={C.selection} cursorColor={C.accent} value={code} onChangeText={(v) => { setCode(v); setJoined(null); }}
             placeholder="Paste the link they sent" placeholderTextColor={C.placeholder} style={s.input}
-            autoCapitalize="none" autoCorrect={false} accessibilityLabel="Crew link or code" />
+            autoCapitalize="none" autoCorrect={false} accessibilityLabel="Crew link or code" {...joinFocus} />
         </Field>
         <Field label="Your first name">
           <TextInput selectionColor={C.selection} cursorColor={C.accent} value={name} onChangeText={setName} placeholder="First name"
-            placeholderTextColor={C.placeholder} style={s.input} maxLength={30} autoCapitalize="words" accessibilityLabel="Your first name" />
+            placeholderTextColor={C.placeholder} style={s.input} maxLength={30} autoCapitalize="words" accessibilityLabel="Your first name" {...joinFocus} />
         </Field>
         {error && <Text style={s.error} accessibilityLiveRegion="polite">{error}</Text>}
         {joined !== null && !error && <Text style={s.success} accessibilityLiveRegion="polite">{joined ? `You're in. The crew for ${joined} is at the top.` : "You're in. Your crew is at the top."}</Text>}
@@ -110,14 +120,15 @@ export function CrewsScreen({ visible, crews, photos, linkCode, onJoin, onStatus
 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
-      <View style={[s.root, Platform.OS === "android" && { paddingTop: insets.top }]}>
-        <FlatList data={crews} keyExtractor={(c) => c.code} ListHeaderComponent={header} ListFooterComponent={footer}
+      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={[s.root, Platform.OS === "android" && { paddingTop: insets.top }]}>
+        <FlatList ref={list} data={crews} keyExtractor={(c) => c.code} ListHeaderComponent={header} ListFooterComponent={footer}
           contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: insets.bottom + 32, gap: 12 }}
           keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}
           renderItem={({ item }) => (
             <CrewTile crew={item} photo={photos[item.spotId]} onStatus={onStatus} onRide={onRide} onOpen={onOpen} />
           )} />
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
