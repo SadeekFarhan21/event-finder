@@ -105,16 +105,29 @@ export function rankByVenue<T extends Pick<Spot, "venue">>(spots: T[], q: Query)
 // An empty search with several limits ("cheap jazz friday late"): which one to drop to see something.
 // Tries dropping each limit alone (time, day, price, then the near-me radius is the screen's) and names
 // the first that brings matches back, with how many. null when no single drop helps.
-export function relaxHint(spots: Spot[], q: Query, now = Date.now()): { drop: string; count: number } | null {
+export type Limit = "after" | "weekday" | "when" | "price";
+export function relaxHint(spots: Spot[], q: Query, now = Date.now()): { drop: string; count: number; limit: Limit } | null {
   const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-  const tries: [string, Query][] = [];
-  if (q.after !== undefined) tries.push([q.after === 22 ? "late" : "the time", { ...q, after: undefined }]);
-  if (q.weekday !== undefined) tries.push([days[q.weekday], { ...q, weekday: undefined }]);
-  if (q.when) tries.push([q.when === "weekend" ? "this weekend" : q.when, { ...q, when: null }]);
-  if (q.maxPrice !== null) tries.push(["the price limit", { ...q, maxPrice: null }]);
-  for (const [drop, rq] of tries) {
+  const tries: [string, Limit, Query][] = [];
+  if (q.after !== undefined) tries.push([q.after === 22 ? "late" : "the time", "after", { ...q, after: undefined }]);
+  if (q.weekday !== undefined) tries.push([days[q.weekday], "weekday", { ...q, weekday: undefined }]);
+  if (q.when) tries.push([q.when === "weekend" ? "this weekend" : q.when, "when", { ...q, when: null }]);
+  if (q.maxPrice !== null) tries.push(["the price limit", "price", { ...q, maxPrice: null }]);
+  for (const [drop, limit, rq] of tries) {
     const count = spots.filter((e) => matchesQuery(e, rq, now)).length;
-    if (count) return { drop, count };
+    if (count) return { drop, count, limit };
   }
   return null;
+}
+
+// The search text without one kind of limit, for the hint's button: "cheap jazz friday late" minus the
+// time is "cheap jazz friday". Same patterns parseQuery reads, so what's removed is what was understood.
+export function withoutLimit(text: string, limit: Limit): string {
+  const pat: Record<Limit, RegExp[]> = {
+    after: [/\bafter\s+\d{1,2}(?::\d\d)?\s*(?:am|pm)?\b/gi, /\blate(?:[\s-]?night)?\b/gi],
+    weekday: [/\b(?:on\s+|this\s+)?(?:sun|mon|tues|wednes|thurs|fri|satur)days?\b/gi],
+    when: [/\b(?:this\s+)?(?:tonight|today|tomorrow|weekend)\b/gi],
+    price: [/(?:under|below|less than|<)\s*\$?\s*\d+/gi, /\b(?:cheap|budget|inexpensive|affordable)\b/gi],
+  };
+  return pat[limit].reduce((t, re) => t.replace(re, " "), text).replace(/\s+/g, " ").trim();
 }
