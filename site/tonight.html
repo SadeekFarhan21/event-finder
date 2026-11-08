@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tonight · Scout</title>
+<meta name="description" content="What's on tonight in New York and Los Angeles: shows, parties and happy hours the Scout agent found on the web, with the ride there.">
+<link rel="icon" href="favicon.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="theme-color" content="#0C0C0A">
+<meta property="og:title" content="What's on tonight · Scout">
+<meta property="og:description" content="Shows, parties and happy hours in New York and Los Angeles, found on the web every few minutes.">
+<meta property="og:image" content="https://scout-download.vercel.app/og-card.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&display=swap">
+<style>
+  /* Same night palette and type as the other Scout pages. The app's list, for any phone's browser. */
+  :root {
+    --bg: #0C0C0A; --surface: #151513; --fill: #1D1C19; --line: #282723;
+    --ink: #F2F0E9; --ink-2: #C2BEB2; --ink-3: #8E8A7F;
+    --yellow: #FFE14A; --on-yellow: #14130F;
+    --display: "Instrument Serif", "Iowan Old Style", Georgia, serif;
+    --body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+    color-scheme: dark;
+  }
+  *,*::before,*::after { box-sizing: border-box }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 400 16px/1.55 var(--body); }
+  .wrap { max-width: 640px; margin: 0 auto; padding-inline: 16px; padding-block: 16px 64px; }
+  a { color: inherit; }
+  :focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; border-radius: 8px; }
+  header { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+  .mark { display: inline-flex; align-items: baseline; min-height: 44px; padding: 8px 0; font: 400 28px/1 var(--display); color: var(--ink); text-decoration: none; }
+  .mark i { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--yellow); margin-left: 3px; }
+  nav a { display: inline-flex; align-items: center; min-height: 44px; color: var(--ink-2); }
+  h1 { font: 400 clamp(36px, 8vw, 48px)/1.05 var(--display); margin: 24px 0 0; text-wrap: balance; }
+  .sub { color: var(--ink-3); font-size: 14px; margin: 6px 0 0; }
+  .controls { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; }
+  .seg { display: inline-flex; padding: 4px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); }
+  .seg button { min-height: 40px; padding: 0 14px; border: 0; border-radius: 999px; background: transparent; color: var(--ink-2); font: 500 15px var(--body); cursor: pointer; }
+  .seg button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+  .chips { display: flex; gap: 8px; overflow-x: auto; margin-top: 12px; padding-bottom: 2px; scrollbar-width: none; }
+  .chips button { flex: none; min-height: 40px; padding: 0 16px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); color: var(--ink-2); font: 500 15px var(--body); cursor: pointer; }
+  .chips button[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--bg); }
+  .find { width: 100%; height: 48px; margin-top: 12px; padding: 0 16px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font: inherit; }
+  .find::placeholder { color: var(--ink-3); }
+  .list { list-style: none; margin: 16px 0 0; padding: 0; border-top: 1px solid var(--line); }
+  .list a { display: grid; grid-template-columns: 76px 1fr; gap: 14px; padding: 14px 0; border-bottom: 1px solid var(--line); text-decoration: none; }
+  .list a > span { min-width: 0; } /* lets long titles end in "…" inside the column */
+  .list b { font: 400 22px/1.1 var(--display); }
+  .list b small { display: block; margin-top: 4px; font: 400 12px var(--body); color: var(--ink-3); }
+  .list strong { display: block; font-weight: 600; }
+  .list a:hover strong { text-decoration: underline; text-underline-offset: 3px; }
+  .list .t { display: block; color: var(--ink-2); font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .list .m { display: block; margin-top: 2px; color: var(--ink-3); font-size: 13px; }
+  .list .p::before { content: ""; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--yellow); margin-right: 6px; vertical-align: 1px; }
+  .empty { padding: 24px 0; color: var(--ink-2); }
+  .note { margin: 24px 0 0; font-size: 14px; color: var(--ink-3); }
+  .cta { display: inline-flex; align-items: center; min-height: 44px; margin-top: 8px; color: var(--ink-2); text-decoration: underline; text-underline-offset: 3px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <a class="mark" href="./">Scout<i aria-hidden="true"></i></a>
+    <nav><a href="./">Get the app</a></nav>
+  </header>
+  <h1 id="title">On tonight</h1>
+  <p class="sub" id="sub">Shows, parties and happy hours the agent found on the web. Times are local.</p>
+  <div class="controls">
+    <div class="seg" id="city" role="group" aria-label="City">
+      <button type="button" data-c="ny" aria-pressed="true">New York</button>
+      <button type="button" data-c="la" aria-pressed="false">Los Angeles</button>
+    </div>
+  </div>
+  <div class="chips" id="chips" role="group" aria-label="Show">
+    <button type="button" data-f="all" aria-pressed="true">Everything</button>
+    <button type="button" data-f="music" aria-pressed="false">Live music</button>
+    <button type="button" data-f="nightlife" aria-pressed="false">Nightlife</button>
+    <button type="button" data-f="deal" aria-pressed="false">Happy hours</button>
+  </div>
+  <input class="find" id="find" type="search" placeholder="Search: jazz, a venue, a neighborhood" aria-label="Search tonight">
+  <p class="sub" id="count" aria-live="polite">Loading tonight…</p>
+  <ul class="list" id="list"></ul>
+  <p class="note">This is Scout's list on the web, for any phone. The Android app adds the map, Plan my night, crews with friends and the ride there. <a href="./">Get Scout for Android</a></p>
+</div>
+<script>
+  // Publishable key: read-only access to public listings.
+  const API = "https://ihxsdwpersowxxtgqcws.supabase.co/rest/v1/upcoming_events", KEY = "sb_publishable_WGHco-ibd0wX9Jhe3x5vJQ_Rb5ys6UZ";
+  const CITIES = { ny: { key: "new york, ny", name: "New York", zone: "America/New_York" }, la: { key: "los angeles, ca", name: "Los Angeles", zone: "America/Los_Angeles" } };
+  const $ = (id) => document.getElementById(id);
+  const esc = (t) => String(t ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+  const calm = (t) => (t && t === t.toUpperCase() && /[A-Z]{4}/.test(t) ? t.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase()) : t);
+  const isDeal = (e) => e.category === "deal" || /happy hour|daily|every (day|night)|nightly/i.test(`${e.title} ${e.deal ?? ""}`);
+  const AREA = /\(([^)]+)\)\s*$/;
+  let cityId = /Los_Angeles|Vancouver|Tijuana/.test(Intl.DateTimeFormat().resolvedOptions().timeZone || "") ? "la" : "ny";
+  let filter = "all", rows = [];
+
+  async function load() {
+    const c = CITIES[cityId];
+    $("count").textContent = "Loading tonight…"; $("list").innerHTML = "";
+    const now = Date.now();
+    // Tonight runs to 6 AM in the city; take dated spots from 3 hours ago to the morning, and standing deals.
+    const q = `select=short,venue,title,start,category,price,deal,address,partner,confidence&city=eq.${encodeURIComponent(c.key)}&confidence=neq.low&or=(start.gte.${new Date(now - 3 * 3600e3).toISOString()},category.eq.deal)&order=start.asc.nullslast&limit=400`;
+    let data;
+    try { const r = await fetch(`${API}?${q}`, { headers: { apikey: KEY } }); if (!r.ok) throw 0; data = await r.json(); }
+    catch { $("count").textContent = "Couldn't load tonight. Check your connection and try again."; return; }
+    const night = (t) => new Date(t - 6 * 3600e3).toLocaleDateString("en-CA", { timeZone: c.zone });
+    const tonight = night(now);
+    rows = data.filter((e) => e.short && (isDeal(e) || (e.start && night(Date.parse(e.start)) === tonight)));
+    render();
+  }
+
+  function render() {
+    const c = CITIES[cityId], q = $("find").value.trim().toLowerCase();
+    const time = (t) => new Date(t).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: c.zone }).replace(":00", "");
+    const started = (e) => e.start && Date.parse(e.start) <= Date.now();
+    let list = rows.filter((e) => filter === "all" || (filter === "deal" ? isDeal(e) : !isDeal(e) && e.category === filter));
+    if (q) list = list.filter((e) => `${e.venue} ${e.title} ${e.address} ${e.deal ?? ""}`.toLowerCase().includes(q));
+    // Still to come first (partners lead their hour), then sets under way, then standing deals.
+    const rank = (e) => (isDeal(e) ? 2 : started(e) ? 1 : 0);
+    list.sort((a, b) => rank(a) - rank(b) || (a.start && b.start ? Date.parse(a.start) - Date.parse(b.start) : 0) || Number(!!b.partner) - Number(!!a.partner));
+    $("title").textContent = `On tonight in ${c.name}`;
+    $("count").textContent = list.length ? `${list.length} ${list.length === 1 ? "spot" : "spots"}${q ? ` matching "${$("find").value.trim()}"` : ""} · times in ${c.name}` : "";
+    if (!list.length) { $("list").innerHTML = `<li class="empty">${q ? "Nothing matches that tonight. Try another word." : "Nothing more on tonight here. Check back tomorrow afternoon."}</li>`; return; }
+    $("list").innerHTML = list.slice(0, 150).map((e) => {
+      const deal = isDeal(e) || !e.start;
+      const when = deal ? `Happy hour` : time(e.start);
+      const tag = deal ? "Deal" : started(e) ? "Started" : "";
+      const area = (e.address.match(AREA) || [])[1] || e.address.split(",").slice(-3, -2)[0] || "";
+      const bill = calm(deal ? String(e.deal || e.title).split(/;\s*/)[0] : e.title);
+      return `<li><a href="e.html?s=${esc(e.short)}"><b${deal ? ' style="font-size:18px"' : ""}>${esc(when)}${tag ? `<small>${esc(tag)}</small>` : ""}</b><span>
+        <strong>${esc(e.venue)}</strong>${bill && bill.toLowerCase() !== e.venue.toLowerCase() ? `<span class="t">${esc(bill)}</span>` : ""}
+        <span class="m">${e.partner ? '<span class="p">Yelo partner</span> · ' : ""}${esc([area.trim(), e.price].filter(Boolean).join(" · "))}</span></span></a></li>`;
+    }).join("");
+  }
+
+  function press(group, attr, val) { document.querySelectorAll(`#${group} button`).forEach((b) => b.setAttribute("aria-pressed", String(b.dataset[attr] === val))); }
+  document.querySelectorAll("#city button").forEach((b) => b.addEventListener("click", () => { cityId = b.dataset.c; press("city", "c", cityId); load(); }));
+  document.querySelectorAll("#chips button").forEach((b) => b.addEventListener("click", () => { filter = b.dataset.f; press("chips", "f", filter); render(); }));
+  $("find").addEventListener("input", render);
+  press("city", "c", cityId);
+  load();
+</script>
+</body>
+</html>
