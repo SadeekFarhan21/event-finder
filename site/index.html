@@ -87,7 +87,7 @@
   .qr p { margin: 0; font-size: 16px; color: var(--ink-2); max-width: 22em; }
 
   .phone { justify-self: center; width: min(300px, 78vw); border-radius: 36px; padding: 8px; background: #0E0E0D; }
-  .phone img { display: block; width: 100%; border-radius: 28px; box-sizing: border-box; padding-top: 14px; background: #0C0C0A; } /* the rounded corners clip empty space, not the status bar */
+  .phone img { display: block; width: 100%; height: auto; border-radius: 28px; box-sizing: border-box; padding-top: 14px; background: #0C0C0A; } /* the rounded corners clip empty space, not the status bar */
 
   h2 { font: 400 clamp(32px, 4vw, 40px)/1.1 var(--display); margin: 0; text-wrap: balance; }
   section { margin-top: 64px; }
@@ -96,7 +96,7 @@
 
   .screens { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
   figure { margin: 0; display: grid; gap: 12px; align-content: start; min-width: 0; }
-  figure img { width: 100%; border-radius: 12px; border: 1px solid var(--line); }
+  figure img { width: 100%; height: auto; border-radius: 12px; border: 1px solid var(--line); }
   /* Screens end where the phone does; fade the last few percent so a cut-off row dissolves. */
   .screens figure img { -webkit-mask-image: linear-gradient(#000 95%, transparent); mask-image: linear-gradient(#000 95%, transparent); }
   figcaption { font-size: 16px; color: var(--ink-2); }
@@ -164,7 +164,7 @@
       </div>
     </div>
 
-    <div class="phone"><img src="shot-map.jpg" alt="Scout in New York with Plan my night on: three stops on the map, a Share plan button, and the first stop, Dos Caminos, a happy hour until 5 PM marked Start here" width="414" height="900"></div>
+    <div class="phone"><img src="shot-map.jpg" alt="Scout in New York with Plan my night on: three stops on the map, a Share plan button, and the first stop, Dos Caminos, a happy hour until 5 PM marked Start here" width="414" height="920"></div>
   </div>
 
   <section aria-labelledby="inside">
@@ -173,7 +173,7 @@
       <p>Real screens from the app, with live data the agent found on the web this week.</p>
     </div>
     <div class="screens">
-      <figure><img src="shot-map-la.jpg" alt="Los Angeles today: search, Near me and Plan my night above numbered bubbles across the city, and a card for Gold-Diggers, a Yelo partner, tonight at 7 PM" loading="lazy" width="414" height="900">
+      <figure><img src="shot-map-la.jpg" alt="Los Angeles today: search, Near me and Plan my night above numbered bubbles across the city, and a card for Gold-Diggers, a Yelo partner, tonight at 7 PM" loading="lazy" width="414" height="920">
         <figcaption><b>One map for the night</b>New York and Los Angeles, refreshed every few minutes. Search for “jazz” or “under $20”, see which happy hours are on now, or tap Plan my night for a route of two or three stops close together.</figcaption></figure>
       <figure><img src="shot-spot.jpg" alt="Nublu, a Yelo partner, started at 10 PM: Maya and you are going, your crew is leaving now and both of you are on the way, and Ride with Yelo" loading="lazy" width="414" height="900">
         <figcaption><b>Ride there</b>Each spot shows the time, the address, which friends are going, and the ride there with its price.</figcaption></figure>
