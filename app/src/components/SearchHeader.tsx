@@ -112,7 +112,7 @@ export function SearchHeader({ city, onCityChange, onSubmitCity, onScout, scouti
           <>
             <View style={[s.searchBox, open && { opacity: 0 }]}>
               <Feather name="search" size={16} color={C.ink3} />
-              <TextInput value={query} onChangeText={onQuery} autoFocus placeholder="Jazz, free, rooftop, under $20"
+              <TextInput value={query} onChangeText={onQuery} autoFocus placeholder="Jazz tonight, free Friday, late"
                 placeholderTextColor={C.placeholder} style={s.searchInput} returnKeyType="search" onSubmitEditing={() => remember(query)} autoCorrect={false}
                 selectionColor={C.selection} cursorColor={C.accent} accessibilityLabel="Search spots" />
               {!!query && <Tap onPress={() => onQuery("")} hitSlop={12} accessibilityLabel="Clear search"><Feather name="x-circle" size={16} color={C.ink3} /></Tap>}
