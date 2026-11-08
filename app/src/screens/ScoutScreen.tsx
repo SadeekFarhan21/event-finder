@@ -463,7 +463,8 @@ export function ScoutScreen() {
               </Tap>
             )}
           </Animated.View>
-          <SpotCarousel ref={carousel} spots={shown} fresh={fresh} steps={filter === "plan" ? steps : undefined} onSwap={filter === "plan" ? swapStop : undefined} going={going} crewPeople={crewPeople} me={me} activeId={active?.id ?? null}
+          <SpotCarousel ref={carousel} spots={shown} fresh={fresh} steps={filter === "plan" ? steps : undefined} onSwap={filter === "plan" ? swapStop : undefined} saved={saved}
+            onSave={(e) => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); show(saved.has(e.id) ? `Removed ${e.venue} from saved` : `Saved ${e.venue}`); toggleSave(e, mapCity ?? cityInput); }} going={going} crewPeople={crewPeople} me={me} activeId={active?.id ?? null}
             onSettle={(e) => { Haptics.selectionAsync(); focus(e); }}
             onPress={(e) => (active?.id === e.id ? setDetail(e) : focus(e, true))}
             onRide={(e) => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); track(e, "ride", mapCity ?? cityInput); openRide(e); }} />

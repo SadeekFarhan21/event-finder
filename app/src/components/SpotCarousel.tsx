@@ -35,9 +35,11 @@ type Props = {
   onPress: (spot: Spot, index: number) => void;
   onRide: (spot: Spot) => void;
   onSwap?: (spot: Spot) => void; // Plan my night: replace this stop with the next best one
+  onSave?: (spot: Spot) => void; // long press: save for later (or unsave)
+  saved?: Set<string>;
 };
 
-export function SpotCarousel({ ref, spots, fresh, steps, onSwap, going, crewPeople, me, activeId, onSettle, onPress, onRide }: Props) {
+export function SpotCarousel({ ref, spots, fresh, steps, onSwap, onSave, saved, going, crewPeople, me, activeId, onSettle, onPress, onRide }: Props) {
   const list = useAnimatedRef<Animated.FlatList<Spot>>();
   const x = useSharedValue(0);
   const onScroll = useAnimatedScrollHandler((e) => { x.value = e.contentOffset.x; });
@@ -58,7 +60,7 @@ export function SpotCarousel({ ref, spots, fresh, steps, onSwap, going, crewPeop
         snapToInterval={CARD_STEP} decelerationRate="fast" disableIntervalMomentum
         contentContainerStyle={{ gap: CARD_GAP, paddingHorizontal: CARD_INSET }}
         onScroll={onScroll} scrollEventThrottle={16} onMomentumScrollEnd={onEnd}
-        renderItem={({ item, index }) => <Card spot={item} step={steps?.[item.id]} isNew={!!fresh?.has(item.id)} going={going[item.id] ?? 0} crew={crewPeople?.[item.id]} me={me} index={index} x={x} onPress={() => onPress(item, index)} onRide={() => onRide(item)} onSwap={onSwap && (() => onSwap(item))} />} />
+        renderItem={({ item, index }) => <Card spot={item} step={steps?.[item.id]} isNew={!!fresh?.has(item.id)} going={going[item.id] ?? 0} crew={crewPeople?.[item.id]} me={me} index={index} x={x} onPress={() => onPress(item, index)} onRide={() => onRide(item)} onSwap={onSwap && (() => onSwap(item))} onSave={onSave && (() => onSave(item))} isSaved={!!saved?.has(item.id)} />} />
     </Animated.View>
   );
 }
@@ -84,8 +86,8 @@ function cardLine(e: Spot) {
 
 // Photo first: the place, then when, then who's going and the ride. Most listings have no photo
 // (the web rarely has a good one), so the fallback is a designed panel, not an empty box.
-function Card({ spot: e, step, onSwap, isNew, going, crew, me, index, x, onPress, onRide }: {
-  spot: Spot; step?: Step; isNew: boolean; going: number; crew?: CrewPeople; me?: Point | null; index: number; x: SharedValue<number>; onPress: () => void; onRide: () => void; onSwap?: () => void;
+function Card({ spot: e, step, onSwap, onSave, isSaved, isNew, going, crew, me, index, x, onPress, onRide }: {
+  spot: Spot; step?: Step; isNew: boolean; going: number; crew?: CrewPeople; me?: Point | null; index: number; x: SharedValue<number>; onPress: () => void; onRide: () => void; onSwap?: () => void; onSave?: () => void; isSaved?: boolean;
 }) {
   // Distance once the rider has shared location (same figure as the sheet's "mi away").
   const miles = me ? (estimateFare(me, { lat: e.lat, lng: e.lng })?.miles ?? null) : null;
@@ -98,7 +100,9 @@ function Card({ spot: e, step, onSwap, isNew, going, crew, me, index, x, onPress
   });
   return (
     <Animated.View style={style}>
-      <Tap onPress={onPress} pressedScale={0.985} style={s.card}>
+      <Tap onPress={onPress} pressedScale={0.985} style={s.card} onLongPress={onSave} delayLongPress={350}
+        accessibilityActions={onSave ? [{ name: "save", label: isSaved ? "Remove from saved" : "Save for later" }] : undefined}
+        onAccessibilityAction={(ev) => { if (ev.nativeEvent.actionName === "save") onSave?.(); }}>
         {e.image ? (
           <View style={s.media}>
             <Image source={e.image} style={StyleSheet.absoluteFill} contentFit="cover" transition={250} />
