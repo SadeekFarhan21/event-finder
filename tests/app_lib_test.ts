@@ -470,6 +470,8 @@ Deno.test("parseQuery/matchesQuery: 'after 10' and 'late' are a starting hour", 
   expect(parseQuery("techno late night").after).toBe(22);
   expect(parseQuery("late").words).toEqual([]);
   expect(parseQuery("after 12").after).toBe(0);
+  expect(parseQuery("techno after 1").after).toBe(1); // 1 AM, not 1 PM
+  expect(parseQuery("after 1pm").after).toBe(13);
   setCityZone("New York, NY");
   try {
     const at = (iso: string) => ({ id: iso, title: "Set", venue: "V", address: "", start: iso, category: "music", price: null, deal: null, description: "", url: null, lat: 0, lng: 0, confidence: "high", source: "exa" }) as unknown as Spot;
@@ -477,6 +479,11 @@ Deno.test("parseQuery/matchesQuery: 'after 10' and 'late' are a starting hour", 
     expect(matchesQuery(at("2026-11-08T03:30:00Z"), q)).toBe(true);  // 10:30 PM
     expect(matchesQuery(at("2026-11-08T06:00:00Z"), q)).toBe(true);  // 1 AM: still late
     expect(matchesQuery(at("2026-11-08T00:00:00Z"), q)).toBe(false); // 7 PM
+    const one = parseQuery("after 1");
+    expect(matchesQuery(at("2026-11-08T06:30:00Z"), one)).toBe(true);  // 1:30 AM
+    expect(matchesQuery(at("2026-11-08T00:00:00Z"), one)).toBe(false); // 7 PM isn't "after 1"
+    const brunch = parseQuery("after 11am");
+    expect(matchesQuery(at("2026-11-07T17:00:00Z"), brunch)).toBe(true); // noon
     const hh = { ...at("2026-11-08T03:30:00Z"), category: "deal", title: "Happy hour" } as Spot;
     expect(matchesQuery(hh, q)).toBe(false); // standing deals have no start to compare
   } finally { setCityZone(null); }
