@@ -127,3 +127,12 @@ export function closeBy(spot: Spot, spots: Spot[], now = Date.now(), max = 3, wi
     .filter((e, i, all) => all.findIndex((x) => same(x.venue, e.venue)) === i);
   return near.slice(0, max).sort((a, b) => Date.parse(a.start!) - Date.parse(b.start!));
 }
+
+// Directions for the whole night, as the plan page offers: Google Maps with the last stop as the
+// destination and the others as waypoints in order (from wherever the rider is now).
+export function planDirectionsUrl(stops: Pick<Stop, "spot">[]): string | null {
+  if (stops.length < 2) return null;
+  const place = (s: Pick<Stop, "spot">) => `${s.spot.venue}, ${s.spot.address}`;
+  const q = new URLSearchParams({ api: "1", destination: place(stops[stops.length - 1]), waypoints: stops.slice(0, -1).map(place).join("|") });
+  return `https://www.google.com/maps/dir/?${q.toString()}`;
+}

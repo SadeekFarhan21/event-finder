@@ -23,7 +23,7 @@ import { useMyLocation } from "../hooks/useMyLocation";
 import { useGoing } from "../hooks/useGoing";
 import { useCrews } from "../hooks/useCrews";
 import { leavingSoon, savedSoon, type CrewPeople } from "../lib/friends";
-import { planAhead, planFromShorts, planMessage } from "../lib/plan";
+import { planAhead, planDirectionsUrl, planFromShorts, planMessage } from "../lib/plan";
 import { openRide } from "../lib/ride";
 import { newIds, newSince } from "../lib/fresh";
 import { isOffline, onNetworkChange } from "../lib/net";
@@ -462,6 +462,12 @@ export function ScoutScreen() {
                 <Text style={s.roomsText}>Share plan</Text>
               </Tap>
             )}
+            {filter === "plan" && plan.length > 1 && (
+              <Tap hitSlop={4} style={[s.rooms, s.roundPill]} accessibilityLabel="Directions for the whole night, in Google Maps"
+                onPress={() => { Haptics.selectionAsync(); const u = planDirectionsUrl(plan); if (u) Linking.openURL(u).catch(() => {}); }}>
+                <Feather name="navigation" size={16} color={C.ink} />
+              </Tap>
+            )}
           </Animated.View>
           <SpotCarousel ref={carousel} spots={shown} fresh={fresh} steps={filter === "plan" ? steps : undefined} onSwap={filter === "plan" ? swapStop : undefined} saved={saved}
             onSave={(e) => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); show(saved.has(e.id) ? `Removed ${e.venue} from saved` : `Saved ${e.venue}`); toggleSave(e, mapCity ?? cityInput); }} going={going} crewPeople={crewPeople} me={me} activeId={active?.id ?? null}
@@ -503,6 +509,7 @@ const s = StyleSheet.create({
   roomsWrap: { position: "absolute", left: CARD_INSET, right: CARD_INSET, bottom: CAROUSEL_BOTTOM + CARD_H, flexDirection: "row", gap: 8 },
   crewsOn: { backgroundColor: C.ink },
   crewsOnText: { color: C.surface },
+  roundPill: { width: 40, paddingHorizontal: 0, justifyContent: "center", flexShrink: 0 }, // icon-only: never squeezed
   rooms: { flexDirection: "row", alignItems: "center", gap: 6, height: 40, maxWidth: 260, flexShrink: 1, paddingHorizontal: 12, borderRadius: R.pill, backgroundColor: C.surface, ...shadow },
   roomsText: { fontFamily: F.semibold, fontSize: T.small, color: C.ink },
 });
