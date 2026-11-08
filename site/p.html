@@ -66,6 +66,7 @@
   .btn.quiet { background: var(--surface); border: 1px solid var(--line); }
   .btn.quiet:hover { border-color: var(--ink-3); }
   .note { font-size: 14px; color: var(--ink-3); margin: 24px 0 0; }
+  .actions .cal { justify-self: start; margin-top: 4px; }
   .empty { margin-top: 48px; }
   .empty .sub { font-size: 16px; color: var(--ink-2); margin-top: 12px; }
   @media (max-width: 360px) { .stop { grid-template-columns: 60px 16px 1fr; column-gap: 8px; } .time b { font-size: 24px; } }
@@ -128,6 +129,21 @@
 
   // Android: open the plan in Scout if it's installed (scout://plan/<codes>), otherwise the download page.
   const appLink = (stops) => `intent://plan/${stops.map((e) => e.short).join(",")}#Intent;scheme=scout;package=com.farhan.scout;S.browser_fallback_url=${encodeURIComponent(location.origin + "/")};end`;
+
+  // One calendar event for the whole night: from the first set (an hour earlier when it opens with a
+  // happy hour) to two hours after the last one starts, every stop and its time in the details.
+  function nightCal(stops) {
+    const timed = stops.filter((e) => e.start && !isDeal(e));
+    if (!timed.length) return "";
+    const from = Date.parse(timed[0].start) - (isDeal(stops[0]) || !stops[0].start ? 3600e3 : 0);
+    const to = Date.parse(timed[timed.length - 1].start) + 2 * 3600e3;
+    const stamp = (x) => new Date(x).toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
+    const lines = stops.map((e) => `${isDeal(e) || !e.start ? "Happy hour" : fmtT(e.start)}: ${e.venue}, ${e.address}`);
+    const q = new URLSearchParams({ action: "TEMPLATE", text: `Night out: ${stops.map((e) => e.venue).join(" → ")}`,
+      dates: `${stamp(from)}/${stamp(to)}`, location: `${stops[0].venue}, ${stops[0].address}`,
+      details: `${lines.join("\n")}\n\nThe plan: ${location.href}` });
+    return `https://calendar.google.com/calendar/render?${q}`;
+  }
 
   function gone(kind) {
     const copy = {
@@ -198,6 +214,7 @@
       <div class="actions">
         <a class="btn primary" href="https://www.google.com/maps/dir/?${dir}" target="_blank" rel="noopener">Directions for the whole night</a>
         ${isAndroid ? `<a class="btn quiet" href="${esc(appLink(stops))}">Open in Scout</a>` : ""}
+        ${nightCal(stops) ? `<a class="more cal" href="${esc(nightCal(stops))}" target="_blank" rel="noopener">Add the night to your calendar</a>` : ""}
       </div>
       <p class="note">Scout finds what's on tonight in New York and Los Angeles and shows the ride there. An independent prototype, not an official Yelo app.</p>`;
     handoff();
