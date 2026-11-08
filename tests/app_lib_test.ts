@@ -515,3 +515,21 @@ Deno.test("planDirectionsUrl: every stop in order, from here (path form)", () =>
   expect(u.pathname.split("/").slice(3).map(decodeURIComponent)).toEqual(["", "Tile Bar, 7th St", "Blind Barber, 339 E 10th St", "Night Club 101, 101 Avenue A"]);
   expect(planDirectionsUrl([st("Solo", "1 St")])).toBeNull();
 });
+
+Deno.test("parseQuery/matchesQuery: weekday names mean that night this week", () => {
+  expect(parseQuery("jazz friday").weekday).toBe(5);
+  expect(parseQuery("jazz friday").words).toEqual(["jazz"]);
+  expect(parseQuery("techno on saturday").weekday).toBe(6);
+  expect(parseQuery("Sundays").weekday).toBe(0);
+  setCityZone("New York, NY");
+  try {
+    const now = Date.parse("2026-11-07T22:00:00Z"); // Sat 5 PM
+    const at = (iso: string) => ({ id: iso, title: "Set", venue: "V", address: "", start: iso, category: "music", price: null, deal: null, description: "", url: null, lat: 0, lng: 0, confidence: "high", source: "exa" }) as unknown as Spot;
+    const fri = parseQuery("friday");
+    expect(matchesQuery(at("2026-11-14T01:00:00Z"), fri, now)).toBe(true);  // Fri Nov 13, 8 PM
+    expect(matchesQuery(at("2026-11-14T06:00:00Z"), fri, now)).toBe(true);  // Sat 1 AM: still Friday night
+    expect(matchesQuery(at("2026-11-15T01:00:00Z"), fri, now)).toBe(false); // Saturday
+    expect(matchesQuery(at("2026-11-21T01:00:00Z"), fri, now)).toBe(false); // the Friday after next week
+    expect(matchesQuery(at("2026-11-08T01:00:00Z"), parseQuery("saturday"), now)).toBe(true); // tonight
+  } finally { setCityZone(null); }
+});

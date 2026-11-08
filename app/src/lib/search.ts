@@ -16,7 +16,7 @@ const ALIASES: Record<string, string[]> = {
 };
 
 export type When = "tonight" | "tomorrow" | "weekend";
-export type Query = { words: string[]; maxPrice: number | null; when: When | null; near?: boolean; after?: number }; // after: hour 0-23, city time
+export type Query = { words: string[]; maxPrice: number | null; when: When | null; near?: boolean; after?: number; weekday?: number }; // after: hour 0-23, city time; weekday: 0 Sun … 6 Sat
 
 export function parseQuery(text: string): Query {
   let t = fold(text);
@@ -25,6 +25,10 @@ export function parseQuery(text: string): Query {
   t = t.replace(/(?:under|below|less than|<)\s*\$?\s*(\d+)/g, (_, n) => { maxPrice = Number(n); return " "; });
   // "jazz tomorrow", "free tonight", "this weekend": a day, not a word to match in the listing.
   let when: When | null = null;
+  // "jazz friday", "techno on saturday": that night in the coming week, not a word to match.
+  const DAYS = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+  let weekday: number | undefined;
+  t = t.replace(/\b(?:on\s+|this\s+)?(sunday|monday|tuesday|wednesday|thursday|friday|saturday)s?\b/g, (_, d) => { weekday = DAYS.indexOf(d); return " "; });
   t = t.replace(/\b(this\s+)?(tonight|today|tomorrow|weekend)\b/g, (_, __, w) => {
     when = w === "today" ? "tonight" : (w as When); return " ";
   });
@@ -43,7 +47,7 @@ export function parseQuery(text: string): Query {
   let near = false;
   t = t.replace(/\b(near me|nearby|close by|around me|walking distance)\b/g, () => { near = true; return " "; });
   const words = t.split(/[^a-z0-9$&+]+/).filter((w) => w.length > 1);
-  return { words, maxPrice, when, near, after };
+  return { words, maxPrice, when, near, after, weekday };
 }
 
 // Lowest dollar amount the listing mentions; free entry counts as 0; unknown is null.
@@ -55,7 +59,13 @@ export function priceOf(e: Pick<Spot, "price" | "deal">): number | null {
 }
 
 export function matchesQuery(e: Spot, q: Query, now = Date.now()): boolean {
-  if (!q.words.length && q.maxPrice === null && !q.when && q.after === undefined) return true; // "near me" alone: the screen narrows by distance
+  if (!q.words.length && q.maxPrice === null && !q.when && q.after === undefined && q.weekday === undefined) return true; // "near me" alone: the screen narrows by distance
+  if (q.weekday !== undefined && !isRecurring(e)) {
+    // That night within the coming week (a 1 AM set on Saturday morning still belongs to Friday night).
+    if (!e.start) return false;
+    const t = Date.parse(e.start), d = nightOffset(t, now);
+    if (d < 0 || d > 6 || nightWeekday(t) !== q.weekday) return false;
+  }
   if (q.after !== undefined) {
     // Starts at or after that hour on the city's clock; past midnight still counts (a 1 AM set is late).
     // Standing deals have no start to compare, so a time search leaves them out.
