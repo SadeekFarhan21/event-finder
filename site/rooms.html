@@ -90,11 +90,16 @@
   <h1>Rooms worth <em>pitching.</em></h1>
   <p class="lede">Independent rooms Scout found that could host a Yelo night: 50 to 400 people, with a quiet weeknight when the listing says one. Rooms riders already opened on Scout this week come first.</p>
   <div class="controls">
-    <div class="seg" role="group" aria-label="City">
+    <div class="seg" id="cityseg" role="group" aria-label="City">
       <button type="button" data-city="new york, ny" aria-pressed="true">New York</button>
       <button type="button" data-city="los angeles, ca" aria-pressed="false">Los Angeles</button>
     </div>
     <input class="find" id="find" type="search" placeholder="Filter by name, area or type" aria-label="Filter rooms">
+    <div class="seg" id="showseg" role="group" aria-label="Show">
+      <button type="button" data-show="all" aria-pressed="true">All</button>
+      <button type="button" data-show="opened" aria-pressed="false">Riders opened</button>
+      <button type="button" data-show="email" aria-pressed="false">Has email</button>
+    </div>
   </div>
   <p class="summary" id="summary" aria-live="polite">Loading rooms…</p>
   <p class="sr" id="live" aria-live="polite"></p>
@@ -136,7 +141,7 @@
     return `<div class="acts"><span class="act muted">No contact</span></div>`;
   }
 
-  let city = "new york, ny", all = [], views = {};
+  let city = "new york, ny", all = [], views = {}, show = "all";
   async function load() {
     $("summary").textContent = "Loading rooms…";
     const [{ data, error }, { data: iv }] = await Promise.all([
@@ -152,11 +157,15 @@
   let list = [];
   function render() {
     const q = $("find").value.trim().toLowerCase();
-    list = q ? all.filter((r) => `${r.venue} ${r.area} ${r.kind}`.toLowerCase().includes(q)) : all;
+    // The two questions the team works from: which rooms riders already care about, and which can be emailed now.
+    const pool = show === "opened" ? all.filter((r) => views[r.venue]) : show === "email" ? all.filter((r) => email(r.contact)) : all;
+    list = q ? pool.filter((r) => `${r.venue} ${r.area} ${r.kind}`.toLowerCase().includes(q)) : pool;
+    document.querySelector('#showseg [data-show="opened"]').textContent = `Riders opened · ${all.filter((r) => views[r.venue]).length}`;
+    document.querySelector('#showseg [data-show="email"]').textContent = `Has email · ${all.filter((r) => email(r.contact)).length}`;
     const opened = all.filter((r) => views[r.venue]).length;
     const town = city.startsWith("los") ? "Los Angeles" : "New York";
     $("summary").textContent = `${all.length} rooms in ${town}${opened ? ` · ${opened} that riders opened this week` : ""}${q ? ` · ${list.length} match "${$("find").value.trim()}"` : ""}`;
-    if (!list.length) { $("rooms").innerHTML = `<li class="empty">${q ? "No rooms match that. Try a neighborhood or a type, like \"Bushwick\" or \"DJ bar\"." : "No rooms for this city yet."}</li>`; return; }
+    if (!list.length) { $("rooms").innerHTML = `<li class="empty">${q ? "No rooms match that. Try a neighborhood or a type, like \"Bushwick\" or \"DJ bar\"." : show === "opened" ? "No rooms riders opened this week yet. They show up here as riders browse their nights." : show === "email" ? "No rooms with an email yet. Copy pitch works for the rest." : "No rooms for this city yet."}</li>`; return; }
     $("rooms").innerHTML = `<li class="room head" aria-hidden="true"><span>Room</span><span>Capacity</span><span>Quiet night</span><span>Rider views</span><span></span></li>` +
       list.map((r, i) => {
         const v = views[r.venue] ?? 0, k = shortKind(r.kind), kind = k && k[0].toUpperCase() + k.slice(1); // "Small live-music bar"
@@ -172,12 +181,17 @@
         </li>`;
       }).join("");
   }
-  document.querySelectorAll(".seg button").forEach((b) => b.addEventListener("click", () => {
+  document.querySelectorAll("#cityseg button").forEach((b) => b.addEventListener("click", () => {
     city = b.dataset.city;
-    document.querySelectorAll(".seg button").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+    document.querySelectorAll("#cityseg button").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
     load();
   }));
   $("find").addEventListener("input", render);
+  document.querySelectorAll("#showseg button").forEach((b) => b.addEventListener("click", () => {
+    show = b.dataset.show;
+    document.querySelectorAll("#showseg button").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+    render();
+  }));
   // Copy pitch: the same draft as the email, to paste into a contact form or a DM.
   $("rooms").addEventListener("click", async (ev) => {
     const b = ev.target.closest("button.copy");
