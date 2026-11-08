@@ -433,20 +433,21 @@ export function ScoutScreen() {
         <>
           <Animated.View entering={FadeIn.delay(150)} style={s.roomsWrap}>
             {crewsApi.available && (
-              <Tap hitSlop={4} style={[s.rooms, (liveCrews.length > 0 || !!nudge) && s.crewsOn]}
-                onPress={() => {
-                  Haptics.selectionAsync();
-                  if (!soon && nudge) { focus(nudge.spot, true); setTimeout(() => setDetail(nudge.spot), 350); return; } // the saved spot itself
-                  setCrewsOpen(true);
-                }}
+              <Tap hitSlop={4} style={[s.rooms, liveCrews.length > 0 && s.crewsOn]} onPress={() => { Haptics.selectionAsync(); setCrewsOpen(true); }}
                 accessibilityLabel={soon ? `Your crew leaves for ${soon.crew.venue} ${soon.mins <= 1 ? "now" : `in ${soon.mins} minutes`}. Open crews`
-                  : nudge ? `${nudge.spot.venue}, which you saved, starts ${nudge.mins <= 1 ? "now" : `in ${nudge.mins} minutes`}. Open it`
                   : `Crews${liveCrews.length ? `, ${liveCrews.length} active` : ""}`}>
-                <Text numberOfLines={1} style={[s.roomsText, (liveCrews.length > 0 || !!nudge) && s.crewsOnText]}>
-                  {soon ? `Leave for ${soon.crew.venue} ${soon.mins <= 1 ? "now" : `in ${soon.mins} min`}`
-                    : nudge ? `${nudge.spot.venue} starts ${nudge.mins <= 1 ? "now" : `in ${nudge.mins} min`}`
-                    : `Crews${liveCrews.length ? `  ·  ${liveCrews.length}` : ""}`}
+                <Text numberOfLines={1} style={[s.roomsText, liveCrews.length > 0 && s.crewsOnText]}>
+                  {soon ? `Leave for ${soon.crew.venue} ${soon.mins <= 1 ? "now" : `in ${soon.mins} min`}` : `Crews${liveCrews.length ? `  ·  ${liveCrews.length}` : ""}`}
                 </Text>
+              </Tap>
+            )}
+            {/* Its own pill beside Crews (when it replaced Crews, Crews was unreachable for 45 minutes). In plan
+                mode the row holds Share plan, so the nudge waits. */}
+            {nudge && filter !== "plan" && (
+              <Tap hitSlop={4} style={[s.rooms, s.crewsOn]}
+                onPress={() => { Haptics.selectionAsync(); focus(nudge.spot, true); setTimeout(() => setDetail(nudge.spot), 350); }}
+                accessibilityLabel={`${nudge.spot.venue}, which you saved, starts ${nudge.mins <= 1 ? "now" : `in ${nudge.mins} minutes`}. Open it`}>
+                <Text numberOfLines={1} style={[s.roomsText, s.crewsOnText]}>{`${nudge.spot.venue} starts ${nudge.mins <= 1 ? "now" : `in ${nudge.mins} min`}`}</Text>
               </Tap>
             )}
             {filter === "plan" && plan.length > 0 && (
