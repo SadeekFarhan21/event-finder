@@ -68,8 +68,9 @@ export function ScoutMap({ ref, initialRegion, showsUserLocation, onRegionChange
       {children}
     </Map>
     {!styled && <Animated.View pointerEvents="none" exiting={FadeOut.duration(250)} style={[StyleSheet.absoluteFill, { backgroundColor: C.bg }]} />}
-    {/* Bottom right, level with the Crews pill: under the header it sat where the search suggestions open. */}
-    <Text style={[s.credit, { bottom: CAROUSEL_BOTTOM + CARD_H + 12 }]} onPress={() => Linking.openURL("https://www.openstreetmap.org/copyright")}
+    {/* Bottom right, just above the pill row: under the header the search suggestions covered it, and in
+        the pill row a long crew countdown ("Leave for Night Club 101 in 43 min") ran over it. */}
+    <Text style={[s.credit, { bottom: CAROUSEL_BOTTOM + CARD_H + 52 }]} onPress={() => Linking.openURL("https://www.openstreetmap.org/copyright")}
       accessibilityRole="link">© OpenStreetMap · OpenFreeMap</Text>
     </View>
   );
