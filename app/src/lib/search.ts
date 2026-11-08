@@ -33,8 +33,9 @@ export function parseQuery(text: string): Query {
   let after: number | undefined;
   t = t.replace(/\bafter\s+(\d{1,2})(?::\d\d)?\s*(am|pm)?\b/g, (_, h, ap) => {
     const n = Number(h) % 12;
-    after = ap === "am" ? n : ap === "pm" || n < 12 ? n + 12 : n; // no am/pm: evening
-    if (Number(h) === 12 && !ap) after = 0; // "after 12": midnight
+    // With am/pm, as said. Without: 1-5 are the small hours ("techno after 1" means 1 AM, not 1 PM),
+    // 6-11 the evening, 12 midnight.
+    after = ap === "am" ? n : ap === "pm" ? n + 12 : n === 0 ? 0 : n <= 5 ? n : n + 12;
     return " ";
   });
   t = t.replace(/\blate(?:[\s-]?night)?\b/g, () => { after ??= 22; return " "; });
@@ -60,7 +61,9 @@ export function matchesQuery(e: Spot, q: Query, now = Date.now()): boolean {
     // Standing deals have no start to compare, so a time search leaves them out.
     if (isRecurring(e) || !e.start) return false;
     const h = cityHour(Date.parse(e.start));
-    if (!(h >= q.after || (q.after >= 12 && h < 6))) return false;
+    // An evening hour reaches past midnight; a small-hours one (1 AM) only runs to 6 AM, so 7 PM isn't "after 1".
+    const ok = q.after >= 12 ? h >= q.after || h < 6 : q.after < 6 ? h >= q.after && h < 6 : h >= q.after;
+    if (!ok) return false;
   }
   if (q.when && !isRecurring(e)) { // standing deals run every day, so they fit any day
     if (!e.start) return false;
