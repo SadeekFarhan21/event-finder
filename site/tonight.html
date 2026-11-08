@@ -57,6 +57,13 @@
   .list .m { display: block; margin-top: 2px; color: var(--ink-3); font-size: 13px; }
   .list .p::before { content: ""; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--yellow); margin-right: 6px; vertical-align: 1px; }
   .empty { padding: 24px 0; color: var(--ink-2); }
+  .list li.row { position: relative; }
+  .list li.row > a { padding-right: 48px; }
+  .save { position: absolute; right: -4px; top: 6px; width: 44px; height: 44px; display: grid; place-items: center; border: 0; background: none; color: var(--ink-3); cursor: pointer; z-index: 1; }
+  .save svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linejoin: round; }
+  .save:hover { color: var(--ink); }
+  .save.on { color: var(--yellow); }
+  .save.on svg { fill: currentColor; }
   .list .planbar { padding: 16px 0 0; }
   .list .planbar a.go { display: flex; align-items: center; justify-content: center; min-height: 48px; padding: 0 16px; border-radius: 999px; border: 0; background: var(--yellow); color: var(--on-yellow); font: 600 16px var(--body); grid-template-columns: none; }
   .note { margin: 24px 0 0; font-size: 14px; color: var(--ink-3); }
@@ -84,6 +91,7 @@
     <button type="button" data-f="nightlife" aria-pressed="false">Nightlife</button>
     <button type="button" data-f="deal" aria-pressed="false">Happy hours</button>
     <button type="button" data-f="plan" aria-pressed="false">Plan my night</button>
+    <button type="button" data-f="saved" aria-pressed="false" id="savedchip" hidden>Saved</button>
   </div>
   <input class="find" id="find" type="search" placeholder="Search: jazz, a venue, a neighborhood" aria-label="Search tonight">
   <p class="sub" id="count" aria-live="polite">Loading tonight…</p>
@@ -101,6 +109,10 @@
   const AREA = /\(([^)]+)\)\s*$/;
   // The city chosen last in this tab (so "← Everything on tonight" comes back to it), else by the visitor's clock.
   let cityId = (() => { try { const c = sessionStorage.getItem("scout.tonightCity"); if (c === "ny" || c === "la") return c; } catch {} return /Los_Angeles|Vancouver|Tijuana/.test(Intl.DateTimeFormat().resolvedOptions().timeZone || "") ? "la" : "ny"; })();
+  // Saved spots: this browser only (localStorage), like the app's shortlist; nothing leaves the phone.
+  const SAVE_KEY = "scout.webSaved";
+  const saved = new Set((() => { try { return JSON.parse(localStorage.getItem(SAVE_KEY) || "[]"); } catch { return []; } })());
+  const persist = () => { try { localStorage.setItem(SAVE_KEY, JSON.stringify([...saved].slice(-200))); } catch {} };
   let filter = "all", rows = [], me = null; // me: the visitor's location, asked for only when they tap Near me
 
   async function load() {
@@ -142,6 +154,9 @@
 
   function render() {
     const c = CITIES[cityId], q = $("find").value.trim().toLowerCase();
+    const savedHere = rows.filter((e) => saved.has(e.short)).length;
+    $("savedchip").hidden = !savedHere; $("savedchip").textContent = `Saved · ${savedHere}`;
+    if (filter === "saved" && !savedHere) { filter = "all"; press("chips", "f", "all"); }
     if (filter === "plan") return renderPlan(c, q);
     // Near me while browsing another city (LA from New York): nothing is near, so say that, not "nothing on".
     if (filter === "near" && me && rows.length && !rows.some((e) => e.lat && km(me, e) <= 25)) {
@@ -150,7 +165,7 @@
     }
     const time = (t) => new Date(t).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: c.zone }).replace(":00", "");
     const started = (e) => e.start && Date.parse(e.start) <= Date.now();
-    let list = rows.filter((e) => filter === "all" || filter === "near" || (filter === "deal" ? isDeal(e) : !isDeal(e) && e.category === filter));
+    let list = rows.filter((e) => filter === "all" || filter === "near" || (filter === "saved" ? saved.has(e.short) : false) || (filter === "deal" ? isDeal(e) : !isDeal(e) && e.category === filter));
     // Near me: within 2 miles (as in the app), nearest first.
     if (filter === "near" && me) list = list.filter((e) => e.lat && km(me, e) <= 3.2);
     if (q) list = list.filter((e) => `${e.venue} ${e.title} ${e.address} ${e.deal ?? ""}`.toLowerCase().includes(q));
@@ -166,7 +181,8 @@
       const tag = deal ? "Deal" : started(e) ? "Started" : "";
       const area = filter === "near" && me && e.lat ? milesAway(km(me, e)) : (e.address.match(AREA) || [])[1] || e.address.split(",").slice(-3, -2)[0] || "";
       const bill = calm(deal ? String(e.deal || e.title).split(/;\s*/)[0] : e.title);
-      return `<li><a href="e.html?s=${esc(e.short)}&from=list"><b${deal ? ' style="font-size:18px"' : ""}>${esc(when)}${tag ? `<small>${esc(tag)}</small>` : ""}</b><span>
+      const on = saved.has(e.short);
+      return `<li class="row"><button type="button" class="save${on ? " on" : ""}" data-s="${esc(e.short)}" aria-pressed="${on}" aria-label="${on ? "Remove" : "Save"} ${esc(e.venue)}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4z"/></svg></button><a href="e.html?s=${esc(e.short)}&from=list"><b${deal ? ' style="font-size:18px"' : ""}>${esc(when)}${tag ? `<small>${esc(tag)}</small>` : ""}</b><span>
         <strong>${esc(e.venue)}</strong>${bill && bill.toLowerCase() !== e.venue.toLowerCase() ? `<span class="t">${esc(bill)}</span>` : ""}
         <span class="m">${e.partner ? '<span class="p">Yelo partner</span> · ' : ""}${esc([area.trim(), e.price].filter(Boolean).join(" · "))}</span></span></a></li>`;
     }).join("");
@@ -211,6 +227,10 @@
       { enableHighAccuracy: false, timeout: 20000, maximumAge: 300000 });
   }));
   $("find").addEventListener("input", render);
+  $("list").addEventListener("click", (ev) => {
+    const b = ev.target.closest("button.save"); if (!b) return;
+    const k = b.dataset.s; saved.has(k) ? saved.delete(k) : saved.add(k); persist(); render();
+  });
   press("city", "c", cityId);
   load();
 </script>
