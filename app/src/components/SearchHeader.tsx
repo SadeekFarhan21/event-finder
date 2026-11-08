@@ -12,7 +12,8 @@ import { Tap } from "./Tap";
 import { lastRun } from "../data/api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const SUGGESTIONS = ["Free", "This weekend", "Live music", "Under $20", "Dance", "Drinks"];
+// "Near me" joins these only once the rider has shared location, like the Near me filter.
+const SUGGESTIONS = ["Free", "Late night", "This weekend", "Live music", "Under $20", "Dance", "Drinks"];
 const RECENT_KEY = "scout.recentSearches";
 // Controls over the map: near-solid d1, so street names don't read through the chip text.
 const OVER_MAP = "rgba(21,21,19,0.94)";
@@ -111,7 +112,7 @@ export function SearchHeader({ city, onCityChange, onSubmitCity, onScout, scouti
           <>
             <View style={[s.searchBox, open && { opacity: 0 }]}>
               <Feather name="search" size={16} color={C.ink3} />
-              <TextInput value={query} onChangeText={onQuery} autoFocus placeholder="Jazz, free, rooftop, under $20"
+              <TextInput value={query} onChangeText={onQuery} autoFocus placeholder="Jazz tonight, free Friday, late"
                 placeholderTextColor={C.placeholder} style={s.searchInput} returnKeyType="search" onSubmitEditing={() => remember(query)} autoCorrect={false}
                 selectionColor={C.selection} cursorColor={C.accent} accessibilityLabel="Search spots" />
               {!!query && <Tap onPress={() => onQuery("")} hitSlop={12} accessibilityLabel="Clear search"><Feather name="x-circle" size={16} color={C.ink3} /></Tap>}
@@ -119,7 +120,7 @@ export function SearchHeader({ city, onCityChange, onSubmitCity, onScout, scouti
             {!query && !open && (
               // One tap for the searches people make most; they also show what search understands.
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.suggestions} keyboardShouldPersistTaps="handled">
-                {[...recent, ...SUGGESTIONS.filter((x) => !recent.includes(x.toLowerCase()))].map((q) => (
+                {[...recent, ...(canNear ? ["Near me"] : []), ...SUGGESTIONS].filter((x, i, all) => all.findIndex((y) => y.toLowerCase() === x.toLowerCase()) === i).map((q) => (
                   <Tap key={q} onPress={() => onQuery(q.toLowerCase())} style={s.chip} accessibilityLabel={`Search ${q}`}>
                     <Text style={s.chipText}>{q.charAt(0).toUpperCase() + q.slice(1)}</Text>
                   </Tap>
