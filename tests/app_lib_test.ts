@@ -504,8 +504,14 @@ Deno.test("closeBy: nearest three, same night, one per venue, in time order", ()
       s("d", "Far Hall", "2026-11-08T01:00:00Z", 40.80),         // too far
       s("e", "Tomorrow Club", "2026-11-09T00:00:00Z", 40.7205),  // another night
       s("f", "Bar HH", "2026-11-07T21:00:00Z", 40.7202, { category: "deal", title: "Happy hour" }), // standing deal
-      s("g", "Nublu", "2026-11-08T03:00:00Z", 40.72)];           // same venue as here
+      s("g", "Nublu", "2026-11-08T03:00:00Z", 40.72),            // same venue as here
+      s("h", "Day Cafe", "2026-11-07T17:30:00Z", 40.7201)];      // 12:30 PM same day: daytime, left out
     expect(closeBy(here, list, now).map((e) => e.id)).toEqual(["b", "c", "a"]);
+    // Tomorrow's 8 PM show: a 12:30 PM listing that day is the same "night" date but not a night out.
+    const sun = s("sun", "Nublu", "2026-11-09T01:00:00Z", 40.72); // Sun 8 PM
+    const lunch = s("lunch", "Parkside", "2026-11-08T17:30:00Z", 40.7201); // Sun 12:30 PM
+    const late = s("late2", "Caveat", "2026-11-09T03:00:00Z", 40.7202); // Sun 10 PM
+    expect(closeBy(sun, [sun, lunch, late], now).map((e) => e.id)).toEqual(["late2"]);
   } finally { setCityZone(null); }
 });
 

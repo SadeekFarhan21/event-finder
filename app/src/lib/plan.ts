@@ -122,7 +122,8 @@ export function closeBy(spot: Spot, spots: Spot[], now = Date.now(), max = 3, wi
   const same = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase();
   const near = spots
     .filter((e) => e.id !== spot.id && !same(e.venue, spot.venue) && e.start && !isRecurring(e)
-      && nightOffset(Date.parse(e.start), ref) === 0 && Date.parse(e.start) > now - 30 * 60000 && km(spot, e) <= withinKm)
+      && nightOffset(Date.parse(e.start), ref) === 0 && Date.parse(e.start) > now - 30 * 60000 && km(spot, e) <= withinKm
+      && (cityHour(Date.parse(e.start)) >= 17 || cityHour(Date.parse(e.start)) < 6)) // evenings: a 12:30 PM listing isn't a night out
     .sort((a, b) => km(spot, a) - km(spot, b))
     .filter((e, i, all) => all.findIndex((x) => same(x.venue, e.venue)) === i);
   return near.slice(0, max).sort((a, b) => Date.parse(a.start!) - Date.parse(b.start!));
