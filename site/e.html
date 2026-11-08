@@ -60,6 +60,8 @@
   .empty { margin-top: 48px; }
   .empty .desc { margin-top: 12px; }
   .empty .note { margin-top: 32px; }
+  .back { display: inline-flex; align-items: center; min-height: 44px; margin-top: 20px; color: var(--ink-2); font-size: 15px; text-decoration: none; }
+  .back:hover { color: var(--ink); }
   .invite { font: 400 28px/1.2 var(--display); margin: 32px 0 0; text-wrap: balance; }
   .crew { margin-top: 16px; padding: 16px; border-radius: 12px; background: var(--fill); } /* a fill, not a second border inside the card */
   .crewhead { margin: 0; font-size: 16px; color: var(--ink-2); }
@@ -320,6 +322,11 @@
     } catch { /* no QR, no panel */ }
   }
 
+  // Opened from the Tonight list (tonight.html adds from=list): no "a friend sent you" line, a way back
+  // instead. The flag is cut from the address so a link copied from here still reads as a friend's.
+  const FROM_LIST = new URLSearchParams(location.search).get("from") === "list";
+  if (FROM_LIST) history.replaceState(null, "", location.pathname + location.search.replace(/[?&]from=list/, "").replace(/^&/, "?") + location.hash);
+
   async function render() {
     const q = new URLSearchParams(location.search);
     const code = (q.get("crew") || "").toLowerCase();
@@ -358,7 +365,7 @@
     const dest = encodeURIComponent(`${e.venue}, ${e.address}`);
     document.title = crew ? `Crew to ${e.venue} · Scout` : `${e.venue} · ${when(e)} · Scout`;
     app.innerHTML = `
-      <p class="invite">${crew ? `${esc(crew.members[0]?.name ?? "A friend")} is heading out. Come with.` : "A friend sent you a night out."}</p>
+      ${FROM_LIST && !crew ? `<a class="back" href="tonight.html">← Everything on tonight</a>` : `<p class="invite">${crew ? `${esc(crew.members[0]?.name ?? "A friend")} is heading out. Come with.` : "A friend sent you a night out."}</p>`}
       <article class="card">
         ${e.image ? `<img class="hero" src="${esc(e.image)}" alt="" referrerpolicy="no-referrer" onerror="this.remove()">` : band(e)}
         <div class="body">
