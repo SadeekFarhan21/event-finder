@@ -45,7 +45,7 @@
   .summary { margin: 16px 0 0; color: var(--ink-3); font-size: 14px; font-variant-numeric: tabular-nums; }
 
   /* Rows: room, size, quiet night, rider views, action. On phones each row stacks. */
-  .rooms { list-style: none; margin: 16px 0 0; padding: 0; border-top: 1px solid var(--line); }
+  .rooms { list-style: none; margin: 16px 0 0; padding: 0; border-top: 1px solid var(--line); min-height: 60vh; } /* room for the list before it loads: the note below doesn't jump */
   .room { display: grid; grid-template-columns: minmax(0, 1fr) 80px 104px 88px 252px; gap: 16px; align-items: center; padding: 16px 0; border-bottom: 1px solid var(--line); }
   .head { padding-block: 10px; font-size: 13px; font-weight: 500; color: var(--ink-3); }
   .name { min-width: 0; }
