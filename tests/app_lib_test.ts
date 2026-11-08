@@ -12,7 +12,7 @@ import { canonicalCity, cityKey } from "../app/src/lib/cities";
 import { similar } from "../app/src/lib/case";
 import { inviteBill, withBill } from "../app/src/lib/invite";
 import { goingLine, initials, leavingSoon, savedSoon } from "../app/src/lib/friends";
-import { closeBy, planAhead, planFromShorts, planMessage, planNight } from "../app/src/lib/plan";
+import { closeBy, planAhead, planDirectionsUrl, planFromShorts, planMessage, planNight } from "../app/src/lib/plan";
 import { newSince } from "../app/src/lib/fresh";
 import { pitchEmail } from "../app/src/lib/pitch";
 import { calendarUrl } from "../app/src/lib/calendar";
@@ -507,4 +507,12 @@ Deno.test("closeBy: nearest three, same night, one per venue, in time order", ()
       s("g", "Nublu", "2026-11-08T03:00:00Z", 40.72)];           // same venue as here
     expect(closeBy(here, list, now).map((e) => e.id)).toEqual(["b", "c", "a"]);
   } finally { setCityZone(null); }
+});
+
+Deno.test("planDirectionsUrl: last stop is the destination, the rest waypoints in order", () => {
+  const st = (venue: string, address: string) => ({ spot: { venue, address } as Spot });
+  const u = new URL(planDirectionsUrl([st("Tile Bar", "7th St"), st("Blind Barber", "339 E 10th St"), st("Night Club 101", "101 Avenue A")])!);
+  expect(u.searchParams.get("destination")).toBe("Night Club 101, 101 Avenue A");
+  expect(u.searchParams.get("waypoints")).toBe("Tile Bar, 7th St|Blind Barber, 339 E 10th St");
+  expect(planDirectionsUrl([st("Solo", "1 St")])).toBeNull();
 });
