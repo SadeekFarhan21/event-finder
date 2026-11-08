@@ -215,8 +215,9 @@
 
     // Google Maps takes the whole route: the last stop as the destination, the rest as waypoints in order.
     const place = (e) => `${e.venue}, ${e.address}`;
-    const dir = new URLSearchParams({ api: "1", destination: place(stops[stops.length - 1]) });
-    if (stops.length > 1) dir.set("waypoints", stops.slice(0, -1).map(place).join("|"));
+    // Path form (/maps/dir//A/B/C, empty first stop = "from here"): the Android Maps app keeps every stop;
+    // with ?api=1&destination=…&waypoints=… it routed to the first stop only.
+    const dirUrl = `https://www.google.com/maps/dir//${stops.map((e) => encodeURIComponent(place(e))).join("/")}`;
     const first = stops.find((e) => e.start && !isDeal(e));
     document.title = `${stops.map((e) => e.venue).join(" → ")} · Scout`;
     app.innerHTML = `
@@ -224,7 +225,7 @@
       <p class="sub">${stops.length} stops${first ? ` · from ${esc(fmtT(first.start))}` : ""}, close together.</p>
       <ol class="route">${rows}</ol>
       <div class="actions">
-        <a class="btn primary" href="https://www.google.com/maps/dir/?${dir}" target="_blank" rel="noopener">Directions for the whole night</a>
+        <a class="btn primary" href="${esc(dirUrl)}" target="_blank" rel="noopener">Directions for the whole night</a>
         ${isAndroid ? `<a class="btn quiet" href="${esc(appLink(stops))}">Open in Scout</a>` : ""}
         ${nightCal(stops) ? `<a class="more cal" href="${esc(nightCal(stops))}" target="_blank" rel="noopener">Add the night to your calendar</a>` : ""}
       </div>
