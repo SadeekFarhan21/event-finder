@@ -34,11 +34,18 @@ const remember = async (code: string) => {
 export const savedName = () => AsyncStorage.getItem(NAME_KEY).catch(() => null);
 const saveName = (name: string) => AsyncStorage.setItem(NAME_KEY, name.trim()).catch(() => {});
 
-// Our own RPC errors are written for people ("Crew not found"); anything else (a constraint,
+// Our own RPC errors (code P0001) map to a sentence with the next step; anything else (a constraint,
 // the network) gets a plain sentence instead of database text.
+// Each RPC error, said with what to do next. Unknown messages from our own functions pass through.
+const RPC_MESSAGES: Record<string, string> = {
+  "Crew not found": "No crew with that code. Check the link, or ask your friend to send it again.",
+  "Crew is full": "That crew is full (20 people). Ask your friend to start another one.",
+  "Too many crews": "You've started a lot of crews in the last hour. Try again a little later.",
+  "Leave time must be soon": "Pick a leave time in the next few days.",
+};
 const fail = (error: { message: string; code?: string } | null) => {
   if (!error) return;
-  throw new Error(error.code === "P0001" ? error.message
+  throw new Error(error.code === "P0001" ? (RPC_MESSAGES[error.message] ?? error.message)
     : isOffline() ? "No connection. Try again when you're back online." : "Something went wrong. Try again in a moment.");
 };
 
