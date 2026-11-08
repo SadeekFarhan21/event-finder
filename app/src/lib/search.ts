@@ -3,7 +3,7 @@
 // so adding words narrows. No network, no AI: instant, and it works offline.
 import type { Spot } from "./types";
 import { CATEGORY } from "../theme";
-import { isRecurring, nightOffset, nightWeekday } from "./time";
+import { cityHour, isRecurring, nightOffset, nightWeekday } from "./time";
 
 const fold = (s: string) => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
 
@@ -16,7 +16,7 @@ const ALIASES: Record<string, string[]> = {
 };
 
 export type When = "tonight" | "tomorrow" | "weekend";
-export type Query = { words: string[]; maxPrice: number | null; when: When | null; near?: boolean };
+export type Query = { words: string[]; maxPrice: number | null; when: When | null; near?: boolean; after?: number }; // after: hour 0-23, city time
 
 export function parseQuery(text: string): Query {
   let t = fold(text);
@@ -28,11 +28,21 @@ export function parseQuery(text: string): Query {
   t = t.replace(/\b(this\s+)?(tonight|today|tomorrow|weekend)\b/g, (_, __, w) => {
     when = w === "today" ? "tonight" : (w as When); return " ";
   });
+  // "after 10", "after 9:30pm", "after 11 pm", "late night", "late": a starting hour, not words to match.
+  // A bare "after 10" means the evening (10 PM); "after 10am" stays morning.
+  let after: number | undefined;
+  t = t.replace(/\bafter\s+(\d{1,2})(?::\d\d)?\s*(am|pm)?\b/g, (_, h, ap) => {
+    const n = Number(h) % 12;
+    after = ap === "am" ? n : ap === "pm" || n < 12 ? n + 12 : n; // no am/pm: evening
+    if (Number(h) === 12 && !ap) after = 0; // "after 12": midnight
+    return " ";
+  });
+  t = t.replace(/\blate(?:[\s-]?night)?\b/g, () => { after ??= 22; return " "; });
   // "jazz near me", "free nearby", "drinks close by": a place to filter by, not words to match.
   let near = false;
   t = t.replace(/\b(near me|nearby|close by|around me|walking distance)\b/g, () => { near = true; return " "; });
   const words = t.split(/[^a-z0-9$&+]+/).filter((w) => w.length > 1);
-  return { words, maxPrice, when, near };
+  return { words, maxPrice, when, near, after };
 }
 
 // Lowest dollar amount the listing mentions; free entry counts as 0; unknown is null.
@@ -44,7 +54,14 @@ export function priceOf(e: Pick<Spot, "price" | "deal">): number | null {
 }
 
 export function matchesQuery(e: Spot, q: Query, now = Date.now()): boolean {
-  if (!q.words.length && q.maxPrice === null && !q.when) return true; // "near me" alone: the screen narrows by distance
+  if (!q.words.length && q.maxPrice === null && !q.when && q.after === undefined) return true; // "near me" alone: the screen narrows by distance
+  if (q.after !== undefined) {
+    // Starts at or after that hour on the city's clock; past midnight still counts (a 1 AM set is late).
+    // Standing deals have no start to compare, so a time search leaves them out.
+    if (isRecurring(e) || !e.start) return false;
+    const h = cityHour(Date.parse(e.start));
+    if (!(h >= q.after || (q.after >= 12 && h < 6))) return false;
+  }
   if (q.when && !isRecurring(e)) { // standing deals run every day, so they fit any day
     if (!e.start) return false;
     const t = Date.parse(e.start), d = nightOffset(t, now);
