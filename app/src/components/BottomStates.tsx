@@ -4,6 +4,7 @@ import { StyleSheet, Text, View } from "react-native";
 import Animated, { FadeIn, FadeOut, useAnimatedStyle, useSharedValue, withRepeat, withTiming } from "react-native-reanimated";
 import { CARD_W, CAROUSEL_BOTTOM, MEDIA_H } from "../layout";
 import { color as C, font as F, radius as R, shadow, text as T } from "../theme";
+import { Tap } from "./Tap";
 
 // Laid out like a real spot card (photo, venue, facts, footer with the Ride pill), so nothing
 // jumps when the spots arrive.
@@ -28,11 +29,17 @@ export function LoadingCard() {
   );
 }
 
-export function EmptyCard({ title, body }: { title: string; body: string }) {
+// action: the one way out of this state ("Search without "late""), as a quiet pill under the message.
+export function EmptyCard({ title, body, action }: { title: string; body: string; action?: { label: string; onPress: () => void } }) {
   return (
-    <Animated.View entering={FadeIn} exiting={FadeOut} style={[s.card, s.empty]} accessibilityRole="summary">
-      <Text style={s.title}>{title}</Text>
+    <Animated.View entering={FadeIn} exiting={FadeOut} style={[s.card, s.empty]}>
+      <Text style={s.title} accessibilityRole="header">{title}</Text>
       <Text style={s.message}>{body}</Text>
+      {action && (
+        <Tap onPress={action.onPress} hitSlop={6} style={s.action} accessibilityLabel={action.label}>
+          <Text style={s.actionText} numberOfLines={1}>{action.label}</Text>
+        </Tap>
+      )}
     </Animated.View>
   );
 }
@@ -49,4 +56,7 @@ const s = StyleSheet.create({
   empty: { padding: 20 },
   title: { fontFamily: F.display, fontSize: T.title, lineHeight: 32, color: C.ink },
   message: { fontFamily: F.regular, fontSize: T.small, lineHeight: 20, color: C.ink2, marginTop: 4 },
+  action: { alignSelf: "flex-start", maxWidth: "100%", height: 36, paddingHorizontal: 16, marginTop: 16, borderRadius: R.pill, justifyContent: "center",
+    backgroundColor: C.d2, borderWidth: StyleSheet.hairlineWidth, borderColor: C.d4 },
+  actionText: { fontFamily: F.semibold, fontSize: T.small, color: C.ink },
 });
