@@ -199,7 +199,15 @@
       const step = i === 0 ? "Start here" : late && i === stops.length - 1 ? "Late" : "Then";
       const away = i ? hop(km(stops[i - 1], e)) : null;
       // A deal's first clause is the offer ("50% off every drink Mon–Fri 2–7pm"); the rest is on Details.
-      const bill = calm(deal ? String(e.deal || e.title).split(/;\s*/)[0] : e.title);
+      // The part of the deal that goes with the hours shown ("Saturday Night 7pm-4am: $5 Michelob…", not the
+      // daytime "Saturday Day 12-7pm" clause next to "7pm–4am"); the first part when no hours are stated.
+      const parts = String(e.deal || e.title).split(/;\s*/);
+      const shownHours = (sub.match(/\d{1,2}(:\d\d)?\s*(am|pm)?–\d{1,2}(:\d\d)?\s*(am|pm)/i) || [""])[0];
+      const norm = (t) => t.toLowerCase().replace(/\s+/g, "").replace(/–|to/g, "-");
+      // A part that's only days and hours ("Sat-Sun 3-8pm") says nothing the time column doesn't: skip it.
+      const says = (p) => p.replace(/\b(mon|tue|wed|thu|fri|sat|sun)[a-z]*\b|\b(day|night|daily|weekdays?|weekends?)\b|[\d:–\-&,]|\b(am|pm|to)\b/gi, "").trim().length >= 4;
+      const match = shownHours && parts.find((p) => norm(p).includes(norm(shownHours)) && says(p));
+      const bill = calm(deal ? match || parts.find(says) || parts[0] : e.title);
       return `<li class="stop">
         <div class="time"><b${deal ? ' class="word"' : /:/.test(time) ? ' class="hm"' : ""}>${esc(time)}</b>${sub ? `<span>${esc(sub)}</span>` : ""}</div>
         <div class="rail" aria-hidden="true"><span class="dot"></span></div>
