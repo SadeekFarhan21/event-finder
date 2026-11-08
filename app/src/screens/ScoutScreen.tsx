@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { nowWord, setCityZone } from "../lib/time";
-import { matchesQuery, parseQuery, rankByVenue, relaxHint } from "../lib/search";
+import { matchesQuery, parseQuery, rankByVenue, relaxHint, withoutLimit } from "../lib/search";
 import { useSaved } from "../hooks/useSaved";
 import { km } from "../lib/fare";
 import { Linking, Share, StyleSheet, Text, View } from "react-native";
@@ -424,6 +424,7 @@ export function ScoutScreen() {
 
       {loading && !spots.length ? <LoadingCard /> : !shown.length && !scouting ? (
         <EmptyCard
+          action={hint ? { label: `Search without ${hint.drop.startsWith("the ") ? hint.drop.slice(4) : `"${hint.drop}"`}`, onPress: () => { Haptics.selectionAsync(); setQuery(withoutLimit(query, hint.limit)); } } : undefined}
           title={loadFailed ? "Couldn't load spots" : filter === "plan" && spots.length ? "Not enough on to plan a night" : query.trim() && spots.length ? `Nothing matches "${query.trim()}"` : spots.length ? "Nothing here yet" : `No spots in ${cityName} yet`}
           body={loadFailed ? "Check your connection. Scout will try again as soon as you're back online."
             : filter === "plan" && spots.length ? (query.trim() ? `Not enough "${query.trim()}" tonight for two stops close together. Try fewer words.` : `A plan needs two spots close together, still to come tonight. Try ${nowWord()} or This week.`)
