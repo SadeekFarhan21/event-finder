@@ -171,9 +171,15 @@
 
   // Made from "Make a night of it" on a spot page: it's the visitor's own plan. Drop the flag from the
   // address bar so the link they copy and send reads "A friend planned tonight." for their friends.
-  const MINE = new URLSearchParams(location.search).get("mine") === "1";
+  // Remembered for this tab (sessionStorage), so Back or a reload still says "Your night out."; a friend
+  // opening the copied link has their own session and sees "A friend planned tonight."
+  const planKey = `scout.myPlan.${new URLSearchParams(location.search).get("s") || ""}`;
+  const flagged = new URLSearchParams(location.search).get("mine") === "1";
+  if (flagged) try { sessionStorage.setItem(planKey, "1"); } catch { /* fine: wording only */ }
+  let MINE = flagged;
+  try { MINE = MINE || sessionStorage.getItem(planKey) === "1"; } catch { /* private mode */ }
   // Rebuilt by hand: URLSearchParams would re-encode the commas as %2C in the link people copy.
-  if (MINE) history.replaceState(null, "", location.pathname + location.search.replace(/[?&]mine=1/, "").replace(/^&/, "?") + location.hash);
+  if (flagged) history.replaceState(null, "", location.pathname + location.search.replace(/[?&]mine=1/, "").replace(/^&/, "?") + location.hash);
 
   async function render() {
     const shorts = (new URLSearchParams(location.search).get("s") || "").toLowerCase().split(",").filter(Boolean).slice(0, 4);
