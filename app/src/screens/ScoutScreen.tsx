@@ -497,9 +497,11 @@ export function ScoutScreen() {
 const s = StyleSheet.create({
   root: { flex: 1, backgroundColor: C.bg },
   bottomFade: { position: "absolute", left: 0, right: 0, bottom: 0 },
-  roomsWrap: { position: "absolute", left: CARD_INSET, bottom: CAROUSEL_BOTTOM + CARD_H, flexDirection: "row", gap: 8 },
+  // Bounded on both sides: two long pills ("Leave for Gold-Diggers in 12 min" + "Rocco's Tavern starts in 25
+  // min") shrink and end in "…" instead of running off the screen.
+  roomsWrap: { position: "absolute", left: CARD_INSET, right: CARD_INSET, bottom: CAROUSEL_BOTTOM + CARD_H, flexDirection: "row", gap: 8 },
   crewsOn: { backgroundColor: C.ink },
   crewsOnText: { color: C.surface },
-  rooms: { flexDirection: "row", alignItems: "center", gap: 6, height: 40, maxWidth: 260, paddingHorizontal: 12, borderRadius: R.pill, backgroundColor: C.surface, ...shadow },
+  rooms: { flexDirection: "row", alignItems: "center", gap: 6, height: 40, maxWidth: 260, flexShrink: 1, paddingHorizontal: 12, borderRadius: R.pill, backgroundColor: C.surface, ...shadow },
   roomsText: { fontFamily: F.semibold, fontSize: T.small, color: C.ink },
 });
