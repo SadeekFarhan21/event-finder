@@ -283,6 +283,9 @@
     });
   }
 
+  // A night out starts from 5 PM to 6 AM in the city: a 12:30 PM listing isn't "close by" for an 8 PM show.
+  const evening = (t) => { const h = Number(fmtT(new Date(t), { hour: "numeric", hourCycle: "h23" })); return h >= 17 || h < 6; };
+
   async function nearby(e) {
     if (!e?.lat || !e?.lng || !e.city) return;
     const ref = e.start && e.category !== "deal" ? Date.parse(e.start) : Date.now();
@@ -292,7 +295,7 @@
     const r = Math.PI / 180;
     const km = (a) => { const x = (a.lng - e.lng) * r * Math.cos(e.lat * r), y = (a.lat - e.lat) * r; return Math.hypot(x, y) * 6371; };
     const near = (data ?? []).filter((x) => x.short && norm(x.venue) !== norm(e.venue) && x.category !== "deal"
-        && nightKey(Date.parse(x.start)) === nightKey(ref) && Date.parse(x.start) > Date.now() - 30 * 60000 && km(x) <= 1.2)
+        && nightKey(Date.parse(x.start)) === nightKey(ref) && evening(x.start) && Date.parse(x.start) > Date.now() - 30 * 60000 && km(x) <= 1.2)
       .sort((a, b) => km(a) - km(b))
       .filter((x, i, all) => all.findIndex((y) => norm(y.venue) === norm(x.venue)) === i) // one row per venue
       .slice(0, 3) // the three nearest
