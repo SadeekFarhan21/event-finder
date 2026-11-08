@@ -533,3 +533,9 @@ Deno.test("parseQuery/matchesQuery: weekday names mean that night this week", ()
     expect(matchesQuery(at("2026-11-08T01:00:00Z"), parseQuery("saturday"), now)).toBe(true); // tonight
   } finally { setCityZone(null); }
 });
+
+Deno.test("parseQuery: 'cheap' caps the price at $15 unless a price is given", () => {
+  expect(parseQuery("cheap drinks")).toMatchObject({ words: ["drinks"], maxPrice: 15 });
+  expect(parseQuery("cheap under $30").maxPrice).toBe(30);
+  expect(parseQuery("budget comedy").maxPrice).toBe(15);
+});
