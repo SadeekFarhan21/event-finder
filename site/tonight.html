@@ -57,6 +57,8 @@
   .list .m { display: block; margin-top: 2px; color: var(--ink-3); font-size: 13px; }
   .list .p::before { content: ""; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--yellow); margin-right: 6px; vertical-align: 1px; }
   .empty { padding: 24px 0; color: var(--ink-2); }
+  .list .planbar { padding: 16px 0 0; }
+  .list .planbar a.go { display: flex; align-items: center; justify-content: center; min-height: 48px; padding: 0 16px; border-radius: 999px; border: 0; background: var(--yellow); color: var(--on-yellow); font: 600 16px var(--body); grid-template-columns: none; }
   .note { margin: 24px 0 0; font-size: 14px; color: var(--ink-3); }
   .cta { display: inline-flex; align-items: center; min-height: 44px; margin-top: 8px; color: var(--ink-2); text-decoration: underline; text-underline-offset: 3px; }
 </style>
@@ -80,6 +82,7 @@
     <button type="button" data-f="music" aria-pressed="false">Live music</button>
     <button type="button" data-f="nightlife" aria-pressed="false">Nightlife</button>
     <button type="button" data-f="deal" aria-pressed="false">Happy hours</button>
+    <button type="button" data-f="plan" aria-pressed="false">Plan my night</button>
   </div>
   <input class="find" id="find" type="search" placeholder="Search: jazz, a venue, a neighborhood" aria-label="Search tonight">
   <p class="sub" id="count" aria-live="polite">Loading tonight…</p>
@@ -95,7 +98,8 @@
   const calm = (t) => (t && t === t.toUpperCase() && /[A-Z]{4}/.test(t) ? t.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase()) : t);
   const isDeal = (e) => e.category === "deal" || /happy hour|daily|every (day|night)|nightly/i.test(`${e.title} ${e.deal ?? ""}`);
   const AREA = /\(([^)]+)\)\s*$/;
-  let cityId = /Los_Angeles|Vancouver|Tijuana/.test(Intl.DateTimeFormat().resolvedOptions().timeZone || "") ? "la" : "ny";
+  // The city chosen last in this tab (so "← Everything on tonight" comes back to it), else by the visitor's clock.
+  let cityId = (() => { try { const c = sessionStorage.getItem("scout.tonightCity"); if (c === "ny" || c === "la") return c; } catch {} return /Los_Angeles|Vancouver|Tijuana/.test(Intl.DateTimeFormat().resolvedOptions().timeZone || "") ? "la" : "ny"; })();
   let filter = "all", rows = [];
 
   async function load() {
@@ -103,7 +107,7 @@
     $("count").textContent = "Loading tonight…"; $("list").innerHTML = "";
     const now = Date.now();
     // Tonight runs to 6 AM in the city; take dated spots from 3 hours ago to the morning, and standing deals.
-    const q = `select=short,venue,title,start,category,price,deal,address,partner,confidence&city=eq.${encodeURIComponent(c.key)}&confidence=neq.low&or=(start.gte.${new Date(now - 3 * 3600e3).toISOString()},category.eq.deal)&order=start.asc.nullslast&limit=400`;
+    const q = `select=short,venue,title,start,category,price,deal,address,partner,confidence,lat,lng&city=eq.${encodeURIComponent(c.key)}&confidence=neq.low&or=(start.gte.${new Date(now - 3 * 3600e3).toISOString()},category.eq.deal)&order=start.asc.nullslast&limit=400`;
     let data;
     try { const r = await fetch(`${API}?${q}`, { headers: { apikey: KEY } }); if (!r.ok) throw 0; data = await r.json(); }
     catch { $("count").textContent = "Couldn't load tonight. Check your connection and try again."; return; }
@@ -113,8 +117,31 @@
     render();
   }
 
+  // Plan my night, as the app does it (lib/plan.ts, without the rider's location): two or three sets still
+  // to come, each starting 90 min or more after the last and within ~4 km of it; tries a few first stops.
+  const km = (a, b) => { const r = Math.PI / 180, x = (b.lng - a.lng) * r * Math.cos(((a.lat + b.lat) / 2) * r), y = (b.lat - a.lat) * r; return Math.hypot(x, y) * 6371; };
+  function planFrom(list) {
+    const now = Date.now(), timed = list.filter((e) => !isDeal(e) && e.start && Date.parse(e.start) >= now - 20 * 60000 && e.lat && e.lng)
+      .sort((a, b) => Date.parse(a.start) - Date.parse(b.start));
+    const build = (seed) => {
+      const stops = [seed];
+      while (stops.length < 3) {
+        const at = stops[stops.length - 1], free = Date.parse(at.start) + 90 * 60000, used = new Set(stops.map((s) => s.venue.toLowerCase()));
+        const next = timed.filter((e) => !used.has(e.venue.toLowerCase()) && Date.parse(e.start) >= free - 15 * 60000 && km(at, e) <= 4)
+          .sort((a, b) => (km(at, a) + (Date.parse(a.start) - free) / 3600e3 * 0.8 - (a.partner ? 0.5 : 0))
+            - (km(at, b) + (Date.parse(b.start) - free) / 3600e3 * 0.8 - (b.partner ? 0.5 : 0)))[0];
+        if (!next) break;
+        stops.push(next);
+      }
+      return stops;
+    };
+    for (const seed of timed.slice(0, 8)) { const p = build(seed); if (p.length >= 2) return p; }
+    return [];
+  }
+
   function render() {
     const c = CITIES[cityId], q = $("find").value.trim().toLowerCase();
+    if (filter === "plan") return renderPlan(c, q);
     const time = (t) => new Date(t).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: c.zone }).replace(":00", "");
     const started = (e) => e.start && Date.parse(e.start) <= Date.now();
     let list = rows.filter((e) => filter === "all" || (filter === "deal" ? isDeal(e) : !isDeal(e) && e.category === filter));
@@ -137,8 +164,27 @@
     }).join("");
   }
 
+  function renderPlan(c, q) {
+    const time = (t) => new Date(t).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: c.zone }).replace(":00", "");
+    const pool = q ? rows.filter((e) => `${e.venue} ${e.title} ${e.address}`.toLowerCase().includes(q)) : rows;
+    const plan = planFrom(pool);
+    $("title").textContent = `Plan my night in ${c.name}`;
+    if (plan.length < 2) {
+      $("count").textContent = "";
+      $("list").innerHTML = `<li class="empty">${q ? "Not enough matching sets close together tonight. Try fewer words." : "Not enough on tonight to plan: it needs two sets still to come, close together."}</li>`;
+      return;
+    }
+    $("count").textContent = `${plan.length} stops, close together · times in ${c.name}`;
+    $("list").innerHTML = plan.map((e, i) => {
+      const hop = i ? km(plan[i - 1], e) : null;
+      return `<li><a href="e.html?s=${esc(e.short)}&from=list"><b>${esc(time(e.start))}<small>${i === 0 ? "Start here" : i === plan.length - 1 && i > 1 ? "Late" : "Then"}</small></b><span>
+        <strong>${esc(e.venue)}</strong><span class="t">${esc(calm(e.title))}</span>
+        <span class="m">${e.partner ? '<span class="p">Yelo partner</span> · ' : ""}${hop === null ? "" : hop < 0.5 ? "A short walk from the last stop" : `${(hop * 0.621).toFixed(1)} mi from the last stop`}</span></span></a></li>`;
+    }).join("") + `<li class="planbar"><a class="go" href="p.html?s=${plan.map((e) => esc(e.short)).join(",")}&mine=1">Open this plan: directions, calendar, share</a></li>`;
+  }
+
   function press(group, attr, val) { document.querySelectorAll(`#${group} button`).forEach((b) => b.setAttribute("aria-pressed", String(b.dataset[attr] === val))); }
-  document.querySelectorAll("#city button").forEach((b) => b.addEventListener("click", () => { cityId = b.dataset.c; press("city", "c", cityId); load(); }));
+  document.querySelectorAll("#city button").forEach((b) => b.addEventListener("click", () => { cityId = b.dataset.c; try { sessionStorage.setItem("scout.tonightCity", cityId); } catch {} press("city", "c", cityId); load(); }));
   document.querySelectorAll("#chips button").forEach((b) => b.addEventListener("click", () => { filter = b.dataset.f; press("chips", "f", filter); render(); }));
   $("find").addEventListener("input", render);
   press("city", "c", cityId);
