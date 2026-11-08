@@ -461,3 +461,23 @@ Deno.test("savedSoon: the soonest saved spot starting within 45 min", () => {
   expect(savedSoon([s("d", -5)], saved, now)).toBeNull(); // already started
   expect(savedSoon([s("a", 10, { category: "deal" })], saved, now)).toBeNull(); // deals don't start
 });
+
+Deno.test("parseQuery/matchesQuery: 'after 10' and 'late' are a starting hour", () => {
+  expect(parseQuery("jazz after 10").after).toBe(22);
+  expect(parseQuery("jazz after 10").words).toEqual(["jazz"]);
+  expect(parseQuery("after 9:30pm").after).toBe(21);
+  expect(parseQuery("brunch after 11am").after).toBe(11);
+  expect(parseQuery("techno late night").after).toBe(22);
+  expect(parseQuery("late").words).toEqual([]);
+  expect(parseQuery("after 12").after).toBe(0);
+  setCityZone("New York, NY");
+  try {
+    const at = (iso: string) => ({ id: iso, title: "Set", venue: "V", address: "", start: iso, category: "music", price: null, deal: null, description: "", url: null, lat: 0, lng: 0, confidence: "high", source: "exa" }) as unknown as Spot;
+    const q = parseQuery("late");
+    expect(matchesQuery(at("2026-11-08T03:30:00Z"), q)).toBe(true);  // 10:30 PM
+    expect(matchesQuery(at("2026-11-08T06:00:00Z"), q)).toBe(true);  // 1 AM: still late
+    expect(matchesQuery(at("2026-11-08T00:00:00Z"), q)).toBe(false); // 7 PM
+    const hh = { ...at("2026-11-08T03:30:00Z"), category: "deal", title: "Happy hour" } as Spot;
+    expect(matchesQuery(hh, q)).toBe(false); // standing deals have no start to compare
+  } finally { setCityZone(null); }
+});
