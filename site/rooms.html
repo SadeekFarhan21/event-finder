@@ -42,7 +42,10 @@
   .seg button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
   .find { flex: 1 1 220px; max-width: 320px; height: 48px; padding: 0 16px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font: inherit; }
   .find::placeholder { color: var(--ink-3); }
-  .summary { margin: 16px 0 0; color: var(--ink-3); font-size: 14px; font-variant-numeric: tabular-nums; }
+  .summary { margin: 0; color: var(--ink-3); font-size: 14px; font-variant-numeric: tabular-nums; }
+  .sumrow { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; margin-top: 16px; }
+  .csv { min-height: 40px; padding: 0 4px; border: 0; background: none; color: var(--ink-2); font: 500 14px var(--body); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+  .csv:hover { color: var(--ink); }
 
   /* Rows: room, size, quiet night, rider views, action. On phones each row stacks. */
   .rooms { list-style: none; margin: 16px 0 0; padding: 0; border-top: 1px solid var(--line); min-height: 60vh; } /* room for the list before it loads: the note below doesn't jump */
@@ -101,7 +104,10 @@
       <button type="button" data-show="email" aria-pressed="false">Has email</button>
     </div>
   </div>
-  <p class="summary" id="summary" aria-live="polite">Loading rooms…</p>
+  <div class="sumrow">
+    <p class="summary" id="summary" aria-live="polite">Loading rooms…</p>
+    <button type="button" class="csv" id="csv" hidden>Download CSV</button>
+  </div>
   <p class="sr" id="live" aria-live="polite"></p>
   <ul class="rooms" id="rooms"></ul>
   <p class="note">Pitch opens a first draft in your mail app, the same one the Scout app writes; Copy pitch puts that draft on your clipboard for a contact form or a DM. Edit it before sending. Rider views count people who opened that venue's spots on Scout in the last 7 days.</p>
@@ -165,6 +171,8 @@
     const opened = all.filter((r) => views[r.venue]).length;
     const town = city.startsWith("los") ? "Los Angeles" : "New York";
     $("summary").textContent = `${all.length} rooms in ${town}${opened ? ` · ${opened} that riders opened this week` : ""}${q ? ` · ${list.length} match "${$("find").value.trim()}"` : ""}`;
+    $("csv").hidden = !list.length;
+    $("csv").textContent = `Download CSV (${list.length})`;
     if (!list.length) { $("rooms").innerHTML = `<li class="empty">${q ? "No rooms match that. Try a neighborhood or a type, like \"Bushwick\" or \"DJ bar\"." : show === "opened" ? "No rooms riders opened this week yet. They show up here as riders browse their nights." : show === "email" ? "No rooms with an email yet. Copy pitch works for the rest." : "No rooms for this city yet."}</li>`; return; }
     $("rooms").innerHTML = `<li class="room head" aria-hidden="true"><span>Room</span><span>Capacity</span><span>Quiet night</span><span>Rider views</span><span></span></li>` +
       list.map((r, i) => {
@@ -187,6 +195,20 @@
     load();
   }));
   $("find").addEventListener("input", render);
+  // The list as it's filtered now, for a spreadsheet or CRM. Every cell quoted; a cell that starts like a
+  // formula (=, +, -, @: scraped text can) is prefixed with ' so a spreadsheet shows it as text.
+  $("csv").addEventListener("click", () => {
+    const cell = (v) => { let t = String(v ?? ""); if (/^[=+\-@\t\r]/.test(t)) t = "'" + t; return `"${t.replace(/"/g, '""')}"`; };
+    const head = ["Venue", "Area", "Type", "Capacity", "Quiet night", "Rider views (7 days)", "Email", "Contact", "Website", "Why it fits"];
+    const rows = list.map((r) => [r.venue, r.area, shortKind(r.kind) || r.kind, r.capacity, r.quiet_night, views[r.venue] ?? 0, email(r.contact) ?? "", r.contact, r.url, r.fit]);
+    const csv = [head, ...rows].map((r) => r.map(cell).join(",")).join("\r\n");
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8" })); // BOM: Excel reads UTF-8
+    a.download = `scout-rooms-${city.startsWith("los") ? "los-angeles" : "new-york"}${show === "all" ? "" : "-" + show}.csv`;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    $("live").textContent = `Downloaded ${list.length} rooms`;
+  });
   document.querySelectorAll("#showseg button").forEach((b) => b.addEventListener("click", () => {
     show = b.dataset.show;
     document.querySelectorAll("#showseg button").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
