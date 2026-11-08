@@ -23,6 +23,8 @@ export function parseQuery(text: string): Query {
   let maxPrice: number | null = null;
   // "under $20", "below 15", "< $30"
   t = t.replace(/(?:under|below|less than|<)\s*\$?\s*(\d+)/g, (_, n) => { maxPrice = Number(n); return " "; });
+  // "cheap drinks", "budget comedy": $15 or less (free counts); an explicit "under $N" wins.
+  t = t.replace(/\b(cheap|budget|inexpensive|affordable)\b/g, () => { maxPrice ??= 15; return " "; });
   // "jazz tomorrow", "free tonight", "this weekend": a day, not a word to match in the listing.
   let when: When | null = null;
   // "jazz friday", "techno on saturday": that night in the coming week, not a word to match.
