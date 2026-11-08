@@ -425,7 +425,8 @@ export function ScoutScreen() {
           title={loadFailed ? "Couldn't load spots" : filter === "plan" && spots.length ? "Not enough on to plan a night" : query.trim() && spots.length ? `Nothing matches "${query.trim()}"` : spots.length ? "Nothing here yet" : `No spots in ${cityName} yet`}
           body={loadFailed ? "Check your connection. Scout will try again as soon as you're back online."
             : filter === "plan" && spots.length ? (query.trim() ? `Not enough "${query.trim()}" tonight for two stops close together. Try fewer words.` : `A plan needs two spots close together, still to come tonight. Try ${nowWord()} or This week.`)
-            : query.trim() && spots.length ? (filter === "all" ? "Try another word, like a venue, a genre or a neighborhood." : "Try This week, or another word.")
+            : query.trim() && spots.length ? (parsed.after !== undefined ? "Nothing starts that late. Try an earlier time, like \"after 10\" or \"late\"."
+              : filter === "all" ? "Try another word, like a venue, a genre or a neighborhood." : "Try This week, or another word.")
             : spots.length ? "Try This week, or another filter."
             : scoutable ? `Open the ${cityName} menu and choose "Look for new spots".` : "New spots usually appear within the hour."} />
       ) : (
