@@ -95,6 +95,8 @@
   .livecity button { min-height: 40px; padding: 0 16px; border: 0; border-radius: 999px; background: transparent; color: var(--ink-2); font: 500 15px var(--body); cursor: pointer; }
   .livecity button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
   .live .live-empty { padding: 16px 0; color: var(--ink-2); border-bottom: 1px solid var(--line); }
+  .live-all { display: inline-flex; align-items: center; min-height: 44px; margin-top: 8px; color: var(--ink-2); text-decoration: underline; text-underline-offset: 3px; }
+  .live-all:hover { color: var(--ink); }
   .live { list-style: none; margin: 16px 0 0; padding: 0; border-top: 1px solid var(--line); max-width: 720px; }
   .live a { display: grid; grid-template-columns: 84px 1fr auto; gap: 16px; align-items: baseline; padding: 16px 0; border-bottom: 1px solid var(--line); text-decoration: none; color: inherit; }
   .live b { font: 400 24px/1 var(--display); }
@@ -162,7 +164,7 @@
         puts them on one map, and shows what a ride there costs. Yelo's partner venues come first.
       </p>
 
-      <p class="ios" id="ios" hidden>You're on an iPhone. Scout's iPhone version runs in a live demo for now: ask Farhan to show you. Android friends can install it below.</p>
+      <p class="ios" id="ios" hidden>You're on an iPhone. The app is Android-only for now, but <a href="tonight.html">see what's on tonight</a> right here in Safari. Android friends can install it below.</p>
       <div class="get">
         <a class="btn" href="https://expo.dev/artifacts/eas/KmhkixYBcBqmE4TYbzbIL_tr6BzKwdJ02JAyaAxb5qA.apk" target="_blank" rel="noopener">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11"/><path d="m7 10 5 5 5-5"/><path d="M5 20h14"/></svg>
@@ -190,6 +192,7 @@
       <button type="button" data-c="la" aria-pressed="false">Los Angeles</button>
     </div>
     <ul class="live" id="livelist"></ul>
+    <a class="live-all" href="tonight.html">See everything on tonight</a>
   </section>
 
   <section aria-labelledby="inside">
@@ -219,7 +222,7 @@
       <li><b>Allow the install</b><span>When Android asks, allow installs from your browser for this one file.</span></li>
       <li><b>Open Scout</b><span>It opens on what's on tonight. Tap Show price on any spot for a ride estimate; that's the only time Scout asks for your location.</span></li>
     </ol>
-    <p class="note">On an iPhone? There's no iOS download yet. Ask Farhan for a live demo.</p>
+    <p class="note">On an iPhone? There's no iOS download yet, but <a href="tonight.html">tonight's list works in any browser</a>.</p>
   </section>
 
   <section>
