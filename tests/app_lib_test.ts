@@ -16,7 +16,7 @@ import { closeBy, planAhead, planDirectionsUrl, planFromShorts, planMessage, pla
 import { newSince } from "../app/src/lib/fresh";
 import { pitchEmail } from "../app/src/lib/pitch";
 import { calendarUrl } from "../app/src/lib/calendar";
-import { matchesQuery, parseQuery, priceOf, rankByVenue } from "../app/src/lib/search";
+import { matchesQuery, parseQuery, priceOf, rankByVenue, relaxHint } from "../app/src/lib/search";
 
 const spot = (over: Partial<Spot>): Spot => ({
   id: "s", city: "new york, ny", title: "Jazz", venue: "Nublu", address: "151 Avenue C", start: null, category: "music",
@@ -538,4 +538,16 @@ Deno.test("parseQuery: 'cheap' caps the price at $15 unless a price is given", (
   expect(parseQuery("cheap drinks")).toMatchObject({ words: ["drinks"], maxPrice: 15 });
   expect(parseQuery("cheap under $30").maxPrice).toBe(30);
   expect(parseQuery("budget comedy").maxPrice).toBe(15);
+});
+
+Deno.test("relaxHint: names the one limit to drop", () => {
+  setCityZone("New York, NY");
+  try {
+    const now = Date.parse("2026-11-07T22:00:00Z");
+    const s = (start: string, extra = {}) => ({ id: start, title: "Jazz trio", venue: "V", address: "", start, category: "music", price: "$25", deal: null, description: "", url: null, lat: 0, lng: 0, confidence: "high", source: "exa", ...extra }) as unknown as Spot;
+    const spots = [s("2026-11-14T03:30:00Z")]; // Fri 10:30 PM, $25
+    expect(relaxHint(spots, parseQuery("cheap jazz friday late"), now)).toEqual({ drop: "the price limit", count: 1 });
+    expect(relaxHint([s("2026-11-14T01:00:00Z", { price: "Free" })], parseQuery("cheap jazz friday late"), now)).toEqual({ drop: "late", count: 1 });
+    expect(relaxHint(spots, parseQuery("techno"), now)).toBeNull();
+  } finally { setCityZone(null); }
 });

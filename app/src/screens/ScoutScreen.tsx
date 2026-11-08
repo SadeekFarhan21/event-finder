@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { nowWord, setCityZone } from "../lib/time";
-import { matchesQuery, parseQuery, rankByVenue } from "../lib/search";
+import { matchesQuery, parseQuery, rankByVenue, relaxHint } from "../lib/search";
 import { useSaved } from "../hooks/useSaved";
 import { km } from "../lib/fare";
 import { Linking, Share, StyleSheet, Text, View } from "react-native";
@@ -399,6 +399,8 @@ export function ScoutScreen() {
   };
 
   const cityName = cityInput.split(",")[0];
+  // Empty search with several limits: name the one to drop (only computed when it'd be shown).
+  const hint = !shown.length && query.trim() && filter !== "plan" ? relaxHint(spots.filter((e) => matches(e, filter)), parsed) : null;
 
   return (
     <View style={s.root}>
@@ -425,7 +427,8 @@ export function ScoutScreen() {
           title={loadFailed ? "Couldn't load spots" : filter === "plan" && spots.length ? "Not enough on to plan a night" : query.trim() && spots.length ? `Nothing matches "${query.trim()}"` : spots.length ? "Nothing here yet" : `No spots in ${cityName} yet`}
           body={loadFailed ? "Check your connection. Scout will try again as soon as you're back online."
             : filter === "plan" && spots.length ? (query.trim() ? `Not enough "${query.trim()}" tonight for two stops close together. Try fewer words.` : `A plan needs two spots close together, still to come tonight. Try ${nowWord()} or This week.`)
-            : query.trim() && spots.length ? (parsed.after !== undefined ? "Nothing starts that late. Try an earlier time, like \"after 10\" or \"late\"."
+            : query.trim() && spots.length ? (hint ? `Without ${hint.drop}, there ${hint.count === 1 ? "is 1 match" : `are ${hint.count}`}. Try the search without it.`
+              : parsed.after !== undefined ? "Nothing starts that late. Try an earlier time, like \"after 10\"."
               : filter === "all" ? "Try another word, like a venue, a genre or a neighborhood." : "Try This week, or another word.")
             : spots.length ? "Try This week, or another filter."
             : scoutable ? `Open the ${cityName} menu and choose "Look for new spots".` : "New spots usually appear within the hour."} />
