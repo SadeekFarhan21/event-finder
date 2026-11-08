@@ -106,6 +106,7 @@
   .near-list em { font-style: normal; font-size: 13px; color: var(--ink-3); white-space: nowrap; }
   .actions .link { align-self: flex-start; padding: 12px 0; color: var(--ink-2); font-size: 16px; text-decoration: underline; text-underline-offset: 3px; }
   .actions .link:hover { color: var(--ink); }
+  .actions button.link { background: none; border: 0; font: inherit; cursor: pointer; text-align: left; }
 
   /* Opened on a laptop (a link from Messages on a Mac): hand the page to the phone, where directions and
      the ride live. Wide screens only, beside the column; never on a phone. */
@@ -269,6 +270,19 @@
   // Close by, same night: up to three other spots within about a kilometre, so a friend opening one
   // link can make a night of it. Nothing nearby: the section stays hidden.
   const calm = (t) => (t && t === t.toUpperCase() && /[A-Z]{4}/.test(t) ? t.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase()) : t); // "ILHAN SELECTS" -> "Ilhan Selects"
+  // Send this spot on: the phone's share sheet (Messages, WhatsApp…), else copy the link. Always the clean
+  // spot link (?s=code), never this page's own extras.
+  function wireShare(e) {
+    const btn = document.getElementById("sharebtn"); if (!btn || !e?.short) { btn?.remove(); return; }
+    const url = `${location.origin}/e.html?s=${e.short}`;
+    const text = `${e.venue} · ${when(e)}`; // "Nublu · Tonight · 7:00 PM"
+    btn.addEventListener("click", async () => {
+      if (navigator.share) { try { await navigator.share({ title: e.venue, text, url }); } catch { /* closed the sheet */ } return; }
+      try { await navigator.clipboard.writeText(url); btn.textContent = "Link copied"; } catch { btn.textContent = url; }
+      setTimeout(() => { if (btn.textContent === "Link copied") btn.textContent = "Copy link to send"; }, 2000);
+    });
+  }
+
   async function nearby(e) {
     if (!e?.lat || !e?.lng || !e.city) return;
     const ref = e.start && e.category !== "deal" ? Date.parse(e.start) : Date.now();
@@ -386,6 +400,7 @@
             <a class="btn ${crew || isAndroid ? "quiet" : "primary"}" href="https://www.google.com/maps/dir/?api=1&destination=${dest}" target="_blank" rel="noopener">Directions</a>
             ${e.url && /^https?:\/\//.test(e.url) ? `<a class="link" href="${esc(e.url)}" target="_blank" rel="noopener">Event page</a>` : ""}
             ${calLink(e) ? `<a class="link" href="${esc(calLink(e))}" target="_blank" rel="noopener">Add to calendar</a>` : ""}
+            ${crew ? "" : `<button type="button" class="link sharebtn" id="sharebtn">${navigator.share ? "Send to a friend" : "Copy link to send"}</button>`}
             ${crew && isAndroid ? `<a class="link" href="${appLink(code)}">Open in the Scout app</a>` : ""}
           </div>
         </div>
@@ -394,7 +409,7 @@
       <p class="note">Scout finds what's on tonight in New York and Los Angeles and shows the ride there. An independent prototype, not an official Yelo app.</p>`;
     handoff();
 
-    if (!crew) { nearby(e).catch(() => {}); return; } // extras never block or break the page
+    if (!crew) { nearby(e).catch(() => {}); wireShare(e); return; } // extras never block or break the page
     announce(crew);
     document.getElementById("join")?.addEventListener("submit", async (ev) => {
       ev.preventDefault();
