@@ -169,6 +169,11 @@
     } catch { /* no QR, no panel */ }
   }
 
+  // Made from "Make a night of it" on a spot page: it's the visitor's own plan. Drop the flag from the
+  // address bar so the link they copy and send reads "A friend planned tonight." for their friends.
+  const MINE = new URLSearchParams(location.search).get("mine") === "1";
+  if (MINE) { const u = new URL(location.href); u.searchParams.delete("mine"); history.replaceState(null, "", u); }
+
   async function render() {
     const shorts = (new URLSearchParams(location.search).get("s") || "").toLowerCase().split(",").filter(Boolean).slice(0, 4);
     if (!shorts.length || !shorts.every((s) => /^[a-f0-9]{8}$/.test(s))) return gone("missing");
@@ -208,7 +213,7 @@
     const first = stops.find((e) => e.start && !isDeal(e));
     document.title = `${stops.map((e) => e.venue).join(" → ")} · Scout`;
     app.innerHTML = `
-      <p class="invite">A friend planned tonight.</p>
+      <p class="invite">${MINE ? "Your night out." : "A friend planned tonight."}</p>
       <p class="sub">${stops.length} stops${first ? ` · from ${esc(fmtT(first.start))}` : ""}, close together.</p>
       <ol class="route">${rows}</ol>
       <div class="actions">
