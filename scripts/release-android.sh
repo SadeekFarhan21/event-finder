@@ -31,10 +31,11 @@ EAS="npx -y eas-cli@latest"
 start_build() {
   local out url
   out=$($EAS build -p android --profile preview --non-interactive --no-wait 2>&1) || true
-  url=$(printf '%s' "$out" | grep -oE "https://expo.dev/[^ ]+/builds/[0-9a-f-]+" | head -1)
+  # "|| true": with pipefail, grep finding no URL would otherwise end the whole script right here, silently.
+  url=$(printf '%s' "$out" | grep -oE "https://expo.dev/[^ ]+/builds/[0-9a-f-]+" | head -1) || true
   if [[ -n "$url" ]]; then echo "$url"; return 0; fi
   echo "No APK build started:" >&2
-  printf '%s\n' "$out" | grep -iE "error|quota|used its|reset|limit|upgrade" | head -4 >&2
+  printf '%s\n' "$out" | grep -iE "error|quota|used its|reset|limit|upgrade" | head -4 >&2 || true
   echo "Installed apps still get the over-the-air update; new downloads stay on the last finished APK." >&2
   return 0
 }
