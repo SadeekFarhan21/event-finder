@@ -79,6 +79,7 @@
   </div>
   <div class="chips" id="chips" role="group" aria-label="Show">
     <button type="button" data-f="all" aria-pressed="true">Everything</button>
+    <button type="button" data-f="near" aria-pressed="false">Near me</button>
     <button type="button" data-f="music" aria-pressed="false">Live music</button>
     <button type="button" data-f="nightlife" aria-pressed="false">Nightlife</button>
     <button type="button" data-f="deal" aria-pressed="false">Happy hours</button>
@@ -100,7 +101,7 @@
   const AREA = /\(([^)]+)\)\s*$/;
   // The city chosen last in this tab (so "← Everything on tonight" comes back to it), else by the visitor's clock.
   let cityId = (() => { try { const c = sessionStorage.getItem("scout.tonightCity"); if (c === "ny" || c === "la") return c; } catch {} return /Los_Angeles|Vancouver|Tijuana/.test(Intl.DateTimeFormat().resolvedOptions().timeZone || "") ? "la" : "ny"; })();
-  let filter = "all", rows = [];
+  let filter = "all", rows = [], me = null; // me: the visitor's location, asked for only when they tap Near me
 
   async function load() {
     const c = CITIES[cityId];
@@ -142,13 +143,20 @@
   function render() {
     const c = CITIES[cityId], q = $("find").value.trim().toLowerCase();
     if (filter === "plan") return renderPlan(c, q);
+    // Near me while browsing another city (LA from New York): nothing is near, so say that, not "nothing on".
+    if (filter === "near" && me && rows.length && !rows.some((e) => e.lat && km(me, e) <= 25)) {
+      $("title").textContent = `On tonight in ${c.name}`; $("count").textContent = "";
+      $("list").innerHTML = `<li class="empty">You're not in ${esc(c.name)}, so nothing here is near you. Switch city above.</li>`; return;
+    }
     const time = (t) => new Date(t).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: c.zone }).replace(":00", "");
     const started = (e) => e.start && Date.parse(e.start) <= Date.now();
-    let list = rows.filter((e) => filter === "all" || (filter === "deal" ? isDeal(e) : !isDeal(e) && e.category === filter));
+    let list = rows.filter((e) => filter === "all" || filter === "near" || (filter === "deal" ? isDeal(e) : !isDeal(e) && e.category === filter));
+    // Near me: within 2 miles (as in the app), nearest first.
+    if (filter === "near" && me) list = list.filter((e) => e.lat && km(me, e) <= 3.2);
     if (q) list = list.filter((e) => `${e.venue} ${e.title} ${e.address} ${e.deal ?? ""}`.toLowerCase().includes(q));
     // Still to come first (partners lead their hour), then sets under way, then standing deals.
     const rank = (e) => (isDeal(e) ? 2 : started(e) ? 1 : 0);
-    list.sort((a, b) => rank(a) - rank(b) || (a.start && b.start ? Date.parse(a.start) - Date.parse(b.start) : 0) || Number(!!b.partner) - Number(!!a.partner));
+    if (filter === "near" && me) list.sort((a, b) => km(me, a) - km(me, b)); else list.sort((a, b) => rank(a) - rank(b) || (a.start && b.start ? Date.parse(a.start) - Date.parse(b.start) : 0) || Number(!!b.partner) - Number(!!a.partner));
     $("title").textContent = `On tonight in ${c.name}`;
     $("count").textContent = list.length ? `${list.length} ${list.length === 1 ? "spot" : "spots"}${q ? ` matching "${$("find").value.trim()}"` : ""} · times in ${c.name}` : "";
     if (!list.length) { $("list").innerHTML = `<li class="empty">${q ? "Nothing matches that tonight. Try another word." : "Nothing more on tonight here. Check back tomorrow afternoon."}</li>`; return; }
@@ -156,7 +164,7 @@
       const deal = isDeal(e) || !e.start;
       const when = deal ? `Happy hour` : time(e.start);
       const tag = deal ? "Deal" : started(e) ? "Started" : "";
-      const area = (e.address.match(AREA) || [])[1] || e.address.split(",").slice(-3, -2)[0] || "";
+      const area = filter === "near" && me && e.lat ? milesAway(km(me, e)) : (e.address.match(AREA) || [])[1] || e.address.split(",").slice(-3, -2)[0] || "";
       const bill = calm(deal ? String(e.deal || e.title).split(/;\s*/)[0] : e.title);
       return `<li><a href="e.html?s=${esc(e.short)}&from=list"><b${deal ? ' style="font-size:18px"' : ""}>${esc(when)}${tag ? `<small>${esc(tag)}</small>` : ""}</b><span>
         <strong>${esc(e.venue)}</strong>${bill && bill.toLowerCase() !== e.venue.toLowerCase() ? `<span class="t">${esc(bill)}</span>` : ""}
@@ -185,7 +193,19 @@
 
   function press(group, attr, val) { document.querySelectorAll(`#${group} button`).forEach((b) => b.setAttribute("aria-pressed", String(b.dataset[attr] === val))); }
   document.querySelectorAll("#city button").forEach((b) => b.addEventListener("click", () => { cityId = b.dataset.c; try { sessionStorage.setItem("scout.tonightCity", cityId); } catch {} press("city", "c", cityId); load(); }));
-  document.querySelectorAll("#chips button").forEach((b) => b.addEventListener("click", () => { filter = b.dataset.f; press("chips", "f", filter); render(); }));
+  const milesAway = (k) => { const m = k * 0.621; return m < 0.05 ? "Under 0.1 mi" : m < 0.95 ? `${m.toFixed(1)} mi` : `${Math.round(m)} mi`; };
+  document.querySelectorAll("#chips button").forEach((b) => b.addEventListener("click", () => {
+    filter = b.dataset.f; press("chips", "f", filter);
+    if (filter !== "near" || me) return render();
+    // Ask for location only now, when the visitor asked for what's near them.
+    $("count").textContent = "Finding where you are…"; $("list").innerHTML = "";
+    if (!navigator.geolocation) { $("list").innerHTML = `<li class="empty">This browser can't share your location. Try search instead, like a neighborhood.</li>`; $("count").textContent = ""; return; }
+    navigator.geolocation.getCurrentPosition(
+      (p) => { me = { lat: p.coords.latitude, lng: p.coords.longitude };
+        render(); },
+      () => { $("count").textContent = ""; $("list").innerHTML = `<li class="empty">Location is off for this page. Allow it in your browser to see what's near you, or search a neighborhood.</li>`; },
+      { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 });
+  }));
   $("find").addEventListener("input", render);
   press("city", "c", cityId);
   load();
