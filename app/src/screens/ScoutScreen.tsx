@@ -22,7 +22,7 @@ import { useLeads } from "../hooks/useLeads";
 import { useMyLocation } from "../hooks/useMyLocation";
 import { useGoing } from "../hooks/useGoing";
 import { useCrews } from "../hooks/useCrews";
-import { leavingSoon, type CrewPeople } from "../lib/friends";
+import { leavingSoon, savedSoon, type CrewPeople } from "../lib/friends";
 import { planAhead, planFromShorts, planMessage } from "../lib/plan";
 import { openRide } from "../lib/ride";
 import { newIds, newSince } from "../lib/fresh";
@@ -136,6 +136,8 @@ export function ScoutScreen() {
   const [query, setQuery] = useState("");
   const parsed = useMemo(() => parseQuery(query), [query]);
   const { saved, toggle: toggleSave } = useSaved();
+  // A saved spot about to start, when no crew is leaving: the same pill nudges ("Nublu starts in 25 min").
+  const nudge = useMemo(() => (!soon && minute ? savedSoon(spots, saved, minute) : null), [soon, spots, saved, minute]);
   // Near me: within 2 miles of the rider, nearest first (only offered once location is shared).
   const dist = useCallback((e: Spot) => (me ? km(me, { lat: e.lat, lng: e.lng }) : Infinity), [me]);
   // Plan my night: tonight's spots chained into two or three stops (lib/plan), in route order.
@@ -430,10 +432,19 @@ export function ScoutScreen() {
         <>
           <Animated.View entering={FadeIn.delay(150)} style={s.roomsWrap}>
             {crewsApi.available && (
-              <Tap hitSlop={4} style={[s.rooms, liveCrews.length > 0 && s.crewsOn]} onPress={() => { Haptics.selectionAsync(); setCrewsOpen(true); }}
-                accessibilityLabel={soon ? `Your crew leaves for ${soon.crew.venue} ${soon.mins <= 1 ? "now" : `in ${soon.mins} minutes`}. Open crews` : `Crews${liveCrews.length ? `, ${liveCrews.length} on` : ""}`}>
-                <Text numberOfLines={1} style={[s.roomsText, liveCrews.length > 0 && s.crewsOnText]}>
-                  {soon ? `Leave for ${soon.crew.venue} ${soon.mins <= 1 ? "now" : `in ${soon.mins} min`}` : `Crews${liveCrews.length ? `  ·  ${liveCrews.length}` : ""}`}
+              <Tap hitSlop={4} style={[s.rooms, (liveCrews.length > 0 || !!nudge) && s.crewsOn]}
+                onPress={() => {
+                  Haptics.selectionAsync();
+                  if (!soon && nudge) { focus(nudge.spot, true); setTimeout(() => setDetail(nudge.spot), 350); return; } // the saved spot itself
+                  setCrewsOpen(true);
+                }}
+                accessibilityLabel={soon ? `Your crew leaves for ${soon.crew.venue} ${soon.mins <= 1 ? "now" : `in ${soon.mins} minutes`}. Open crews`
+                  : nudge ? `${nudge.spot.venue}, which you saved, starts ${nudge.mins <= 1 ? "now" : `in ${nudge.mins} minutes`}. Open it`
+                  : `Crews${liveCrews.length ? `, ${liveCrews.length} on` : ""}`}>
+                <Text numberOfLines={1} style={[s.roomsText, (liveCrews.length > 0 || !!nudge) && s.crewsOnText]}>
+                  {soon ? `Leave for ${soon.crew.venue} ${soon.mins <= 1 ? "now" : `in ${soon.mins} min`}`
+                    : nudge ? `${nudge.spot.venue} starts ${nudge.mins <= 1 ? "now" : `in ${nudge.mins} min`}`
+                    : `Crews${liveCrews.length ? `  ·  ${liveCrews.length}` : ""}`}
                 </Text>
               </Tap>
             )}
