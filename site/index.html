@@ -91,6 +91,10 @@
 
   h2 { font: 400 clamp(32px, 4vw, 40px)/1.1 var(--display); margin: 0; text-wrap: balance; }
   section { margin-top: 64px; }
+  .livecity { display: inline-flex; padding: 4px; margin-top: 16px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); }
+  .livecity button { min-height: 40px; padding: 0 16px; border: 0; border-radius: 999px; background: transparent; color: var(--ink-2); font: 500 15px var(--body); cursor: pointer; }
+  .livecity button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+  .live .live-empty { padding: 16px 0; color: var(--ink-2); border-bottom: 1px solid var(--line); }
   .live { list-style: none; margin: 16px 0 0; padding: 0; border-top: 1px solid var(--line); max-width: 720px; }
   .live a { display: grid; grid-template-columns: 84px 1fr auto; gap: 16px; align-items: baseline; padding: 16px 0; border-bottom: 1px solid var(--line); text-decoration: none; color: inherit; }
   .live b { font: 400 24px/1 var(--display); }
@@ -181,6 +185,10 @@
       <h2 id="live">On tonight in New York</h2>
       <p id="livesub">What the agent found for tonight, from the live map.</p>
     </div>
+    <div class="livecity" id="livecity" role="group" aria-label="City">
+      <button type="button" data-c="ny" aria-pressed="true">New York</button>
+      <button type="button" data-c="la" aria-pressed="false">Los Angeles</button>
+    </div>
     <ul class="live" id="livelist"></ul>
   </section>
 
@@ -252,37 +260,53 @@
   }
 </script>
 <script>
-  // Proof the agent works, in its own output: three spots still to come tonight in New York, Yelo partners
-  // first, each opening its spot page. Shown only once real data is in; any error leaves it hidden.
-  (async () => {
-    const H = { headers: { apikey: "sb_publishable_WGHco-ibd0wX9Jhe3x5vJQ_Rb5ys6UZ" } };
+  // Proof the agent works, in its own output: three spots still to come tonight (New York or LA), Yelo
+  // partners first, each opening its spot page, times on that city's clock. Shown only once real data is in.
+  const CITIES = { ny: { key: "new york, ny", name: "New York", zone: "America/New_York" }, la: { key: "los angeles, ca", name: "Los Angeles", zone: "America/Los_Angeles" } };
+  const esc = (t) => String(t ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+  const calm = (t) => (t && t === t.toUpperCase() && /[A-Z]{4}/.test(t) ? t.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase()) : t);
+  async function liveFor(id) {
+    const c = CITIES[id], H = { headers: { apikey: "sb_publishable_WGHco-ibd0wX9Jhe3x5vJQ_Rb5ys6UZ" } };
     const now = Date.now(), from = new Date(now - 15 * 60000).toISOString(), to = new Date(now + 32 * 3600e3).toISOString();
-    const q = `select=short,venue,title,start,partner&city=eq.new%20york,%20ny&category=neq.deal&confidence=neq.low&start=gte.${from}&start=lt.${to}&order=start.asc&limit=80`;
+    const q = `select=short,venue,title,start,partner&city=eq.${encodeURIComponent(c.key)}&category=neq.deal&confidence=neq.low&start=gte.${from}&start=lt.${to}&order=start.asc&limit=80`;
     const r = await fetch(`https://ihxsdwpersowxxtgqcws.supabase.co/rest/v1/upcoming_events?${q}`, H);
-    if (!r.ok) return;
-    // Nights run to 6 AM in New York. Tonight's list, or when tonight is nearly over (late evening), tomorrow's.
-    // A night out: starts from 5 PM to 6 AM in the city (not tomorrow's 8 AM coffee).
-    const evening = (t) => { const h = Number(new Date(t).toLocaleTimeString("en-US", { hour: "numeric", hourCycle: "h23", timeZone: "America/New_York" })); return h >= 17 || h < 6; };
-    const nightOf = (t) => new Date(Date.parse(t) - 6 * 3600e3).toLocaleDateString("en-CA", { timeZone: "America/New_York" });
+    if (!r.ok) return null;
+    // Nights run to 6 AM in the city; a night out starts from 5 PM to 6 AM (not tomorrow's 8 AM coffee).
+    const hour = (t) => Number(new Date(t).toLocaleTimeString("en-US", { hour: "numeric", hourCycle: "h23", timeZone: c.zone }));
+    const evening = (t) => hour(t) >= 17 || hour(t) < 6;
+    const nightOf = (t) => new Date(Date.parse(t) - 6 * 3600e3).toLocaleDateString("en-CA", { timeZone: c.zone });
     const all = (await r.json()).filter((e) => e.short), tonight = nightOf(new Date(now).toISOString());
     const pick = (night) => { const seen = new Set();
       return all.filter((e) => nightOf(e.start) === night && evening(e.start) && !seen.has(e.venue) && seen.add(e.venue))
         .sort((a, b) => Number(!!b.partner) - Number(!!a.partner) || Date.parse(a.start) - Date.parse(b.start)).slice(0, 3); };
-    let rows = pick(tonight), label = "On tonight in New York";
-    if (rows.length < 2) {
-      const next = all.map((e) => nightOf(e.start)).find((n) => n > tonight);
-      rows = next ? pick(next) : []; label = "On tomorrow night in New York";
+    let rows = pick(tonight), when = "tonight";
+    if (rows.length < 2) { const next = all.map((e) => nightOf(e.start)).find((n) => n > tonight); rows = next ? pick(next) : []; when = "tomorrow night"; }
+    const time = (t) => new Date(t).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: c.zone }).replace(":00", "");
+    return { rows: rows.sort((a, b) => Date.parse(a.start) - Date.parse(b.start)), when, name: c.name, time };
+  }
+  async function showLive(id) {
+    const d = await liveFor(id);
+    const list = document.getElementById("livelist");
+    if (!d || d.rows.length < 2) {
+      if (document.getElementById("livesec").hidden) return; // first load with nothing: keep the section hidden
+      list.innerHTML = `<li class="live-empty">Nothing more on in ${esc(CITIES[id].name)} tonight. Check back tomorrow afternoon.</li>`;
+      return;
     }
-    if (rows.length < 2) return; // nothing worth showing
-    document.getElementById("live").textContent = label;
-    if (label.includes("tomorrow")) document.getElementById("livesub").textContent = "What the agent found for tomorrow night, from the live map.";
-    const esc = (t) => String(t ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
-    const time = (t) => new Date(t).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: "America/New_York" }).replace(":00", "");
-    const calm = (t) => (t && t === t.toUpperCase() && /[A-Z]{4}/.test(t) ? t.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase()) : t);
-    document.getElementById("livelist").innerHTML = rows.sort((a, b) => Date.parse(a.start) - Date.parse(b.start)).map((e) =>
-      `<li><a href="e.html?s=${esc(e.short)}"><b>${esc(time(e.start))}</b><span><strong>${esc(e.venue)}</strong><small>${esc(calm(e.title))}</small></span>${e.partner ? '<em class="p">Yelo partner</em>' : "<em></em>"}</a></li>`).join("");
+    document.getElementById("live").textContent = `On ${d.when} in ${d.name}`;
+    document.getElementById("livesub").textContent = `What the agent found for ${d.when}, from the live map. Times in ${d.name}.`;
+    list.innerHTML = d.rows.map((e) =>
+      `<li><a href="e.html?s=${esc(e.short)}"><b>${esc(d.time(e.start))}</b><span><strong>${esc(e.venue)}</strong><small>${esc(calm(e.title))}</small></span>${e.partner ? '<em class="p">Yelo partner</em>' : "<em></em>"}</a></li>`).join("");
     document.getElementById("livesec").hidden = false;
-  })().catch(() => {});
+  }
+  document.querySelectorAll("#livecity button").forEach((b) => b.addEventListener("click", () => {
+    document.querySelectorAll("#livecity button").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+    showLive(b.dataset.c).catch(() => {});
+  }));
+  // Start in the visitor's city when their clock says Pacific time; New York otherwise.
+  { const pacific = /Los_Angeles|Vancouver|Tijuana/.test(Intl.DateTimeFormat().resolvedOptions().timeZone || "");
+    const start = pacific ? "la" : "ny";
+    document.querySelectorAll("#livecity button").forEach((x) => x.setAttribute("aria-pressed", String(x.dataset.c === start)));
+    showLive(start).catch(() => {}); }
 
   // Proof the agent is live: when Scout last searched the web (either city). Falls back to the static line.
   fetch("https://ihxsdwpersowxxtgqcws.supabase.co/rest/v1/scout_runs?select=ran_at&kind=eq.events&error=is.null&order=ran_at.desc&limit=1",
