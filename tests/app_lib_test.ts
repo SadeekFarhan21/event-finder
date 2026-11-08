@@ -509,10 +509,9 @@ Deno.test("closeBy: nearest three, same night, one per venue, in time order", ()
   } finally { setCityZone(null); }
 });
 
-Deno.test("planDirectionsUrl: last stop is the destination, the rest waypoints in order", () => {
+Deno.test("planDirectionsUrl: every stop in order, from here (path form)", () => {
   const st = (venue: string, address: string) => ({ spot: { venue, address } as Spot });
   const u = new URL(planDirectionsUrl([st("Tile Bar", "7th St"), st("Blind Barber", "339 E 10th St"), st("Night Club 101", "101 Avenue A")])!);
-  expect(u.searchParams.get("destination")).toBe("Night Club 101, 101 Avenue A");
-  expect(u.searchParams.get("waypoints")).toBe("Tile Bar, 7th St|Blind Barber, 339 E 10th St");
+  expect(u.pathname.split("/").slice(3).map(decodeURIComponent)).toEqual(["", "Tile Bar, 7th St", "Blind Barber, 339 E 10th St", "Night Club 101, 101 Avenue A"]);
   expect(planDirectionsUrl([st("Solo", "1 St")])).toBeNull();
 });

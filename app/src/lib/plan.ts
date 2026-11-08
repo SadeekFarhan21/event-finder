@@ -128,11 +128,12 @@ export function closeBy(spot: Spot, spots: Spot[], now = Date.now(), max = 3, wi
   return near.slice(0, max).sort((a, b) => Date.parse(a.start!) - Date.parse(b.start!));
 }
 
-// Directions for the whole night, as the plan page offers: Google Maps with the last stop as the
-// destination and the others as waypoints in order (from wherever the rider is now).
+// Directions for the whole night, as the plan page offers: Google Maps through every stop in order,
+// from wherever the rider is now.
 export function planDirectionsUrl(stops: Pick<Stop, "spot">[]): string | null {
   if (stops.length < 2) return null;
-  const place = (s: Pick<Stop, "spot">) => `${s.spot.venue}, ${s.spot.address}`;
-  const q = new URLSearchParams({ api: "1", destination: place(stops[stops.length - 1]), waypoints: stops.slice(0, -1).map(place).join("|") });
-  return `https://www.google.com/maps/dir/?${q.toString()}`;
+  // The path form (/maps/dir//A/B/C, the empty first stop = "from here"): the Android Maps app keeps every
+  // stop. With ?api=1&destination=…&waypoints=… it dropped the destination and routed to the first stop.
+  const place = (s: Pick<Stop, "spot">) => encodeURIComponent(`${s.spot.venue}, ${s.spot.address}`);
+  return `https://www.google.com/maps/dir//${stops.map(place).join("/")}`;
 }
