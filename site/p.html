@@ -165,6 +165,8 @@
     if (box.childElementCount) return; // drawn once; the crew page re-renders every 20 s
     try {
       new QRCode(box, { text: location.href, width: 256, height: 256, colorDark: "#111111", colorLight: "#FFFFFF", correctLevel: QRCode.CorrectLevel.M });
+    // qrcodejs adds an <img> without alt; the box already carries the label, so the image is decorative.
+    document.querySelectorAll(".qr-box img").forEach((i) => i.setAttribute("alt", ""));
       document.getElementById("handoff").hidden = false;
     } catch { /* no QR, no panel */ }
   }
