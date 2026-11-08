@@ -92,6 +92,7 @@
     color-scheme: dark;
   }
   .nearby { margin-top: 32px; }
+  .nearby .make { margin-top: 16px; text-align: center; line-height: 1.3; padding-block: 10px; } /* long venue chains wrap inside the pill */
   .near-head { font: 400 26px/1.15 var(--display); margin: 0 0 8px; }
   .near-list { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
   .near-list a { display: grid; grid-template-columns: 76px 1fr auto; gap: 12px; align-items: baseline; padding: 14px 0; border-bottom: 1px solid var(--line); text-decoration: none; }
@@ -287,8 +288,22 @@
       const d = km(x);
       return `<li><a href="e.html?s=${esc(x.short)}"><b>${esc(fmtT(new Date(x.start), { hour: "numeric", minute: "2-digit" }).replace(":00", ""))}</b>
         <span><strong>${esc(x.venue)}</strong><small>${esc(calm(x.title))}</small></span><em>${d < 0.4 ? "Short walk" : `${(d * 0.621).toFixed(1)} mi`}</em></a></li>`;
-    }).join("")}</ul>`;
+    }).join("")}</ul>${nightLink(e, ref, near)}`;
     box.hidden = false;
+  }
+
+  // "Make a night of it": this spot, then up to two close-by spots each starting an hour or more after
+  // the one before, opened as a plan (p.html: route, directions for the whole night, calendar, the app).
+  function nightLink(e, ref, near) {
+    if (!e?.short) return "";
+    const next = [];
+    let after = ref + 3600e3;
+    for (const x of near) {
+      if (next.length === 2) break;
+      if (Date.parse(x.start) >= after) { next.push(x); after = Date.parse(x.start) + 3600e3; }
+    }
+    if (!next.length) return "";
+    return `<a class="btn quiet make" href="p.html?s=${[e.short, ...next.map((x) => x.short)].map(esc).join(",")}&mine=1">Make a night of it: ${esc([e.venue, ...next.map((x) => x.venue)].join(" → "))}</a>`;
   }
 
 
