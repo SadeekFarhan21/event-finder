@@ -12,7 +12,7 @@ import { canonicalCity, cityKey } from "../app/src/lib/cities";
 import { similar } from "../app/src/lib/case";
 import { inviteBill, withBill } from "../app/src/lib/invite";
 import { goingLine, initials, leavingSoon, savedSoon } from "../app/src/lib/friends";
-import { planAhead, planFromShorts, planMessage, planNight } from "../app/src/lib/plan";
+import { closeBy, planAhead, planFromShorts, planMessage, planNight } from "../app/src/lib/plan";
 import { newSince } from "../app/src/lib/fresh";
 import { pitchEmail } from "../app/src/lib/pitch";
 import { calendarUrl } from "../app/src/lib/calendar";
@@ -486,5 +486,25 @@ Deno.test("parseQuery/matchesQuery: 'after 10' and 'late' are a starting hour", 
     expect(matchesQuery(at("2026-11-07T17:00:00Z"), brunch)).toBe(true); // noon
     const hh = { ...at("2026-11-08T03:30:00Z"), category: "deal", title: "Happy hour" } as Spot;
     expect(matchesQuery(hh, q)).toBe(false); // standing deals have no start to compare
+  } finally { setCityZone(null); }
+});
+
+Deno.test("closeBy: nearest three, same night, one per venue, in time order", () => {
+  setCityZone("New York, NY");
+  try {
+    const now = Date.parse("2026-11-07T23:00:00Z"); // 6 PM
+    const base = { address: "", price: null, deal: null, description: "", url: null, confidence: "high" as const, source: "exa" as const, lng: -73.98, category: "music" as const };
+    const s = (id: string, venue: string, start: string | null, lat: number, extra = {}) => ({ ...base, id, title: id, venue, start, lat, ...extra }) as Spot;
+    const here = s("here", "Nublu", "2026-11-08T00:00:00Z", 40.72);
+    const list = [here,
+      s("a", "Drom", "2026-11-08T02:30:00Z", 40.722),            // 9:30 PM, near
+      s("b", "Caveat", "2026-11-08T00:00:00Z", 40.724),          // 7 PM, near
+      s("b2", "Caveat", "2026-11-08T03:00:00Z", 40.7241),        // same venue: one row
+      s("c", "Studio 151", "2026-11-08T01:00:00Z", 40.721),      // 8 PM, nearest
+      s("d", "Far Hall", "2026-11-08T01:00:00Z", 40.80),         // too far
+      s("e", "Tomorrow Club", "2026-11-09T00:00:00Z", 40.7205),  // another night
+      s("f", "Bar HH", "2026-11-07T21:00:00Z", 40.7202, { category: "deal", title: "Happy hour" }), // standing deal
+      s("g", "Nublu", "2026-11-08T03:00:00Z", 40.72)];           // same venue as here
+    expect(closeBy(here, list, now).map((e) => e.id)).toEqual(["b", "c", "a"]);
   } finally { setCityZone(null); }
 });

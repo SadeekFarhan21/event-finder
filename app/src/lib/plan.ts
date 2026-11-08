@@ -113,3 +113,17 @@ export function planFromShorts(spots: Spot[], shorts: string[], now = Date.now()
     return { spot, step, hop: d === null ? null : d < 0.5 ? "a short walk" : `${(d * 0.621).toFixed(1)} mi`, day };
   });
 }
+
+// Close by, same night: up to three other spots within about a kilometre of this one, for the sheet
+// ("make a night of it"), the same rules as the spot page (site/e.html). Nearest three, listed in the
+// order the night runs, one per venue; standing deals and spots already under way for over 30 min are left out.
+export function closeBy(spot: Spot, spots: Spot[], now = Date.now(), max = 3, withinKm = 1.2): Spot[] {
+  const ref = spot.start && !isRecurring(spot) ? Date.parse(spot.start) : now;
+  const same = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase();
+  const near = spots
+    .filter((e) => e.id !== spot.id && !same(e.venue, spot.venue) && e.start && !isRecurring(e)
+      && nightOffset(Date.parse(e.start), ref) === 0 && Date.parse(e.start) > now - 30 * 60000 && km(spot, e) <= withinKm)
+    .sort((a, b) => km(spot, a) - km(spot, b))
+    .filter((e, i, all) => all.findIndex((x) => same(x.venue, e.venue)) === i);
+  return near.slice(0, max).sort((a, b) => Date.parse(a.start!) - Date.parse(b.start!));
+}
