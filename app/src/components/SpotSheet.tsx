@@ -11,7 +11,7 @@ import { Feather } from "@expo/vector-icons";
 import { Gesture, GestureDetector, ScrollView } from "react-native-gesture-handler";
 import Animated, { FadeIn, interpolate, useAnimatedStyle, useSharedValue, withSpring, withTiming } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
-import { estimateFare, type Point } from "../lib/fare";
+import { estimateFare, milesLabel, type Point } from "../lib/fare";
 import { openRide } from "../lib/ride";
 import { config } from "../config";
 import { track } from "../data/activity";
@@ -21,6 +21,7 @@ import { HeadingOutSheet } from "./HeadingOutSheet";
 import { isRecurring, whenLabel } from "../lib/time";
 import { calendarUrl } from "../lib/calendar";
 import { calmCaps, similar } from "../lib/case";
+import { goingLine } from "../lib/friends";
 import type { Spot } from "../lib/types";
 import { CATEGORY, color as C, font as F, radius as R, shadow, text as T } from "../theme";
 import { Tap } from "./Tap";
@@ -122,8 +123,8 @@ export function SpotSheet({ spot, city, me, unlocked, canAskLocation, locationRe
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); track(e, "unlock", city); onUnlock(e);
     setTimeout(() => scroll.current?.scrollToEnd({ animated: true }), 120);
   };
-  // Each fact stays whole when the line wraps ("3 mi away" never splits).
-  const facts = [whenLabel(e), e.price && !similar(e.price, e.title) ? e.price : null, fare && `${fare.miles < 0.95 ? fare.miles.toFixed(1) : Math.round(fare.miles)} mi away`].filter(Boolean) as string[];
+  // Each fact stays whole when the line wraps ("3 mi away" never splits). Distance reads as the card does ("Under 0.1 mi away").
+  const facts = [whenLabel(e), e.price && !similar(e.price, e.title) ? e.price : null, fare && `${milesLabel(fare.miles)} away`].filter(Boolean) as string[];
   const eyebrow = [(e.category === "deal" ? "Deal" : CATEGORY[e.category].label), addr.area].filter(Boolean).join("  ·  ");
   const source = e.source === "venue" ? "Listed by the venue" : e.confidence === "low" ? "Unconfirmed listing. Check the details before you go." : "Found on the web";
 
@@ -192,8 +193,8 @@ export function SpotSheet({ spot, city, me, unlocked, canAskLocation, locationRe
             {/* Who's going, and getting your people there (your crew's names and status are in the crew box below) */}
             <View style={s.row}>
               <Text style={[s.rowText, !going && { color: C.ink2, fontFamily: F.medium }]} numberOfLines={1}>
-                {/* The total only: your crew's names are in the crew box right below. */}
-                {(isGoing && going <= 1 ? "You're going" : going ? `${going} going${isGoing ? ", including you" : ""}` : "No one going yet")}
+                {/* Same words as the map card ("You and 2 more"); your crew's names are in the crew box right below. */}
+                {going || isGoing ? goingLine(Math.max(going, 1), { others: [], me: isGoing }) : "No one going yet"}
               </Text>
               <Tap style={[s.pill, isGoing && s.pillOn]} disabled={isGoing && !onUnGo} accessibilityState={{ selected: isGoing }}
                 accessibilityHint={isGoing && onUnGo ? "Tap to take it back" : undefined}
