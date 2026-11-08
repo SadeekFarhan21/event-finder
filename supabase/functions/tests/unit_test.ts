@@ -59,6 +59,19 @@ Deno.test("dedupe keeps the first id, so share links survive a re-find", () => {
   assertEquals(out[0].discoveredAt, "2026-11-06T10:00:00Z");
 });
 
+Deno.test("dedupe merges the same billing even when one copy's deal mentions a happy hour", () => {
+  // Real shapes (LA, Nov 7): the deal text made one twin a "standing deal" and the other an event.
+  const out = dedupeEvents([
+    ev({ id: "a", venue: "The Bellwether", title: "Jai Wolf with Conrad.", deal: "Happy hour at The Virginian one hour before doors", start: "2026-11-15T03:00:00Z" }),
+    ev({ id: "b", venue: "The Bellwether", title: "Jai Wolf", start: "2026-11-15T03:00:00Z" }),
+    // Different things at one venue at one time stay apart.
+    ev({ id: "c", venue: "The High Low", title: "Karaoke Night w/ KJ Yonny", start: "2026-11-07T21:00:00Z" }),
+    ev({ id: "d", venue: "The High Low", title: "Weekend Happy Hour", deal: "Happy hour 3-7pm", start: "2026-11-07T21:00:00Z" }),
+  ]);
+  assertEquals(out.filter((e) => e.venue === "The Bellwether").length, 1);
+  assertEquals(out.filter((e) => e.venue === "The High Low").length, 2);
+});
+
 Deno.test("dedupe keeps two nights at one venue apart", () => {
   const out = dedupeEvents([ev({ id: "fri", start: "2026-11-07T00:00:00Z" }), ev({ id: "sat", start: "2026-11-08T00:00:00Z" })]);
   assertEquals(out.length, 2);

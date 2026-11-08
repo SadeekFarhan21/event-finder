@@ -34,6 +34,16 @@ const isStanding = (e: YeloEvent) => e.category === "deal" || STANDING.test(`${e
 // Two listings are the same spot if they're at the same venue and either both are standing
 // deals, or they start within 8 hours of each other. Keeps the higher-confidence one
 // (newer wins ties), and carries over a deal the winner is missing.
+// The same listing found twice, whatever its deal text says: same start (within an hour) and one
+// title contains the other ("Jai Wolf" / "Jai Wolf with Conrad.", "ALTO" / "ALTO – Electronic / House
+// Party"). Deal text that mentions a happy hour used to class one twin as a standing deal and the
+// other not, so they were never compared and both showed as cards.
+function sameBilling(a: YeloEvent, b: YeloEvent) {
+  if (!a.start || !b.start || Math.abs(Date.parse(a.start) - Date.parse(b.start)) >= 3600e3) return false;
+  const ta = key(a.title), tb = key(b.title);
+  return ta.length >= 3 && tb.length >= 3 && (ta.includes(tb) || tb.includes(ta));
+}
+
 // Same room under two names: "Nublu" and "Nublu 151", "Elsewhere" and "Elsewhere Hall". One name
 // extends the other by whole words, and they share a street address or the pins are within a block
 // (~150 m). The address check matters: geocoders can place one address a few blocks apart.
@@ -55,9 +65,10 @@ export function dedupeEvents(events: YeloEvent[]): YeloEvent[] {
   for (const e of [...events].sort((a, b) => b.discoveredAt.localeCompare(a.discoveredAt))) {
     const twin = kept.find((k) =>
       sameVenue(k, e) &&
-      (isStanding(k) && isStanding(e)
+      ((isStanding(k) && isStanding(e)
         ? true
-        : !isStanding(k) && !isStanding(e) && k.start && e.start && Math.abs(Date.parse(k.start) - Date.parse(e.start)) < 8 * 3600e3),
+        : !isStanding(k) && !isStanding(e) && k.start && e.start && Math.abs(Date.parse(k.start) - Date.parse(e.start)) < 8 * 3600e3)
+        || sameBilling(k, e)),
     );
     if (!twin) {
       kept.push({ ...e, venue: cleanVenue(e.venue), title: cleanTitle(e.title, e.venue) });
