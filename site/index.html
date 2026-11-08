@@ -256,12 +256,26 @@
   // first, each opening its spot page. Shown only once real data is in; any error leaves it hidden.
   (async () => {
     const H = { headers: { apikey: "sb_publishable_WGHco-ibd0wX9Jhe3x5vJQ_Rb5ys6UZ" } };
-    const now = Date.now(), from = new Date(now - 15 * 60000).toISOString(), to = new Date(now + 8 * 3600e3).toISOString();
-    const q = `select=short,venue,title,start,partner&city=eq.new%20york,%20ny&category=neq.deal&confidence=neq.low&start=gte.${from}&start=lt.${to}&order=partner.desc,start.asc&limit=12`;
+    const now = Date.now(), from = new Date(now - 15 * 60000).toISOString(), to = new Date(now + 32 * 3600e3).toISOString();
+    const q = `select=short,venue,title,start,partner&city=eq.new%20york,%20ny&category=neq.deal&confidence=neq.low&start=gte.${from}&start=lt.${to}&order=start.asc&limit=80`;
     const r = await fetch(`https://ihxsdwpersowxxtgqcws.supabase.co/rest/v1/upcoming_events?${q}`, H);
     if (!r.ok) return;
-    const seen = new Set(), rows = (await r.json()).filter((e) => e.short && !seen.has(e.venue) && seen.add(e.venue)).slice(0, 3);
-    if (rows.length < 2) return; // late at night: nothing worth showing
+    // Nights run to 6 AM in New York. Tonight's list, or when tonight is nearly over (late evening), tomorrow's.
+    // A night out: starts from 5 PM to 6 AM in the city (not tomorrow's 8 AM coffee).
+    const evening = (t) => { const h = Number(new Date(t).toLocaleTimeString("en-US", { hour: "numeric", hourCycle: "h23", timeZone: "America/New_York" })); return h >= 17 || h < 6; };
+    const nightOf = (t) => new Date(Date.parse(t) - 6 * 3600e3).toLocaleDateString("en-CA", { timeZone: "America/New_York" });
+    const all = (await r.json()).filter((e) => e.short), tonight = nightOf(new Date(now).toISOString());
+    const pick = (night) => { const seen = new Set();
+      return all.filter((e) => nightOf(e.start) === night && evening(e.start) && !seen.has(e.venue) && seen.add(e.venue))
+        .sort((a, b) => Number(!!b.partner) - Number(!!a.partner) || Date.parse(a.start) - Date.parse(b.start)).slice(0, 3); };
+    let rows = pick(tonight), label = "On tonight in New York";
+    if (rows.length < 2) {
+      const next = all.map((e) => nightOf(e.start)).find((n) => n > tonight);
+      rows = next ? pick(next) : []; label = "On tomorrow night in New York";
+    }
+    if (rows.length < 2) return; // nothing worth showing
+    document.getElementById("live").textContent = label;
+    if (label.includes("tomorrow")) document.getElementById("livesub").textContent = "What the agent found for tomorrow night, from the live map.";
     const esc = (t) => String(t ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
     const time = (t) => new Date(t).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: "America/New_York" }).replace(":00", "");
     const calm = (t) => (t && t === t.toUpperCase() && /[A-Z]{4}/.test(t) ? t.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase()) : t);
