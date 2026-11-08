@@ -172,7 +172,8 @@
   // Made from "Make a night of it" on a spot page: it's the visitor's own plan. Drop the flag from the
   // address bar so the link they copy and send reads "A friend planned tonight." for their friends.
   const MINE = new URLSearchParams(location.search).get("mine") === "1";
-  if (MINE) { const u = new URL(location.href); u.searchParams.delete("mine"); history.replaceState(null, "", u); }
+  // Rebuilt by hand: URLSearchParams would re-encode the commas as %2C in the link people copy.
+  if (MINE) history.replaceState(null, "", location.pathname + location.search.replace(/[?&]mine=1/, "").replace(/^&/, "?") + location.hash);
 
   async function render() {
     const shorts = (new URLSearchParams(location.search).get("s") || "").toLowerCase().split(",").filter(Boolean).slice(0, 4);
