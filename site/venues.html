@@ -109,6 +109,8 @@
   ul.spots .spot-title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .spot-meta { flex: none; display: grid; justify-items: end; gap: 2px; text-align: right; }
   .spot-meta .spot-eng { display: block; margin: 0; }
+  .copylink { display: inline-block; margin: 0; padding: 4px 0; min-height: 32px; border: 0; background: none; font: 500 13px var(--body); color: var(--ink-3); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; vertical-align: baseline; }
+  .copylink:hover { color: var(--ink); }
   .showall { font: 600 14px var(--body); color: var(--ink); background: none; border: 0; padding: 12px 0; min-height: 44px; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
   .form > label { align-self: start; } /* a hint under one field doesn't stretch its neighbour */
   label .hint { display: block; margin-top: 4px; font-size: 14px; font-weight: 400; color: var(--ink-3); }
@@ -339,11 +341,34 @@
         `<div class="stat"><b>${v.toLocaleString()}</b><span>${label}</span></div>`).join("")}</div>` : ""}
       ${trend(daily.data ?? [])}
       ${zero.length ? `<p class="zeros">No ${joinWords(zero.map(([, , w]) => w))} yet this week.</p>` : ""}
-      ${list.length ? `<h3 class="subh">On the map now</h3><ul class="spots">${list.map((s, i) => `<li${i >= 5 ? ' class="more" hidden' : ""}><span class="spot-title">${esc(s.title)}</span><span class="spot-meta"><small>${esc(fmt(s.start))}</small>${engaged(s) || '<span class="spot-eng spot-none">No views yet</span>'}</span></li>`).join("")}</ul>${list.length > 5 ? `<button type="button" class="showall" id="showall">Show all ${list.length}</button>` : ""}`
+      ${list.length ? `<h3 class="subh">On the map now</h3><ul class="spots">${list.map((s, i) => `<li${i >= 5 ? ' class="more" hidden' : ""} data-k="${esc(s.title + "|" + Date.parse(s.start))}"><span class="spot-title">${esc(s.title)}</span><span class="spot-meta"><small>${esc(fmt(s.start))}</small>${engaged(s) || '<span class="spot-eng spot-none">No views yet</span>'}<button type="button" class="copylink" hidden>Copy link</button></span></li>`).join("")}</ul>${list.length > 5 ? `<button type="button" class="showall" id="showall">Show all ${list.length}</button>` : ""}`
         : `<p class="empty">${esc(name)} has no spots on the map right now. List one below.</p>`}`;
+    shareLinks(list, city).catch(() => {}); // extras never block the numbers
   });
 
-  document.addEventListener("click", (ev) => {
+  // Each night's public page (e.html?s=<code>), to post or send to regulars. The stats function doesn't
+  // return share codes, so match them by title and start from the public listings (one read).
+  async function shareLinks(list, city) {
+    if (!list.length) return;
+    const { data } = await db.from("upcoming_events").select("short,title,start")
+      .eq("city", city.toLowerCase()).in("title", [...new Set(list.map((s) => s.title))]).limit(200);
+    const code = Object.fromEntries((data ?? []).filter((r) => r.short).map((r) => [r.title + "|" + Date.parse(r.start), r.short]));
+    document.querySelectorAll("ul.spots li[data-k]").forEach((li) => {
+      const c = code[li.dataset.k], b = li.querySelector(".copylink");
+      if (!c || !b) return;
+      b.dataset.url = `${location.origin}/e.html?s=${c}`;
+      b.hidden = false;
+    });
+  }
+
+  document.addEventListener("click", async (ev) => {
+    const cl = ev.target.closest?.(".copylink");
+    if (cl) {
+      try { await navigator.clipboard.writeText(cl.dataset.url); cl.textContent = "Copied"; }
+      catch { cl.textContent = cl.dataset.url; } // no clipboard: show it to copy by hand
+      setTimeout(() => { if (cl.textContent === "Copied") cl.textContent = "Copy link"; }, 2000);
+      return;
+    }
     if (ev.target.id !== "showall") return;
     document.querySelectorAll("ul.spots li.more").forEach((li) => (li.hidden = false)); ev.target.remove();
   });
