@@ -101,3 +101,20 @@ export function rankByVenue<T extends Pick<Spot, "venue">>(spots: T[], q: Query)
   const named = (e: T) => q.words.every((w) => fold(e.venue).includes(w));
   return [...spots].sort((a, b) => Number(named(b)) - Number(named(a)));
 }
+
+// An empty search with several limits ("cheap jazz friday late"): which one to drop to see something.
+// Tries dropping each limit alone (time, day, price, then the near-me radius is the screen's) and names
+// the first that brings matches back, with how many. null when no single drop helps.
+export function relaxHint(spots: Spot[], q: Query, now = Date.now()): { drop: string; count: number } | null {
+  const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  const tries: [string, Query][] = [];
+  if (q.after !== undefined) tries.push([q.after === 22 ? "late" : "the time", { ...q, after: undefined }]);
+  if (q.weekday !== undefined) tries.push([days[q.weekday], { ...q, weekday: undefined }]);
+  if (q.when) tries.push([q.when === "weekend" ? "this weekend" : q.when, { ...q, when: null }]);
+  if (q.maxPrice !== null) tries.push(["the price limit", { ...q, maxPrice: null }]);
+  for (const [drop, rq] of tries) {
+    const count = spots.filter((e) => matchesQuery(e, rq, now)).length;
+    if (count) return { drop, count };
+  }
+  return null;
+}
