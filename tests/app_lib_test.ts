@@ -11,7 +11,7 @@ import { estimateFare, km, milesLabel } from "../app/src/lib/fare";
 import { canonicalCity, cityKey } from "../app/src/lib/cities";
 import { similar } from "../app/src/lib/case";
 import { inviteBill, withBill } from "../app/src/lib/invite";
-import { goingLine, initials, leavingSoon } from "../app/src/lib/friends";
+import { goingLine, initials, leavingSoon, savedSoon } from "../app/src/lib/friends";
 import { planAhead, planFromShorts, planMessage, planNight } from "../app/src/lib/plan";
 import { newSince } from "../app/src/lib/fresh";
 import { pitchEmail } from "../app/src/lib/pitch";
@@ -449,4 +449,15 @@ Deno.test("parseQuery: 'near me' is a place to filter by, not words", () => {
   expect(parseQuery("free drinks nearby tonight").words).toEqual(["free", "drinks"]);
   expect(parseQuery("Close By").near).toBe(true);
   expect(parseQuery("nearly famous").near).toBe(false); // a band name isn't "near me"
+});
+
+Deno.test("savedSoon: the soonest saved spot starting within 45 min", () => {
+  const now = Date.parse("2026-11-08T00:00:00Z");
+  const at = (m: number) => new Date(now + m * 60000).toISOString();
+  const s = (id: string, m: number | null, extra = {}) => ({ id, start: m === null ? null : at(m), category: "music", title: "Set", deal: null, ...extra });
+  const saved = new Set(["a", "b", "c", "d"]);
+  expect(savedSoon([s("a", 40), s("b", 25), s("x", 5)], saved, now)?.spot.id).toBe("b"); // x isn't saved
+  expect(savedSoon([s("c", 60)], saved, now)).toBeNull(); // too far off
+  expect(savedSoon([s("d", -5)], saved, now)).toBeNull(); // already started
+  expect(savedSoon([s("a", 10, { category: "deal" })], saved, now)).toBeNull(); // deals don't start
 });

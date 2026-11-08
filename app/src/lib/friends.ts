@@ -34,3 +34,17 @@ export function leavingSoon<T extends SoonCrew>(crews: T[], now: number, within 
   }
   return best;
 }
+
+// A saved spot starting within the next 45 minutes (the soonest), for the pill when no crew is
+// leaving: "Nublu starts in 25 min". Standing deals don't "start", so they never nudge.
+type SoonSpot = { id: string; start: string | null; category: string; title: string; deal: string | null };
+export function savedSoon<T extends SoonSpot>(spots: T[], saved: Set<string>, now: number, within = 45): { spot: T; mins: number } | null {
+  let best: { spot: T; mins: number } | null = null;
+  for (const e of spots) {
+    if (!saved.has(e.id) || !e.start || e.category === "deal" || /happy hour/i.test(`${e.title} ${e.deal ?? ""}`)) continue;
+    const mins = Math.ceil((Date.parse(e.start) - now) / 60000);
+    if (mins < 0 || mins > within) continue;
+    if (!best || mins < best.mins) best = { spot: e, mins };
+  }
+  return best;
+}
