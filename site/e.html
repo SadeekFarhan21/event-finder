@@ -266,6 +266,16 @@
   // Close by, same night: up to three other spots within about a kilometre, so a friend opening one
   // link can make a night of it. Nothing nearby: the section stays hidden.
   const calm = (t) => (t && t === t.toUpperCase() && /[A-Z]{4}/.test(t) ? t.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase()) : t); // "ILHAN SELECTS" -> "Ilhan Selects"
+  // A friend's link reached someone: tell the venue (once per browser per spot; anonymous device id,
+  // like the app's views). Venues see it as "Opened from a friend's link". Never blocks the page.
+  function linkOpened(e, live) {
+    if (!live?.id || !live.city) return;
+    const key = `scout.linkOpened.${live.id}`;
+    try { if (localStorage.getItem(key)) return; } catch { return; }
+    db.from("spot_activity").insert({ spot_id: live.id, venue: live.venue, city: live.city, kind: "link", device_id: deviceId() })
+      .then(({ error }) => { if (!error) try { localStorage.setItem(key, "1"); } catch { /* counted; just may count again */ } }, () => {});
+  }
+
   async function nearby(e) {
     if (!e?.lat || !e?.lng || !e.city) return;
     const ref = e.start && e.category !== "deal" ? Date.parse(e.start) : Date.now();
@@ -370,7 +380,7 @@
       <p class="note">Scout finds what's on tonight in New York and Los Angeles and shows the ride there. An independent prototype, not an official Yelo app.</p>`;
     handoff();
 
-    if (!crew) { nearby(e).catch(() => {}); return; } // extras never block or break the page
+    if (!crew) { nearby(e).catch(() => {}); linkOpened(e, live); return; } // extras never block or break the page
     announce(crew);
     document.getElementById("join")?.addEventListener("submit", async (ev) => {
       ev.preventDefault();
