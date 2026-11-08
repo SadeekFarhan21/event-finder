@@ -203,8 +203,12 @@
     navigator.geolocation.getCurrentPosition(
       (p) => { me = { lat: p.coords.latitude, lng: p.coords.longitude };
         render(); },
-      () => { $("count").textContent = ""; $("list").innerHTML = `<li class="empty">Location is off for this page. Allow it in your browser to see what's near you, or search a neighborhood.</li>`; },
-      { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 });
+      // Only a refusal means location is off; a first fix can just be slow (the clock runs while the browser's
+      // permission prompt is up), so that one says to try again.
+      (err) => { $("count").textContent = ""; $("list").innerHTML = err && err.code === 1
+        ? `<li class="empty">Location is off for this page. Allow it in your browser to see what's near you, or search a neighborhood.</li>`
+        : `<li class="empty">Couldn't find where you are just now. Tap Near me again, or search a neighborhood.</li>`; },
+      { enableHighAccuracy: false, timeout: 20000, maximumAge: 300000 });
   }));
   $("find").addEventListener("input", render);
   press("city", "c", cityId);
